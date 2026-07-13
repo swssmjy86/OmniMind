@@ -19,7 +19,7 @@
 - 비밀값(`.env.local`)은 절대 커밋하지 않는다
 - 작업 환경: Windows / PowerShell (명령은 PowerShell 문법)
 
-> **P0의 테스트 정책:** P0는 스캐폴딩·설정·외부 서비스 연동 단계라 자동 테스트 대상 로직이 없다. 각 태스크는 "실행 → 눈으로 확인" 검증 단계를 가진다. TDD는 P1(계산 엔진)부터 전면 적용한다.
+> **P0의 테스트 정책:** Task 1~3은 스캐폴딩·설정 단계라 "실행 → 눈으로 확인" 검증을 쓴다. **Task 3.5에서 검증 파이프라인(`npm run verify`)과 테스트 인프라(Vitest+RTL, GitHub Actions CI)를 구축**하며, 이후 모든 태스크는 커밋 전 `npm run verify` 통과가 필수다. TDD는 P1(계산 엔진)부터 전면 적용한다.
 
 ---
 
@@ -316,6 +316,150 @@ Expected: 하단 탭 4개 표시, 탭 클릭으로 4개 페이지 이동, 활성
 
 ```powershell
 git add -A ; git commit -m "feat: app shell with bottom tab navigation (home/me/concern/mind)"
+```
+
+---
+
+### Task 3.5: 검증 파이프라인 + 테스트 인프라
+
+**Files:**
+- Modify: `package.json` (scripts, devDependencies)
+- Create: `vitest.config.ts`, `src/test/setup.ts`
+- Create: `src/components/BottomNav.test.tsx`, `src/app/pages.test.tsx`
+- Create: `.github/workflows/ci.yml`
+
+**Interfaces:**
+- Produces: `npm run verify` (lint→typecheck→test→build), `npm test` (vitest run). **이후 모든 태스크는 커밋 전 `npm run verify` 통과 필수.** CI가 push/PR마다 동일 검증 수행.
+
+- [ ] **Step 1: 테스트 의존성 설치**
+
+```powershell
+npm install -D vitest @vitejs/plugin-react jsdom @testing-library/react @testing-library/jest-dom vite-tsconfig-paths
+```
+
+- [ ] **Step 2: Vitest 설정**
+
+```ts
+// vitest.config.ts
+import { defineConfig } from "vitest/config";
+import react from "@vitejs/plugin-react";
+import tsconfigPaths from "vite-tsconfig-paths";
+
+export default defineConfig({
+  plugins: [react(), tsconfigPaths()],
+  test: {
+    environment: "jsdom",
+    setupFiles: ["./src/test/setup.ts"],
+    include: ["src/**/*.test.{ts,tsx}"],
+  },
+});
+```
+
+```ts
+// src/test/setup.ts
+import "@testing-library/jest-dom/vitest";
+```
+
+- [ ] **Step 3: package.json 스크립트 추가**
+
+`scripts`에 추가:
+
+```json
+{
+  "test": "vitest run",
+  "test:watch": "vitest",
+  "typecheck": "tsc --noEmit",
+  "verify": "npm run lint && npm run typecheck && npm run test && npm run build"
+}
+```
+
+- [ ] **Step 4: 스모크 테스트 작성 — 실패 확인 후 통과 확인 순서로**
+
+```tsx
+// src/components/BottomNav.test.tsx
+import { render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+import BottomNav from "./BottomNav";
+
+const mockPathname = vi.hoisted(() => vi.fn(() => "/"));
+vi.mock("next/navigation", () => ({ usePathname: mockPathname }));
+
+describe("BottomNav", () => {
+  it("4개 탭(홈/나/고민/마음)을 렌더한다", () => {
+    render(<BottomNav />);
+    for (const label of ["홈", "나", "고민", "마음"]) {
+      expect(screen.getByText(label)).toBeInTheDocument();
+    }
+  });
+
+  it("현재 경로의 탭을 딥 그린으로 강조한다", () => {
+    mockPathname.mockReturnValue("/me");
+    render(<BottomNav />);
+    expect(screen.getByText("나").closest("a")).toHaveClass("text-primary-green");
+    expect(screen.getByText("홈").closest("a")).toHaveClass("text-text-soft");
+  });
+});
+```
+
+```tsx
+// src/app/pages.test.tsx
+import { render, screen } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
+import HomePage from "./(tabs)/page";
+import ConcernPage from "./(tabs)/concern/page";
+import MindPage from "./(tabs)/mind/page";
+
+describe("탭 페이지 렌더", () => {
+  it.each([
+    [HomePage, "오늘의 이야기"],
+    [ConcernPage, "고민"],
+    [MindPage, "마음"],
+  ])("페이지가 제목을 렌더한다: %#", (Page, heading) => {
+    render(<Page />);
+    expect(screen.getByRole("heading", { name: heading })).toBeInTheDocument();
+  });
+});
+```
+
+(참고: `/me` 페이지는 Task 5에서 서버 컴포넌트로 바뀌므로 P0에서는 스모크 대상에서 제외한다.)
+
+- [ ] **Step 5: 테스트 실행 확인**
+
+Run: `npm test`
+Expected: 2개 파일, 전체 PASS
+
+- [ ] **Step 6: GitHub Actions CI 작성**
+
+```yaml
+# .github/workflows/ci.yml
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run verify
+```
+
+- [ ] **Step 7: 전체 검증 파이프라인 확인**
+
+Run: `npm run verify`
+Expected: lint→typecheck→test→build 순차 전부 통과
+
+- [ ] **Step 8: Commit**
+
+```powershell
+git add -A ; git commit -m "test: verification pipeline (lint/typecheck/vitest/build) and smoke tests with CI"
 ```
 
 ---
