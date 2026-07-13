@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+:root {
+  --warm-base: #f5efe6;
+  --warm-surface: #fdfbf7;
+  --accent-coral: #e8927c;
+  --primary-green: #2d5a4a;
+  --text-main: #3e3a36;
+  --text-soft: #8a8178;
+}
+
+/* 다크 모드: 딥 그린 바탕 + 베이지 텍스트 (설계서 §5.2) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --warm-base: #1f3a30;
+    --warm-surface: #2d5a4a;
+    --accent-coral: #e8927c;
+    --primary-green: #f5efe6;
+    --text-main: #f5efe6;
+    --text-soft: #cfc6b8;
+  }
+}
+
+@theme inline {
+  --color-warm-base: var(--warm-base);
+  --color-warm-surface: var(--warm-surface);
+  --color-accent-coral: var(--accent-coral);
+  --color-primary-green: var(--primary-green);
+  --color-text-main: var(--text-main);
+  --color-text-soft: var(--text-soft);
+  --font-sans: "Pretendard Variable", Pretendard, -apple-system, sans-serif;
+  --font-serif-kr: "Noto Serif KR", serif;
+  --radius-card: 20px;
+}
+
+body {
+  background: var(--warm-base);
+  color: var(--text-main);
+  font-family: var(--font-sans);
+}

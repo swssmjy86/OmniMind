@@ -22,6 +22,7 @@
 | 1 | Next.js 스캐폴딩 (TS, App Router, Tailwind) | 로컬에서 뜨는 앱 |
 | 2 | 디자인 토큰 + 폰트 (Pretendard, Noto Serif KR) | 브랜드 컬러·서체 적용된 전역 스타일 |
 | 3 | 앱 셸 — 하단 4탭 네비게이션 + 플레이스홀더 페이지 | 홈/나/고민/마음 이동 가능 |
+| 3.5 | 검증 파이프라인 + 테스트 인프라 (Vitest·RTL·GitHub Actions, `npm run verify`) | 커밋 전 필수 검증 체계 |
 | 4 | Supabase 연동 (클라이언트/서버 유틸) | DB 연결 확인 |
 | 5 | 소셜 로그인 (카카오·구글) + 세션 미들웨어 | 로그인/로그아웃 동작 |
 | 6 | Vercel 배포 | 공개 URL |

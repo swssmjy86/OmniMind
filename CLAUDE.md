@@ -83,7 +83,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 개발 명령
 
-_아직 코드 없음. 프로젝트 스캐폴딩 후 build / test / lint / dev 명령을 여기에 기록._
+```bash
+npm run dev        # 개발 서버 (localhost:3000)
+npm run verify     # lint → typecheck → test → build 전체 검증
+npm test           # Vitest 단위/컴포넌트 테스트
+npm run test:watch # 테스트 워치 모드
+```
+
+**규칙: 모든 커밋 전 `npm run verify` 통과 필수.** CI(GitHub Actions)가 push/PR마다 동일 검증을 수행한다. 계산 엔진(`src/lib/engine/`) 작업은 TDD 필수 — 정답이 존재하는 영역이다.
 
 ## 아키텍처
 
