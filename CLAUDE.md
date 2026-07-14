@@ -94,4 +94,13 @@ npm run test:watch # 테스트 워치 모드
 
 ## 아키텍처
 
-_코드 추가 후 여러 파일을 읽어야 이해되는 '큰 그림' 구조를 여기에 기술._
+### 계산 엔진 `src/lib/engine/` (P1)
+
+만세력·별자리·MBTI·혈액형 계산의 **순수 함수 계층**. 네트워크·IO·`Date.now()` 없음, 출력은 JSON 직렬화 가능한 `ProfileContext` 하나. UI·DB·API는 이 계층을 호출만 한다.
+
+- **입출력 단일 진입점:** `computeProfile(EngineInput): ProfileContext` (`index.ts`)
+- **TZ 안전성:** `kst.ts`가 KST 벽시계를 런타임 TZ(Vercel=UTC) 무관하게 다룬다. 로컬 `Date` 게터 금지 — 절대 instant만 신뢰하고 `toKstParts`로 KST 컴포넌트를 읽는다.
+- **절기 테이블:** `solar-terms.data.ts`는 `scripts/gen-solar-terms.ts`(Meeus 천문 알고리즘)로 빌드 타임 생성(1900~2100). 경계 정밀도는 `verify-solar-terms.ts`(KASI 대조·패치, 무료 API 키 필요)로 후속 보정.
+- **모듈:** `pillars`(년·월·일·시주, 절기·오호둔·오서둔·야자시 23시 경계), `elements`(오행 분포), `ten-gods`(십성), `zodiac`(별자리), `mbti`/`blood`(특성 키워드), `dst`(서머타임 보정)
+- **일주 앵커:** 2000-01-07=갑자일 기준 JDN 산술. 포스텔러 대조로 확정 예정(유일한 외부 가정).
+- **테스트:** 계산은 정답이 존재하므로 TDD 필수. 대조 코퍼스는 `fixtures/manseryeok-cases.ts`.
