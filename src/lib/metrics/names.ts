@@ -4,7 +4,10 @@
 export const SERVER_EVENTS = ["onboard_complete"] as const;
 
 /** 클라이언트(서버 액션 경유)가 기록할 수 있는 이벤트 화이트리스트. */
-export const CLIENT_EVENTS = ["card_open", "card_share", "card_copy_link"] as const;
+export const CLIENT_EVENTS = [
+  "card_open", "card_share", "card_copy_link",
+  "match_compute", "match_copy_link", // P7 궁합·초대 루프
+] as const;
 
 export type ClientEvent = (typeof CLIENT_EVENTS)[number];
 

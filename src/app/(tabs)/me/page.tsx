@@ -89,6 +89,14 @@ export default async function MePage() {
 
       <ShareSheet query={cardQuery(ctx)} via="profile" label="나의 조각 카드" />
 
+      {/* P7 궁합 — 우리의 조합 입구 */}
+      <Link
+        href="/match"
+        className="mt-4 block w-full rounded-card border border-primary-green/30 bg-warm-surface py-3.5 text-center font-medium text-primary-green"
+      >
+        우리의 조합 보기 — 연인·친구·동료 🍃
+      </Link>
+
       <form action={signOut} className="mt-8">
         <button className="text-sm text-text-soft underline">잠시 떠나기 (로그아웃)</button>
       </form>
