@@ -8,13 +8,13 @@ import { assembleProfile } from "@/lib/interpret/templates";
 import type { InterpretationSection } from "@/lib/interpret/types";
 import type { BloodType, Mbti } from "@/lib/engine/types";
 import { saveProfile } from "./actions";
+import SajuChart from "@/components/profile/SajuChart";
 
 const BLOODS: BloodType[] = ["A", "B", "O", "AB"];
 const MBTIS: Mbti[] = [
   "INTJ", "INTP", "ENTJ", "ENTP", "INFJ", "INFP", "ENFJ", "ENFP",
   "ISTJ", "ISFJ", "ESTJ", "ESFJ", "ISTP", "ISFP", "ESTP", "ESFP",
 ];
-const ELEMENTS = ["목", "화", "토", "금", "수"] as const;
 
 interface Draft {
   nickname: string;
@@ -260,7 +260,6 @@ function ProfileView({
   }, []);
 
   const { ctx, sections } = result;
-  const max = Math.max(...Object.values(ctx.elements.counts), 1);
 
   if (revealing) {
     return (
@@ -279,40 +278,9 @@ function ProfileView({
         {nickname}님의 이야기
       </h1>
 
-      {/* 사주 4주 */}
-      <div className="mt-6 grid grid-cols-4 gap-2 text-center">
-        {[
-          ["시주", ctx.pillars.hour],
-          ["일주", ctx.pillars.day],
-          ["월주", ctx.pillars.month],
-          ["년주", ctx.pillars.year],
-        ].map(([label, val]) => (
-          <div key={label} className="rounded-card bg-warm-surface py-4">
-            <p className="text-xs text-text-soft">{label}</p>
-            <p className="mt-1 font-[family-name:var(--font-serif-kr)] text-xl text-primary-green">
-              {val ?? "—"}
-            </p>
-          </div>
-        ))}
-      </div>
-
-      {/* 오행 균형 */}
-      <div className="mt-4 rounded-card bg-warm-surface p-4">
-        <p className="mb-3 text-sm text-text-soft">오행의 균형</p>
-        <div className="space-y-2">
-          {ELEMENTS.map((e) => (
-            <div key={e} className="flex items-center gap-3">
-              <span className="w-5 text-sm text-text-main">{e}</span>
-              <div className="h-2.5 flex-1 rounded-full bg-text-soft/15">
-                <div
-                  className="h-2.5 rounded-full bg-accent-coral"
-                  style={{ width: `${(ctx.elements.counts[e] / max) * 100}%` }}
-                />
-              </div>
-              <span className="w-4 text-right text-xs text-text-soft">{ctx.elements.counts[e]}</span>
-            </div>
-          ))}
-        </div>
+      {/* 사주 명식(전문 뷰) */}
+      <div className="mt-6">
+        <SajuChart ctx={ctx} />
       </div>
 
       {/* 해석 섹션 */}
