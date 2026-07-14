@@ -20,29 +20,26 @@ export default async function MePage() {
       <h1 className="font-[family-name:var(--font-serif-kr)] text-2xl text-primary-green">
         온전한 나
       </h1>
-      {user ? (
-        <div className="mt-4">
-          <p className="text-text-soft">
-            반가워요, {user.user_metadata?.name ?? "당신"}님. 곧 이곳에서
-            당신의 조각들을 이어드릴게요.
-          </p>
-          <form action={signOut} className="mt-6">
+      <div className="mt-4">
+        <p className="text-text-soft">
+          {user
+            ? `반가워요, ${user.user_metadata?.name ?? "당신"}님. 당신의 조각들을 이어볼까요?`
+            : "사주·MBTI·혈액형·별자리를 종합해 '온전한 나'를 만나보세요."}
+        </p>
+        <Link
+          href="/onboarding"
+          className="mt-6 block w-full rounded-card bg-accent-coral py-3.5 text-center font-medium text-white"
+        >
+          나를 알아보기 ✨
+        </Link>
+        {user && (
+          <form action={signOut} className="mt-4">
             <button className="text-sm text-text-soft underline">
               잠시 떠나기 (로그아웃)
             </button>
           </form>
-        </div>
-      ) : (
-        <div className="mt-4">
-          <p className="text-text-soft">아직 우리, 인사를 못 나눴네요.</p>
-          <Link
-            href="/login"
-            className="mt-6 block w-full rounded-card bg-accent-coral py-3.5 text-center font-medium text-white"
-          >
-            시작해볼까요?
-          </Link>
-        </div>
-      )}
+        )}
+      </div>
     </main>
   );
 }
