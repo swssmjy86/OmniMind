@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { computeDaily } from "@/lib/engine/daily";
 import { assembleDaily } from "@/lib/interpret/content/daily";
+import { currentMilestone } from "@/lib/interpret/milestone";
 import { toKstParts } from "@/lib/engine/kst";
 import type { ProfileRow } from "@/lib/db/types";
 
@@ -33,6 +34,7 @@ export default async function HomePage() {
     const now = new Date();
     companionDays = Math.max(1, Math.floor((now.getTime() - start.getTime()) / 86_400_000) + 1);
   }
+  const badge = currentMilestone(companionDays);
 
   return (
     <main className="p-6">
@@ -41,7 +43,14 @@ export default async function HomePage() {
           오늘의 이야기
         </h1>
         {companionDays > 0 && (
-          <span className="text-xs text-text-soft">함께한 지 {companionDays}일째 🌱</span>
+          <span className="flex items-center gap-1 text-xs text-text-soft">
+            함께한 지 {companionDays}일째
+            {badge && (
+              <span className="rounded-full bg-warm-surface px-2 py-0.5 text-primary-green">
+                {badge.emoji} {badge.label}
+              </span>
+            )}
+          </span>
         )}
       </div>
 

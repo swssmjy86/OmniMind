@@ -38,6 +38,7 @@ export default function OnboardingPage() {
   });
   const [result, setResult] = useState<Result | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [saveState, setSaveState] = useState<"pending" | "saved" | "guest">("pending");
 
   const set = (patch: Partial<Draft>) => setDraft((d) => ({ ...d, ...patch }));
 
@@ -54,21 +55,22 @@ export default function OnboardingPage() {
       setResult({ ctx, sections });
       setStep(5);
       // 로그인 상태면 백그라운드로 저장(best-effort). 미리보기는 항상 동작.
-      void saveProfile({
+      setSaveState("pending");
+      saveProfile({
         nickname: draft.nickname.trim() || "당신",
         birthDate: draft.birthDate,
         birthTime: draft.timeUnknown ? null : draft.birthTime,
         timeUnknown: draft.timeUnknown,
         bloodType: draft.bloodType!,
         mbti: draft.mbti!,
-      });
+      }).then((r) => setSaveState(r.saved ? "saved" : "guest"));
     } catch {
       setError("입력을 다시 확인해 주세요.");
     }
   }
 
   if (step === 5 && result) {
-    return <ProfileView nickname={draft.nickname.trim() || "당신"} result={result} />;
+    return <ProfileView nickname={draft.nickname.trim() || "당신"} result={result} saveState={saveState} />;
   }
 
   const zodiacPreview =
@@ -248,7 +250,9 @@ function Choice({
   );
 }
 
-function ProfileView({ nickname, result }: { nickname: string; result: Result }) {
+function ProfileView({
+  nickname, result, saveState,
+}: { nickname: string; result: Result; saveState: "pending" | "saved" | "guest" }) {
   const [revealing, setRevealing] = useState(true);
   useEffect(() => {
     const t = setTimeout(() => setRevealing(false), 1600);
@@ -323,12 +327,26 @@ function ProfileView({ nickname, result }: { nickname: string; result: Result })
         ))}
       </div>
 
-      <p className="mt-8 text-center text-xs text-text-soft">
-        지금은 미리보기예요. 로그인하고 저장하면 언제든 다시 볼 수 있어요.
-      </p>
+      {saveState === "saved" ? (
+        <p className="mt-8 text-center text-sm text-primary-green">
+          이 이야기를 저장했어요. &lsquo;나&rsquo; 탭에서 언제든 다시 볼 수 있어요 🌿
+        </p>
+      ) : (
+        <section className="mt-8 rounded-card bg-warm-surface p-5 text-center">
+          <p className="text-sm text-text-soft">
+            지금은 미리보기예요. 로그인하면 이 이야기를 저장하고, 매일의 기운도 받아볼 수 있어요.
+          </p>
+          <Link
+            href="/login"
+            className="mt-4 block w-full rounded-card bg-accent-coral py-3.5 font-medium text-white"
+          >
+            로그인하고 저장하기
+          </Link>
+        </section>
+      )}
       <Link
         href="/"
-        className="mt-4 block w-full rounded-card border border-text-soft/30 py-3.5 text-center text-text-soft"
+        className="mt-3 block w-full rounded-card border border-text-soft/30 py-3.5 text-center text-text-soft"
       >
         홈으로
       </Link>
