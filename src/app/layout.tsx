@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Noto_Serif_KR } from "next/font/google";
+import RefTracker from "@/components/share/RefTracker";
 import "./globals.css";
 
 const notoSerifKr = Noto_Serif_KR({
@@ -31,6 +32,7 @@ export default function RootLayout({
         />
       </head>
       <body className="mx-auto min-h-dvh max-w-[480px] antialiased">
+        <RefTracker />
         {children}
       </body>
     </html>

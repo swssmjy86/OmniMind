@@ -2,7 +2,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { assembleProfile } from "@/lib/interpret/templates";
+import { cardQuery } from "@/lib/share/card-copy";
 import SajuChart from "@/components/profile/SajuChart";
+import ShareSheet from "@/components/share/ShareSheet";
 import type { ProfileRow, InterpretationRow } from "@/lib/db/types";
 
 export default async function MePage() {
@@ -84,6 +86,8 @@ export default async function MePage() {
           </section>
         ))}
       </div>
+
+      <ShareSheet query={cardQuery(ctx)} via="profile" label="나의 조각 카드" />
 
       <form action={signOut} className="mt-8">
         <button className="text-sm text-text-soft underline">잠시 떠나기 (로그아웃)</button>
