@@ -4,8 +4,10 @@ import { ZODIAC_TEXT } from "./zodiac";
 import { BLOOD_TEXT } from "./blood";
 import { MBTI_AXIS_TEXT } from "./mbti";
 import { ELEMENT_BALANCE_TEXT } from "./elements";
+import { tenGodTheme, dominantCategory } from "./ten-gods";
 import { mbtiTrait } from "@/lib/engine/mbti";
 import { checkTone } from "../tone-guard";
+import type { TenGodChart } from "@/lib/engine/ten-gods";
 
 const STEMS = ["갑","을","병","정","무","기","경","신","임","계"];
 const ZODIACS = ["양자리","황소자리","쌍둥이자리","게자리","사자자리","처녀자리",
@@ -43,5 +45,17 @@ describe("콘텐츠 톤 준수 (§5.4)", () => {
     const full = ELEMENT_BALANCE_TEXT({ counts: { 목:2,화:2,토:2,금:1,수:1 }, dominant: "목", lacking: [] });
     expect(checkTone(withLack)).toHaveLength(0);
     expect(checkTone(full)).toHaveLength(0);
+  });
+
+  it("십성 5갈래 테마가 전부 톤 통과", () => {
+    const gods = ["비견","식신","편재","정관","정인"] as const; // 각 갈래 대표
+    for (const g of gods) {
+      const chart: TenGodChart = {
+        yearStem: g, monthStem: g, hourStem: g,
+        yearBranch: g, monthBranch: g, dayBranch: g, hourBranch: g,
+      };
+      expect(dominantCategory(chart)).toBeDefined();
+      expect(checkTone(tenGodTheme(chart))).toHaveLength(0);
+    }
   });
 });
