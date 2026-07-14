@@ -4,6 +4,7 @@ import { computeDaily } from "@/lib/engine/daily";
 import { assembleDaily } from "@/lib/interpret/content/daily";
 import { currentMilestone } from "@/lib/interpret/milestone";
 import { toKstParts } from "@/lib/engine/kst";
+import AdSlot from "@/components/ads/AdSlot";
 import DailyRecorder from "@/components/DailyRecorder";
 import ShareSheet from "@/components/share/ShareSheet";
 import { cardQuery } from "@/lib/share/card-copy";
@@ -107,6 +108,9 @@ export default async function HomePage() {
           </Link>
         </section>
       )}
+
+      {/* 광고는 콘텐츠 흐름이 끝난 가장 아래에만 (§P4-4 비침습 원칙) */}
+      <AdSlot />
     </main>
   );
 }
