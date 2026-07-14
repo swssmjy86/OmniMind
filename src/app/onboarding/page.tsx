@@ -8,6 +8,7 @@ import { assembleProfile } from "@/lib/interpret/templates";
 import type { InterpretationSection } from "@/lib/interpret/types";
 import type { BloodType, Mbti } from "@/lib/engine/types";
 import { saveProfile } from "./actions";
+import { saveDraft, loadDraft, clearDraft, isCompleteDraft, type Draft } from "./draft";
 import SajuChart from "@/components/profile/SajuChart";
 
 const BLOODS: BloodType[] = ["A", "B", "O", "AB"];
@@ -16,18 +17,10 @@ const MBTIS: Mbti[] = [
   "ISTJ", "ISFJ", "ESTJ", "ESFJ", "ISTP", "ISFP", "ESTP", "ESFP",
 ];
 
-interface Draft {
-  nickname: string;
-  birthDate: string;
-  birthTime: string;
-  timeUnknown: boolean;
-  bloodType: BloodType | null;
-  mbti: Mbti | null;
-}
-
 interface Result {
   ctx: ProfileContext;
   sections: InterpretationSection[];
+  nickname: string;
 }
 
 export default function OnboardingPage() {
@@ -38,39 +31,61 @@ export default function OnboardingPage() {
   });
   const [result, setResult] = useState<Result | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [saveState, setSaveState] = useState<"pending" | "saved" | "guest">("pending");
+  const [saveState, setSaveState] = useState<"pending" | "saved" | "guest" | "error">("pending");
 
   const set = (patch: Partial<Draft>) => setDraft((d) => ({ ...d, ...patch }));
 
-  function finish() {
+  function finishWith(d: Draft) {
     try {
       const ctx = computeProfile({
-        birthDate: draft.birthDate,
-        birthTime: draft.timeUnknown ? null : draft.birthTime,
-        timeUnknown: draft.timeUnknown,
-        bloodType: draft.bloodType!,
-        mbti: draft.mbti!,
+        birthDate: d.birthDate,
+        birthTime: d.timeUnknown ? null : d.birthTime,
+        timeUnknown: d.timeUnknown,
+        bloodType: d.bloodType!,
+        mbti: d.mbti!,
       });
-      const sections = assembleProfile(ctx, draft.nickname.trim() || "당신");
-      setResult({ ctx, sections });
+      const nickname = d.nickname.trim() || "당신";
+      const sections = assembleProfile(ctx, nickname);
+      setResult({ ctx, sections, nickname });
       setStep(5);
+      // 로그인 왕복(OAuth)에 대비해 draft 보존 — 저장 성공 시 삭제
+      saveDraft(d);
       // 로그인 상태면 백그라운드로 저장(best-effort). 미리보기는 항상 동작.
       setSaveState("pending");
       saveProfile({
-        nickname: draft.nickname.trim() || "당신",
-        birthDate: draft.birthDate,
-        birthTime: draft.timeUnknown ? null : draft.birthTime,
-        timeUnknown: draft.timeUnknown,
-        bloodType: draft.bloodType!,
-        mbti: draft.mbti!,
-      }).then((r) => setSaveState(r.saved ? "saved" : "guest"));
+        nickname: d.nickname.trim() || "당신",
+        birthDate: d.birthDate,
+        birthTime: d.timeUnknown ? null : d.birthTime,
+        timeUnknown: d.timeUnknown,
+        bloodType: d.bloodType!,
+        mbti: d.mbti!,
+      }).then((r) => {
+        if (r.saved) {
+          clearDraft();
+          setSaveState("saved");
+        } else {
+          setSaveState(r.reason === "not-authenticated" ? "guest" : "error");
+        }
+      });
     } catch {
       setError("입력을 다시 확인해 주세요.");
     }
   }
 
+  const finish = () => finishWith(draft);
+
+  // 로그인 복귀(?resume=1): 보존된 draft로 자동 재계산·저장을 이어간다.
+  // 렌더 캐스케이드를 피하기 위해 마운트 직후 태스크로 미룬다.
+  useEffect(() => {
+    if (!new URLSearchParams(window.location.search).get("resume")) return;
+    const d = loadDraft();
+    if (!d || !isCompleteDraft(d)) return;
+    const t = setTimeout(() => finishWith(d), 0);
+    return () => clearTimeout(t);
+  }, []);
+
   if (step === 5 && result) {
-    return <ProfileView nickname={draft.nickname.trim() || "당신"} result={result} saveState={saveState} />;
+    return <ProfileView nickname={result.nickname} result={result} saveState={saveState} />;
   }
 
   const zodiacPreview =
@@ -252,7 +267,7 @@ function Choice({
 
 function ProfileView({
   nickname, result, saveState,
-}: { nickname: string; result: Result; saveState: "pending" | "saved" | "guest" }) {
+}: { nickname: string; result: Result; saveState: "pending" | "saved" | "guest" | "error" }) {
   const [revealing, setRevealing] = useState(true);
   useEffect(() => {
     const t = setTimeout(() => setRevealing(false), 1600);
@@ -295,17 +310,27 @@ function ProfileView({
         ))}
       </div>
 
-      {saveState === "saved" ? (
+      {saveState === "saved" && (
         <p className="mt-8 text-center text-sm text-primary-green">
           이 이야기를 저장했어요. &lsquo;나&rsquo; 탭에서 언제든 다시 볼 수 있어요 🌿
         </p>
-      ) : (
+      )}
+      {saveState === "error" && (
+        <p className="mt-8 text-center text-sm text-text-soft">
+          저장이 잠시 어려웠어요. 이야기는 그대로 볼 수 있고, 다음 방문 때 다시 이어둘게요 🌿
+        </p>
+      )}
+      {(saveState === "guest" || saveState === "pending") && (
         <section className="mt-8 rounded-card bg-warm-surface p-5 text-center">
           <p className="text-sm text-text-soft">
             지금은 미리보기예요. 로그인하면 이 이야기를 저장하고, 매일의 기운도 받아볼 수 있어요.
           </p>
           <Link
             href="/login"
+            onClick={() => {
+              // 로그인 후 이 자리로 돌아와 자동 저장을 이어가도록 목적지를 쿠키로
+              document.cookie = `om_next=${encodeURIComponent("/onboarding?resume=1")}; path=/; max-age=600; samesite=lax`;
+            }}
             className="mt-4 block w-full rounded-card bg-accent-coral py-3.5 font-medium text-white"
           >
             로그인하고 저장하기

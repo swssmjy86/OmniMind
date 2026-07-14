@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { createServerSupabase } from "@/lib/supabase/server";
 
 export async function GET(request: Request) {
@@ -15,7 +16,19 @@ export async function GET(request: Request) {
   if (code) {
     const supabase = await createServerSupabase();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) return NextResponse.redirect(`${base}/`);
+    if (!error) {
+      // 로그인 전 자리로 복귀(om_next 쿠키) — 온보딩 저장 이어가기 등
+      const jar = await cookies();
+      const rawNext = jar.get("om_next")?.value;
+      let next = "/";
+      if (rawNext) {
+        const decoded = decodeURIComponent(rawNext);
+        if (decoded.startsWith("/") && !decoded.startsWith("//")) next = decoded;
+      }
+      const res = NextResponse.redirect(`${base}${next}`);
+      res.cookies.delete("om_next");
+      return res;
+    }
   }
   return NextResponse.redirect(`${base}/login?error=auth`);
 }
