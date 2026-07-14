@@ -23,3 +23,12 @@ export interface InterpretationRow {
   source: "template" | "llm";
   created_at: string;
 }
+
+export interface ChatMessageRow {
+  id: string;
+  user_id: string;
+  role: "user" | "assistant";
+  content: string;
+  source: "llm" | "template" | null;
+  created_at: string;
+}
