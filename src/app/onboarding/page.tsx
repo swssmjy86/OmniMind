@@ -7,6 +7,7 @@ import { zodiacSign } from "@/lib/engine/zodiac";
 import { assembleProfile } from "@/lib/interpret/templates";
 import type { InterpretationSection } from "@/lib/interpret/types";
 import type { BloodType, Mbti } from "@/lib/engine/types";
+import { saveProfile } from "./actions";
 
 const BLOODS: BloodType[] = ["A", "B", "O", "AB"];
 const MBTIS: Mbti[] = [
@@ -52,6 +53,15 @@ export default function OnboardingPage() {
       const sections = assembleProfile(ctx, draft.nickname.trim() || "당신");
       setResult({ ctx, sections });
       setStep(5);
+      // 로그인 상태면 백그라운드로 저장(best-effort). 미리보기는 항상 동작.
+      void saveProfile({
+        nickname: draft.nickname.trim() || "당신",
+        birthDate: draft.birthDate,
+        birthTime: draft.timeUnknown ? null : draft.birthTime,
+        timeUnknown: draft.timeUnknown,
+        bloodType: draft.bloodType!,
+        mbti: draft.mbti!,
+      });
     } catch {
       setError("입력을 다시 확인해 주세요.");
     }
