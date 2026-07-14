@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { recordClientEvent } from "@/lib/metrics/actions";
 
 interface Props {
   query: string; // /api/card 쿼리 문자열 (유형 조합만, 개인정보 없음)
@@ -20,6 +21,7 @@ export default function ShareSheet({ query, via, label }: Props) {
     await navigator.clipboard.writeText(shareUrl());
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+    void recordClientEvent("card_copy_link", { via });
   }
 
   async function share() {
@@ -31,12 +33,14 @@ export default function ShareSheet({ query, via, label }: Props) {
           const file = new File([blob], "omnimind-card.png", { type: "image/png" });
           if (navigator.canShare?.({ files: [file] })) {
             await navigator.share({ files: [file], text: "나의 조합이 궁금하다면", url: shareUrl() });
+            void recordClientEvent("card_share", { via, kind: "image" });
             return;
           }
         } catch {
           // 파일 공유 실패 → 링크 공유로
         }
         await navigator.share({ url: shareUrl() });
+        void recordClientEvent("card_share", { via, kind: "link" });
         return;
       }
       await copyLink();
@@ -45,10 +49,15 @@ export default function ShareSheet({ query, via, label }: Props) {
     }
   }
 
+  function openSheet() {
+    setOpen(true);
+    void recordClientEvent("card_open", { via });
+  }
+
   if (!open) {
     return (
       <button
-        onClick={() => setOpen(true)}
+        onClick={openSheet}
         className="mt-4 block w-full rounded-card border border-accent-coral/40 bg-warm-surface py-3.5 text-center font-medium text-primary-green"
       >
         {label} 만들기 ✨

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Noto_Serif_KR } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import RefTracker from "@/components/share/RefTracker";
 import "./globals.css";
 
@@ -34,6 +35,7 @@ export default function RootLayout({
       <body className="mx-auto min-h-dvh max-w-[480px] antialiased">
         <RefTracker />
         {children}
+        <Analytics />
       </body>
     </html>
   );

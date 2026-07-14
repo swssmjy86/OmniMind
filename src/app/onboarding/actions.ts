@@ -4,6 +4,7 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { computeProfile } from "@/lib/engine";
 import { assembleProfile } from "@/lib/interpret/templates";
 import { assertTone } from "@/lib/interpret/tone-guard";
+import { recordEvent } from "@/lib/metrics/events";
 import type { BloodType, Mbti } from "@/lib/engine/types";
 
 export interface CreateProfileInput {
@@ -56,6 +57,7 @@ export async function saveProfile(
       { onConflict: "user_id,kind,target_date" },
     );
 
+    await recordEvent("onboard_complete", { mbti: input.mbti }); // 유입(ref/via)은 쿠키에서 병합
     return { saved: true };
   } catch (e) {
     return { saved: false, reason: e instanceof Error ? e.message : "unknown" };
