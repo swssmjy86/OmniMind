@@ -4,6 +4,7 @@ import { computeDaily } from "@/lib/engine/daily";
 import { assembleDaily } from "@/lib/interpret/content/daily";
 import { currentMilestone } from "@/lib/interpret/milestone";
 import { toKstParts } from "@/lib/engine/kst";
+import DailyRecorder from "@/components/DailyRecorder";
 import type { ProfileRow } from "@/lib/db/types";
 
 export const dynamic = "force-dynamic"; // 날짜·세션에 따라 매번 렌더
@@ -75,6 +76,15 @@ export default async function HomePage() {
         </div>
         <p className="mt-4 text-sm text-text-soft">🍀 행운 포인트 — {guide.lucky}</p>
       </section>
+
+      {profile && (
+        <>
+          <DailyRecorder />
+          <Link href="/history" className="mt-4 block text-center text-sm text-text-soft underline">
+            지난 이야기 보기
+          </Link>
+        </>
+      )}
 
       {/* 프로필 없으면 개인화 유도 */}
       {!profile && (
