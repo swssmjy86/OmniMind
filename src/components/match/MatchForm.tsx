@@ -6,6 +6,7 @@ import {
   type MatchMe, type MatchMode, type MatchContext,
 } from "@/lib/engine/match";
 import { assembleMatch } from "@/lib/interpret/content/match";
+import { createInvite } from "@/lib/match/actions";
 import { recordClientEvent } from "@/lib/metrics/actions";
 import type { InterpretationSection } from "@/lib/interpret/types";
 import type { Mbti } from "@/lib/engine/types";
@@ -25,6 +26,7 @@ export default function MatchForm({ me, nickname }: { me: MatchMe; nickname: str
   const [result, setResult] = useState<{ match: MatchContext; sections: InterpretationSection[] } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [inviteUrl, setInviteUrl] = useState<string | null>(null); // 모드별 토큰 초대장 캐시
 
   function compute() {
     setError(null);
@@ -39,7 +41,15 @@ export default function MatchForm({ me, nickname }: { me: MatchMe; nickname: str
   }
 
   async function copyInvite() {
-    const url = `${window.location.origin}/?ref=match&via=${MODE_SLUG[mode]}`;
+    // P7-2 — 토큰 초대장 발급(수락 시 양방향 심층 궁합). 실패하면 일반 유입 링크로.
+    let url = inviteUrl;
+    if (!url) {
+      const res = await createInvite(MODE_SLUG[mode]);
+      url = res.ok
+        ? `${window.location.origin}/connect/${res.token}?ref=match&via=${MODE_SLUG[mode]}`
+        : `${window.location.origin}/?ref=match&via=${MODE_SLUG[mode]}`;
+      if (res.ok) setInviteUrl(url);
+    }
     try {
       if (navigator.share) {
         await navigator.share({ text: "우리의 조합이 궁금하다면", url });
@@ -60,7 +70,7 @@ export default function MatchForm({ me, nickname }: { me: MatchMe; nickname: str
         {MATCH_MODES.map((m) => (
           <button
             key={m}
-            onClick={() => setMode(m)}
+            onClick={() => { setMode(m); setInviteUrl(null); }}
             className={`rounded-full px-4 py-2 text-sm transition-colors ${
               mode === m ? "bg-primary-green text-white" : "bg-warm-surface text-text-soft"
             }`}

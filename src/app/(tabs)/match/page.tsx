@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { createServerSupabase } from "@/lib/supabase/server";
 import MatchForm from "@/components/match/MatchForm";
-import type { MatchMe } from "@/lib/engine/match";
-import type { ProfileRow } from "@/lib/db/types";
+import { SLUG_TO_MODE, type MatchMe } from "@/lib/engine/match";
+import type { ProfileRow, ConnectionRow } from "@/lib/db/types";
 
 export const dynamic = "force-dynamic";
 
@@ -44,6 +44,14 @@ export default async function MatchPage() {
     mbti: ctx.mbti.type,
   };
 
+  // P7-2 — 내가 초대했거나 수락한 연결 목록(마이그레이션 0005 전이면 조용히 빈 목록).
+  const { data: conns } = await supabase
+    .from("connections").select("*")
+    .or(`inviter_id.eq.${user!.id},invitee_id.eq.${user!.id}`)
+    .order("created_at", { ascending: false }).limit(20)
+    .returns<ConnectionRow[]>();
+  const connections = conns ?? [];
+
   return (
     <main className="p-6 pb-24">
       <Link href="/me" className="text-sm text-text-soft">
@@ -57,6 +65,36 @@ export default async function MatchPage() {
         읽어드릴게요.
       </p>
       <MatchForm me={me} nickname={profile.nickname} />
+
+      {connections.length > 0 && (
+        <section className="mt-10">
+          <h2 className="font-[family-name:var(--font-serif-kr)] text-lg text-primary-green">
+            이어진 조합
+          </h2>
+          <div className="mt-3 space-y-2">
+            {connections.map((c) => {
+              const iAmInviter = c.inviter_id === user!.id;
+              const otherName = iAmInviter ? c.invitee_nickname : c.inviter_nickname;
+              return (
+                <Link
+                  key={c.id}
+                  href={`/connect/${c.token}`}
+                  className="flex items-center justify-between rounded-card bg-warm-surface px-4 py-3"
+                >
+                  <span className="text-text-main">
+                    {c.status === "accepted"
+                      ? `${otherName}님과의 ${SLUG_TO_MODE[c.mode]} 조합`
+                      : `${SLUG_TO_MODE[c.mode]} 초대장 — 기다리는 중`}
+                  </span>
+                  <span className="text-sm text-text-soft">
+                    {c.status === "accepted" ? "보기 →" : "🍃"}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      )}
     </main>
   );
 }

@@ -1,4 +1,5 @@
 import type { ElementIndex, Mbti } from "./types";
+import type { ProfileContext } from "./index";
 import type { ZodiacSign } from "./zodiac";
 import { zodiacSign } from "./zodiac";
 import { dayPillar } from "./pillars";
@@ -11,6 +12,16 @@ import { kstStringToInstant } from "./kst";
 
 export type MatchMode = "연인" | "친구" | "동료";
 export const MATCH_MODES = ["연인", "친구", "동료"] as const;
+
+// DB·URL에는 ASCII 슬러그로 저장한다(ref.ts TOKEN 규칙과 동일한 이유).
+export type MatchModeSlug = "lover" | "friend" | "coworker";
+export const MODE_TO_SLUG: Record<MatchMode, MatchModeSlug> = {
+  연인: "lover", 친구: "friend", 동료: "coworker",
+};
+export const SLUG_TO_MODE: Record<MatchModeSlug, MatchMode> = {
+  lover: "연인", friend: "친구", coworker: "동료",
+};
+export const isMatchModeSlug = (v: string): v is MatchModeSlug => v in SLUG_TO_MODE;
 
 export type ZodiacElement = "불" | "흙" | "바람" | "물";
 export type ZodiacHarmony = "닮음" | "어울림" | "다름";
@@ -135,5 +146,73 @@ export function computeMatch(
     zodiacHarmony: harmony,
     mbtiSynergy: synergy,
     score,
+  };
+}
+
+// ── 심층 궁합 (P7-2) — 두 사람의 프로필 전체(사주 8글자)로 계산 ──
+
+export interface DeepMatchContext extends MatchContext {
+  /** 서로의 부족한 오행을 채워주는지 — 초대 연결의 보상이 되는 핵심 정보 */
+  complement: {
+    iFillPartner: string[]; // 상대에게 없는 오행 중 내가 지닌 것
+    partnerFillsMe: string[]; // 내게 없는 오행 중 상대가 지닌 것
+  };
+  myDayGanzhi: string; // 내 일진(심층 뷰에서 양쪽 다 보여준다)
+}
+
+/** a(나)의 오행 분포가 b의 부족(lacking)을 채우는 오행 목록. */
+export function fillingElements(
+  a: { counts: Record<string, number> },
+  bLacking: readonly string[],
+): string[] {
+  return bLacking.filter((e) => (a.counts[e] ?? 0) > 0);
+}
+
+/**
+ * 양방향 심층 궁합 — 두 ProfileContext(사주 전체)로 계산.
+ * 입력형(computeMatch)과 같은 점수 체계에, 오행 상호 보완 보너스를 더한다.
+ */
+export function computeDeepMatch(
+  me: ProfileContext,
+  partner: ProfileContext,
+  mode: MatchMode,
+): DeepMatchContext {
+  const mineIdx = ELEMENTS.indexOf(me.dayMaster.element as (typeof ELEMENTS)[number]);
+  const partnerIdx = ELEMENTS.indexOf(partner.dayMaster.element as (typeof ELEMENTS)[number]);
+  if (mineIdx < 0 || partnerIdx < 0)
+    throw new Error(`오행 오류: ${me.dayMaster.element}/${partner.dayMaster.element}`);
+
+  const elementRelation = relateElement(mineIdx as ElementIndex, partnerIdx as ElementIndex);
+  const harmony = zodiacHarmony(me.zodiac, partner.zodiac);
+  const synergy = mbtiSynergy(me.mbti.type, partner.mbti.type);
+
+  const iFillPartner = fillingElements(me.elements, partner.elements.lacking);
+  const partnerFillsMe = fillingElements(partner.elements, me.elements.lacking);
+  // 서로 채우는 오행 하나당 +4, 최대 +12 — 보완이 심층 궁합의 보상이 된다.
+  const complementBonus = Math.min(12, (iFillPartner.length + partnerFillsMe.length) * 4);
+
+  const w = MODE_WEIGHTS[mode];
+  const raw =
+    50 +
+    RELATION_POINTS[elementRelation] * w.element +
+    HARMONY_POINTS[harmony] * w.zodiac +
+    synergy * 4 * w.mbti +
+    complementBonus;
+  const score = Math.max(0, Math.min(100, Math.round(raw)));
+
+  return {
+    mode,
+    partner: {
+      dayGanzhi: partner.pillars.day,
+      element: partner.dayMaster.element,
+      zodiac: partner.zodiac,
+      mbti: partner.mbti.type,
+    },
+    elementRelation,
+    zodiacHarmony: harmony,
+    mbtiSynergy: synergy,
+    score,
+    complement: { iFillPartner, partnerFillsMe },
+    myDayGanzhi: me.pillars.day,
   };
 }

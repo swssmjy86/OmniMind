@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { computeMatch, MATCH_MODES, type MatchMe } from "@/lib/engine/match";
-import { assembleMatch, scoreLine } from "./match";
+import { computeProfile } from "@/lib/engine";
+import { computeMatch, computeDeepMatch, MATCH_MODES, type MatchMe } from "@/lib/engine/match";
+import { assembleMatch, assembleDeepMatch, complementText, scoreLine } from "./match";
 import { checkTone } from "../tone-guard";
 
 const me: MatchMe = { element: "목", zodiac: "사자자리", mbti: "INFP" };
@@ -44,6 +45,49 @@ describe("궁합 해석 조립 (P7)", () => {
     for (const s of [30, 55, 70, 85, 100]) {
       expect(scoreLine(s).length).toBeGreaterThan(0);
       expect(checkTone(scoreLine(s))).toHaveLength(0);
+    }
+  });
+});
+
+describe("심층 궁합 해석 (P7-2)", () => {
+  const a = computeProfile({
+    birthDate: "1990-03-15", birthTime: "08:30", timeUnknown: false,
+    bloodType: "A", mbti: "INFP",
+  });
+  const b = computeProfile({
+    birthDate: "1993-11-02", birthTime: "22:10", timeUnknown: false,
+    bloodType: "O", mbti: "ESTJ",
+  });
+
+  it("모드 3종 전부 6개 섹션 + 톤 통과, 이름·간지 반영", () => {
+    for (const mode of MATCH_MODES) {
+      const m = computeDeepMatch(a, b, mode);
+      const sections = assembleDeepMatch({
+        match: m, myElement: a.dayMaster.element, myName: "새벽", partnerName: "노을",
+      });
+      expect(sections).toHaveLength(6);
+      for (const s of sections) {
+        expect(s.body.length).toBeGreaterThan(0);
+        expect(checkTone(s.body)).toHaveLength(0);
+      }
+      expect(sections[0].body).toContain("새벽");
+      expect(sections[0].body).toContain("노을");
+      expect(sections[1].body).toContain(a.pillars.day);
+      expect(sections[1].body).toContain(b.pillars.day);
+    }
+  });
+
+  it("complementText — 네 갈래 전부 문구 존재 + 톤 통과", () => {
+    const cases = [
+      { iFillPartner: ["화"], partnerFillsMe: ["수"] },
+      { iFillPartner: ["화", "금"], partnerFillsMe: [] },
+      { iFillPartner: [], partnerFillsMe: ["토"] },
+      { iFillPartner: [], partnerFillsMe: [] },
+    ];
+    for (const c of cases) {
+      const t = complementText(c);
+      expect(t.length).toBeGreaterThan(0);
+      expect(checkTone(t)).toHaveLength(0);
     }
   });
 });

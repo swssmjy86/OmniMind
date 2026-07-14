@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { computeMatch, partnerFromBirth, zodiacElement, mbtiSynergy } from "./match";
+import { computeProfile } from "./index";
+import {
+  computeMatch, computeDeepMatch, partnerFromBirth, zodiacElement, mbtiSynergy,
+  fillingElements, SLUG_TO_MODE, MODE_TO_SLUG, isMatchModeSlug,
+} from "./match";
 
 describe("partnerFromBirth — 상대 기운 산출", () => {
   it("일주 앵커일(2000-01-07)은 갑자·목·염소자리", () => {
@@ -85,5 +89,60 @@ describe("computeMatch — 우리의 조합", () => {
     const a = computeMatch(me, { birthDate: "1992-11-03", mbti: "ISTP" }, "친구");
     const b = computeMatch(me, { birthDate: "1992-11-03", mbti: "ISTP" }, "친구");
     expect(a.score).toBe(b.score);
+  });
+});
+
+describe("computeDeepMatch — 양방향 심층 궁합 (P7-2)", () => {
+  const a = computeProfile({
+    birthDate: "1990-03-15", birthTime: "08:30", timeUnknown: false,
+    bloodType: "A", mbti: "INFP",
+  });
+  const b = computeProfile({
+    birthDate: "1993-11-02", birthTime: "22:10", timeUnknown: false,
+    bloodType: "O", mbti: "ESTJ",
+  });
+
+  it("두 프로필로 관계·조화·시너지·보완을 산출한다", () => {
+    const m = computeDeepMatch(a, b, "연인");
+    expect(m.partner.dayGanzhi).toBe(b.pillars.day);
+    expect(m.myDayGanzhi).toBe(a.pillars.day);
+    expect(m.partner.mbti).toBe("ESTJ");
+    expect(m.mbtiSynergy).toBe(mbtiSynergy("INFP", "ESTJ"));
+    expect(m.score).toBeGreaterThanOrEqual(0);
+    expect(m.score).toBeLessThanOrEqual(100);
+  });
+
+  it("보완 오행은 상대의 lacking ∩ 내 보유 오행", () => {
+    const m = computeDeepMatch(a, b, "친구");
+    for (const e of m.complement.iFillPartner) {
+      expect(b.elements.lacking).toContain(e);
+      expect(a.elements.counts[e as keyof typeof a.elements.counts]).toBeGreaterThan(0);
+    }
+    for (const e of m.complement.partnerFillsMe) {
+      expect(a.elements.lacking).toContain(e);
+      expect(b.elements.counts[e as keyof typeof b.elements.counts]).toBeGreaterThan(0);
+    }
+  });
+
+  it("결정적 — 같은 입력이면 같은 결과", () => {
+    expect(computeDeepMatch(a, b, "동료")).toEqual(computeDeepMatch(a, b, "동료"));
+  });
+});
+
+describe("fillingElements", () => {
+  it("부족 오행 중 보유한 것만 고른다", () => {
+    const counts = { 목: 2, 화: 0, 토: 3, 금: 0, 수: 1 };
+    expect(fillingElements({ counts }, ["화", "토", "수"])).toEqual(["토", "수"]);
+    expect(fillingElements({ counts }, [])).toEqual([]);
+  });
+});
+
+describe("모드 슬러그 변환", () => {
+  it("양방향 매핑이 일치한다", () => {
+    for (const [mode, slug] of Object.entries(MODE_TO_SLUG)) {
+      expect(SLUG_TO_MODE[slug as keyof typeof SLUG_TO_MODE]).toBe(mode);
+    }
+    expect(isMatchModeSlug("lover")).toBe(true);
+    expect(isMatchModeSlug("연인")).toBe(false);
   });
 });

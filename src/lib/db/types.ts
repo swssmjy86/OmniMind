@@ -26,6 +26,21 @@ export interface InterpretationRow {
   created_at: string;
 }
 
+export interface ConnectionRow {
+  id: string;
+  token: string;
+  mode: "lover" | "friend" | "coworker";
+  status: "pending" | "accepted";
+  inviter_id: string;
+  inviter_nickname: string;
+  inviter_profile: ProfileContext;
+  invitee_id: string | null;
+  invitee_nickname: string | null;
+  invitee_profile: ProfileContext | null;
+  created_at: string;
+  accepted_at: string | null;
+}
+
 export interface ChatMessageRow {
   id: string;
   user_id: string;

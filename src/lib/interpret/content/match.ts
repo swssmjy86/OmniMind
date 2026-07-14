@@ -1,4 +1,4 @@
-import type { MatchContext, MatchMode, ZodiacHarmony } from "@/lib/engine/match";
+import type { DeepMatchContext, MatchContext, MatchMode, ZodiacHarmony } from "@/lib/engine/match";
 import type { DailyRelation } from "@/lib/engine/daily";
 import type { InterpretationSection } from "../types";
 
@@ -59,6 +59,44 @@ export interface MatchAssembleInput {
   match: MatchContext;
   myElement: string;
   nickname?: string;
+}
+
+/** 오행 상호 보완(심층 궁합의 보상) 문구. */
+export function complementText(c: DeepMatchContext["complement"]): string {
+  const i = c.iFillPartner;
+  const p = c.partnerFillsMe;
+  const list = (xs: string[]) => xs.join("·");
+  if (i.length && p.length)
+    return `서로가 서로의 빈 자리를 채워주는, 흔치 않은 조합이에요. 당신은 상대에게 ${list(i)}의 기운을, 상대는 당신에게 ${list(p)}의 기운을 건네주죠. 함께 있는 것만으로 각자의 팔자가 조금 더 온전해져요.`;
+  if (i.length)
+    return `당신에게는 상대에게 없는 ${list(i)}의 기운이 있어요. 당신의 존재가 상대의 빈 자리를 살며시 메워주는 셈이죠. 곁에 있어주는 것만으로 큰 힘이 될 거예요.`;
+  if (p.length)
+    return `상대에게는 당신에게 없는 ${list(p)}의 기운이 있어요. 그 곁에 있으면 당신의 빈 자리가 조용히 채워지죠. 그 온기를 편히 받아들여도 괜찮아요.`;
+  return "두 분 모두 각자의 결이 이미 뚜렷한 편이에요. 채움보다는 나란히 서서 같은 곳을 바라보는 조합이죠.";
+}
+
+/** 양방향 심층 궁합 해석 — 두 사람의 사주 전체가 만나는 이야기. */
+export function assembleDeepMatch(input: {
+  match: DeepMatchContext;
+  myElement: string;
+  myName: string;
+  partnerName: string;
+}): InterpretationSection[] {
+  const { match, myElement, myName, partnerName } = input;
+  return [
+    {
+      title: "우리의 온도",
+      body: `${myName}님과 ${partnerName}님, 두 분의 온도는 ${match.score}°예요. ${scoreLine(match.score)}`,
+    },
+    {
+      title: "기운의 결",
+      body: `${myName}님은 ${myElement}(${match.myDayGanzhi}), ${partnerName}님은 ${match.partner.element}(${match.partner.dayGanzhi})의 기운이에요. ${RELATION_TEXT[match.elementRelation]}`,
+    },
+    { title: "서로를 채우는 조각", body: complementText(match.complement) },
+    { title: "별이 말하길", body: HARMONY_TEXT[match.zodiacHarmony] },
+    { title: "마음의 결", body: synergyText(match.mbtiSynergy) },
+    { title: `${match.mode}로서 함께할 때`, body: MODE_CLOSING[match.mode] },
+  ];
 }
 
 /** '우리의 조합' 해석 조립. */
