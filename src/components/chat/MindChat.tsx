@@ -17,7 +17,9 @@ export default function MindChat({
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, pending]);
 
-  const exhausted = remaining <= 0;
+  // remaining < 0 = 무제한(프리미엄, quota.ts UNLIMITED 센티널)
+  const unlimited = remaining < 0;
+  const exhausted = !unlimited && remaining <= 0;
 
   async function send() {
     const text = input.trim();
@@ -45,9 +47,11 @@ export default function MindChat({
       <header className="px-6 pt-6 pb-3">
         <h1 className="font-[family-name:var(--font-serif-kr)] text-2xl text-primary-green">마음</h1>
         <p className="mt-1 text-xs text-text-soft">
-          {exhausted
-            ? "오늘 이야기는 여기까지예요 🌙"
-            : `오늘 나눌 수 있는 이야기가 ${remaining}번 남았어요`}
+          {unlimited
+            ? "마음 이야기를 마음껏 나눌 수 있어요 ✨"
+            : exhausted
+              ? "오늘 이야기는 여기까지예요 🌙"
+              : `오늘 나눌 수 있는 이야기가 ${remaining}번 남았어요`}
         </p>
       </header>
 
@@ -65,6 +69,10 @@ export default function MindChat({
       {exhausted ? (
         <div className="border-t border-text-soft/15 px-6 py-4 text-center">
           <p className="text-sm text-text-soft">내일 아침, 새로운 기운과 함께 기다릴게요.</p>
+          {/* §6.4 — 제한이 프리미엄 판매 포인트가 되도록 자리를 심어둠 */}
+          <p className="mt-1.5 text-xs text-text-soft/70">
+            마음 이야기를 무제한으로 나눌 수 있는 날도 준비하고 있어요 🌙
+          </p>
         </div>
       ) : (
         <div className="flex items-end gap-2 border-t border-text-soft/15 px-4 py-3">

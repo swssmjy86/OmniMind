@@ -10,6 +10,8 @@ export interface ProfileRow {
   blood_type: "A" | "B" | "O" | "AB";
   mbti: string;
   profile_context: ProfileContext;
+  /** P7 프리미엄 — 구독 만료 시각(0004 마이그레이션 전이거나 무료면 null/undefined). */
+  premium_until?: string | null;
   created_at: string;
   updated_at: string;
 }

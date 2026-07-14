@@ -10,6 +10,7 @@ Supabase 대시보드 → SQL Editor에서 순서대로 Run:
 - [ ] `supabase/migrations/0001_p2_profiles.sql` — 프로필·해석 저장 (P2 영속화 활성)
 - [ ] `supabase/migrations/0002_p5_chat.sql` — 챗 기억·하루 10회 제한 (P5 활성)
 - [ ] `supabase/migrations/0003_p4_events.sql` — 성장 지표 events (P4-5 활성)
+- [ ] `supabase/migrations/0004_p7_premium.sql` — 프리미엄 `premium_until` 컬럼 (P7 챗 무제한 게이트)
 
 ## 2. 카카오톡 채널 알림 (P4-3, 수동 운영)
 

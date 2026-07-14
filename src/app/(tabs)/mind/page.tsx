@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { toKstParts } from "@/lib/engine/kst";
-import { DAILY_LIMIT } from "@/lib/chat/constants";
+import { chatRemaining } from "@/lib/chat/quota";
 import MindChat from "@/components/chat/MindChat";
 import type { ProfileRow, ChatMessageRow } from "@/lib/db/types";
 
@@ -40,12 +40,13 @@ export default async function MindPage() {
     .eq("user_id", user!.id).order("created_at", { ascending: true }).limit(50)
     .returns<ChatMessageRow[]>();
 
-  const t = toKstParts(new Date());
+  const now = new Date();
+  const t = toKstParts(now);
   const day = `${t.y}-${String(t.mo).padStart(2, "0")}-${String(t.d).padStart(2, "0")}`;
   const { data: counter } = await supabase
     .from("usage_counters").select("chat_count")
     .eq("user_id", user!.id).eq("day", day).maybeSingle<{ chat_count: number }>();
-  const remaining = Math.max(0, DAILY_LIMIT - (counter?.chat_count ?? 0));
+  const remaining = chatRemaining(profile.premium_until, counter?.chat_count ?? 0, now);
 
   return (
     <MindChat

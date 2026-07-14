@@ -6,6 +6,7 @@ import { toKstParts } from "@/lib/engine/kst";
 import type { ProfileRow, ChatMessageRow } from "@/lib/db/types";
 import type { ChatMsg } from "@/lib/interpret/provider";
 import { DAILY_LIMIT } from "./constants";
+import { isPremium, UNLIMITED } from "./quota";
 
 export type SendResult =
   | { ok: true; reply: string; source: "llm" | "template"; remaining: number }
@@ -25,14 +26,17 @@ export async function sendMessage(message: string): Promise<SendResult> {
       .from("profiles").select("*").eq("user_id", user.id).maybeSingle<ProfileRow>();
     if (!profile) return { ok: false, reason: "no-profile" };
 
-    const t = toKstParts(new Date());
+    const now = new Date();
+    const t = toKstParts(now);
     const day = `${t.y}-${String(t.mo).padStart(2, "0")}-${String(t.d).padStart(2, "0")}`;
 
     const { data: counter } = await supabase
       .from("usage_counters").select("chat_count")
       .eq("user_id", user.id).eq("day", day).maybeSingle<{ chat_count: number }>();
     const used = counter?.chat_count ?? 0;
-    if (used >= DAILY_LIMIT) return { ok: false, reason: "limit", remaining: 0 };
+    // P7 프리미엄은 하루 제한 없이 통과("마음 이야기 무제한").
+    const premium = isPremium(profile.premium_until, now);
+    if (!premium && used >= DAILY_LIMIT) return { ok: false, reason: "limit", remaining: 0 };
 
     const { data: recent } = await supabase
       .from("chat_messages").select("role,content")
@@ -56,7 +60,10 @@ export async function sendMessage(message: string): Promise<SendResult> {
       { onConflict: "user_id,day" },
     );
 
-    return { ok: true, reply: r.text, source: r.source, remaining: DAILY_LIMIT - (used + 1) };
+    return {
+      ok: true, reply: r.text, source: r.source,
+      remaining: premium ? UNLIMITED : DAILY_LIMIT - (used + 1),
+    };
   } catch {
     return { ok: false, reason: "error" };
   }
