@@ -54,7 +54,7 @@ describe("computeProfile — 통합·계약", () => {
     expect(() => computeProfile({ ...base, bloodType: "C" })).toThrow();
   });
 
-  it("경계 유형 코퍼스를 최소 6건 보유(포스텔러 30건 확장은 후속 QA)", () => {
-    expect(CASES.length).toBeGreaterThanOrEqual(6);
+  it("대조 코퍼스를 최소 20건 보유(년주·오호둔·오서둔 감사 + 앵커 외부확정)", () => {
+    expect(CASES.length).toBeGreaterThanOrEqual(20);
   });
 });
