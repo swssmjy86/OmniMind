@@ -29,5 +29,6 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  // api/card: 공유 카드 이미지 — 세션 불필요 + 외부(카카오 스크래퍼 등)가 쿠키 없이 가져간다
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/card).*)"],
 };

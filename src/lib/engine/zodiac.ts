@@ -2,6 +2,14 @@ export type ZodiacSign =
   | "양자리" | "황소자리" | "쌍둥이자리" | "게자리" | "사자자리" | "처녀자리"
   | "천칭자리" | "전갈자리" | "사수자리" | "염소자리" | "물병자리" | "물고기자리";
 
+export const ZODIAC_SIGNS: readonly ZodiacSign[] = [
+  "양자리", "황소자리", "쌍둥이자리", "게자리", "사자자리", "처녀자리",
+  "천칭자리", "전갈자리", "사수자리", "염소자리", "물병자리", "물고기자리",
+];
+
+export const isZodiacSign = (v: string): v is ZodiacSign =>
+  (ZODIAC_SIGNS as readonly string[]).includes(v);
+
 // [시작월, 시작일, 별자리] — 해당일 이상이면 그 별자리 시작. 확정 경계표(트로피컬).
 const CUTOFFS: [number, number, ZodiacSign][] = [
   [1, 20, "물병자리"], [2, 19, "물고기자리"], [3, 21, "양자리"], [4, 20, "황소자리"],
