@@ -3,15 +3,16 @@
 > 코드는 전부 준비됨. 아래 항목은 계정·콘솔 작업이라 사용자가 직접 실행해야 한다.
 > 완료할 때마다 체크하고, 전부 끝나면 P4 완료 기준(공유 카드 경유 신규 가입 추적)이 온전히 동작한다.
 
-## 1. Supabase 마이그레이션 실행 (P2·P5·P4 공통 선행)
+## 1. Supabase 마이그레이션 실행 — ✅ 전부 완료 (2026-07-15)
 
-Supabase 대시보드 → SQL Editor에서 순서대로 Run:
+Supabase 대시보드 → SQL Editor에서 실행 완료, REST 프로브로 검증됨:
 
-- [ ] `supabase/migrations/0001_p2_profiles.sql` — 프로필·해석 저장 (P2 영속화 활성)
-- [ ] `supabase/migrations/0002_p5_chat.sql` — 챗 기억·하루 10회 제한 (P5 활성)
-- [ ] `supabase/migrations/0003_p4_events.sql` — 성장 지표 events (P4-5 활성)
-- [ ] `supabase/migrations/0004_p7_premium.sql` — 프리미엄 `premium_until` 컬럼 (P7 챗 무제한 게이트)
-- [ ] `supabase/migrations/0005_p7_connections.sql` — 초대 연결 connections (P7-2 양방향 심층 궁합 활성)
+- [x] `supabase/migrations/0001_p2_profiles.sql` — 프로필·해석 저장 (P2 영속화 활성)
+- [x] `supabase/migrations/0002_p5_chat.sql` — 챗 기억·하루 10회 제한 (P5 활성)
+- [x] `supabase/migrations/0003_p4_events.sql` — 성장 지표 events (P4-5 활성)
+- [x] `supabase/migrations/0004_p7_premium.sql` — 프리미엄 `premium_until` 컬럼 (P7 챗 무제한 게이트)
+- [x] `supabase/migrations/0005_p7_connections.sql` — 초대 연결 connections (P7-2 양방향 심층 궁합 활성)
+- [x] `supabase/migrations/0006_daeun_gender.sql` — 성별(선택) 컬럼 (대운 "운의 계절" 카드 활성)
 
 ## 2. 카카오톡 채널 알림 (P4-3, 수동 운영)
 
@@ -43,11 +44,17 @@ Supabase 대시보드 → SQL Editor에서 순서대로 Run:
 
 코드(`@vercel/analytics`)는 이미 부착됨. 활성화하면 페이지뷰·재방문이 잡힌다.
 
-## 5. (선택) Gemini API 키 (P5 LLM 개인화)
+## 5. (선택) Gemini API 키 (P5 LLM 개인화) — ✅ 완료
 
-- [ ] Google AI Studio에서 무료 키 발급 → Vercel env `GEMINI_API_KEY` 추가
+- [x] Google AI Studio에서 무료 키 발급 → Vercel env `GEMINI_API_KEY` 추가 (커밋 `8984987` 재배포로 적용)
 
 없어도 챗은 템플릿 폴백으로 완전 동작한다.
+
+## 6. Google 소셜 로그인 — ✅ 완료 (2026-07-15)
+
+- [x] Google Cloud OAuth 클라이언트 생성 + 리디렉션 URI `https://stfahvkqqbdztpiaxnwh.supabase.co/auth/v1/callback` 등록
+- [x] Supabase → Authentication → Providers → Google 활성화 (Client ID·Secret 입력)
+- [x] 프로덕션 로그인 동작 확인
 
 ## 확인 방법 (전부 적용 후)
 
