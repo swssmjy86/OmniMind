@@ -29,7 +29,8 @@ export function kstPartsToInstant(p: KstParts): Date {
   return new Date(Date.UTC(p.y, p.mo - 1, p.d, p.h, p.mi) - KST_OFFSET_MS);
 }
 
-/** "YYYY-MM-DDTHH:mm" (KST 벽시계) → 절대 instant */
+/** "YYYY-MM-DDTHH:mm" 또는 "YYYY-MM-DDTHH:mm:ss" (KST 벽시계) → 절대 instant.
+ *  절기 테이블은 경계 판정을 위해 초까지 담고 있어 두 형식을 모두 받는다. */
 export function kstStringToInstant(s: string): Date {
-  return new Date(`${s}:00+09:00`);
+  return new Date(s.length === 16 ? `${s}:00+09:00` : `${s}+09:00`);
 }
