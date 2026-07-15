@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { applyDst, DST_PERIODS } from "./dst";
+import { computePillars } from "./pillars";
 import { kstStringToInstant } from "./kst";
 
 const at = (s: string) => kstStringToInstant(s);
@@ -52,5 +53,17 @@ describe("applyDst — 한국 서머타임 보정", () => {
   it("기존 1987/88 구간은 변함없이 동작한다", () => {
     expect(applyDst(at("1987-07-01T12:00"))).toEqual(minus1h("1987-07-01T12:00"));
     expect(applyDst(at("1988-10-09T03:00"))).toEqual(at("1988-10-09T03:00"));
+  });
+
+  // 회귀 방지: 시간 미상 출생은 00:00으로 들어오는데, DST −1h를 먼저 적용하면
+  // 전날로 밀려 일주가 하루 어긋났다. 날짜는 입력된 출생일 기준이어야 한다.
+  it("시간 미상 + DST 구간: 일주가 입력한 출생일 기준으로 계산된다", () => {
+    for (const date of ["1955-07-01", "1948-06-01", "1987-07-15"]) {
+      const unknown = computePillars(at(`${date}T00:00`), { timeUnknown: true });
+      const knownNoon = computePillars(at(`${date}T12:00`), { timeUnknown: false });
+      expect(unknown.day, `${date} 일주`).toEqual(knownNoon.day);
+      expect(unknown.year, `${date} 년주`).toEqual(knownNoon.year);
+      expect(unknown.month, `${date} 월주`).toEqual(knownNoon.month);
+    }
   });
 });
