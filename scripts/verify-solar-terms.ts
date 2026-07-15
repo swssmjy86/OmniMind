@@ -42,7 +42,10 @@ async function fetchYear(year: number, key: string): Promise<Map<string, string>
           for (const it of list) {
             if (map.has(it.dateName)) continue; // KASI 라벨 중복 quirk(예: 2000년 입춘×2) — 첫 항목만
             const d = String(it.locdate); // YYYYMMDD
-            const t = String(it.kst ?? "0000").trim().padStart(4, "0"); // "HHmm" (후행 공백 방어)
+            const t = String(it.kst ?? "").trim(); // "HHmm" (후행 공백 방어)
+            // 시각이 없거나 불량(예: 2019 대한 "1760" = 60분)이면 그 절기는 신뢰하지 않는다.
+            // 00:00으로 메꾸면 조작된 값이 '보정'인 척 데이터에 들어간다.
+            if (!/^\d{4}$/.test(t) || Number(t.slice(0, 2)) > 23 || Number(t.slice(2, 4)) > 59) continue;
             map.set(
               it.dateName,
               `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}T${t.slice(0, 2)}:${t.slice(2, 4)}`,
@@ -97,12 +100,15 @@ async function main() {
     TERM_NAMES.forEach((name, i) => {
       const k = kasi.get(name);
       if (!k) {
-        console.log(`  ${name}: KASI 항목 없음 — 로컬 값 유지`);
+        console.log(`  ${name}: KASI 항목 없음/시각 불량 — 로컬 값 유지`);
         return;
       }
-      // 이름이 같아도 날짜가 크게 어긋나면 KASI 라벨 오류 — 신뢰하지 않는다
-      if (Math.abs(Date.parse(`${k}:00+09:00`) - Date.parse(`${local[i]}:00+09:00`)) > 3 * 86400_000) {
-        console.log(`  ${name}: KASI 값(${k})이 로컬(${local[i]})과 3일 이상 차이 — 라벨 오류로 보고 건너뜀`);
+      // Meeus 근사는 분 단위 정확도라, 진짜 보정은 ±30분을 넘지 않는다.
+      // 그 이상 차이는 KASI 데이터 오류(예: 2011 대한 locdate +1일, 2011 입동 +356분)로 보고 거부한다.
+      const kMs = Date.parse(`${k}:00+09:00`);
+      const lMs = Date.parse(`${local[i]}:00+09:00`);
+      if (!Number.isFinite(kMs) || !Number.isFinite(lMs) || Math.abs(kMs - lMs) > 30 * 60_000) {
+        console.log(`  ${name}: KASI 값(${k})이 로컬(${local[i]})과 30분 초과 차이 — KASI 데이터 오류로 보고 건너뜀`);
         return;
       }
       if (local[i] !== k) {

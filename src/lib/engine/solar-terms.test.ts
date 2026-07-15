@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ipchunInstant, resolveMonth, assertYearInRange, termInstant } from "./solar-terms";
 import { toKstParts, kstStringToInstant } from "./kst";
+import { SOLAR_TERMS } from "./solar-terms.data";
 
 describe("절기 테이블", () => {
   it("입춘 절입 시각이 2월 4일 전후(KST)로 산출된다", () => {
@@ -48,5 +49,20 @@ describe("절기 테이블", () => {
   it("범위 밖 연도는 예외", () => {
     expect(() => assertYearInRange(1899)).toThrow(RangeError);
     expect(() => assertYearInRange(2101)).toThrow(RangeError);
+  });
+
+  // KASI 보정(verify-solar-terms.ts --write)이 오염된 값을 들여오는 사고 방지 —
+  // 실제로 KASI 원본에 "17:60" 같은 불법 시각, +1일 어긋난 날짜가 존재했다.
+  it("전 연도 무결성: 24개 항목, 유효한 시각, 연내 단조 증가", () => {
+    for (const [year, terms] of Object.entries(SOLAR_TERMS)) {
+      expect(terms, `${year}년 항목 수`).toHaveLength(24);
+      let prev = -Infinity;
+      for (const s of terms) {
+        const t = kstStringToInstant(s).getTime();
+        expect(Number.isFinite(t), `${year}년 파싱 불가 값: ${s}`).toBe(true);
+        expect(t, `${year}년 순서 역전: ${s}`).toBeGreaterThan(prev);
+        prev = t;
+      }
+    }
   });
 });
