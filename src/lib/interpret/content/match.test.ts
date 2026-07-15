@@ -48,6 +48,27 @@ describe("궁합 해석 조립 (P7)", () => {
     }
   });
 
+  it("scoreLine 경계가 실제 점수 분포와 맞물린다 — 실조합으로 네 구간 전부 도달", () => {
+    // 1년치 상대 생일 × 모드 × MBTI(시너지 0/5/미입력)를 쓸어 실제 점수 분포를 만든다.
+    const lines = new Set<string>();
+    let min = 101;
+    let max = -1;
+    for (let i = 0; i < 366; i += 2) {
+      const birthDate = new Date(Date.UTC(2000, 0, 1 + i)).toISOString().slice(0, 10);
+      for (const mode of MATCH_MODES) {
+        for (const mbti of ["ISTP", "ENFJ", undefined] as const) {
+          const m = computeMatch({ ...me, dayGanzhi: "갑자" }, { birthDate, mbti }, mode);
+          lines.add(scoreLine(m.score));
+          min = Math.min(min, m.score);
+          max = Math.max(max, m.score);
+        }
+      }
+    }
+    expect(lines.size).toBe(4); // 죽은 구간 없음 — 네 문구 모두 실제로 나온다
+    expect(min).toBeLessThan(65); // 최저 조합(단련·다름·시너지0·충)이 첫 구간에 닿고
+    expect(max).toBeGreaterThanOrEqual(90); // 최고 조합(채움·닮음·시너지5)이 끝 구간에 닿는다
+  });
+
   it("bondText — 합·충 전 갈래 문구 존재 + 톤 통과, 없으면 빈 문자열", () => {
     const cases = [
       { stemCombine: true, branchBond: null },

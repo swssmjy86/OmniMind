@@ -40,7 +40,7 @@ export async function saveProfile(
       gender: input.gender ?? undefined,
     });
 
-    const { error: upErr } = await supabase.from("profiles").upsert({
+    const row = {
       user_id: user.id,
       nickname: input.nickname,
       birth_date: input.birthDate,
@@ -50,7 +50,15 @@ export async function saveProfile(
       mbti: input.mbti,
       profile_context: context,
       updated_at: new Date().toISOString(),
-    });
+    };
+    // 성별은 0006 마이그레이션 이후에만 존재하는 컬럼 — 실패 시 없이 재시도(방어).
+    // 대운 자체는 profile_context에 이미 담겨 있어 컬럼이 없어도 기능은 온전하다.
+    let upErr = input.gender
+      ? (await supabase.from("profiles").upsert({ ...row, gender: input.gender })).error
+      : (await supabase.from("profiles").upsert(row)).error;
+    if (upErr && input.gender) {
+      upErr = (await supabase.from("profiles").upsert(row)).error;
+    }
     if (upErr) return { saved: false, reason: upErr.message };
 
     const sections = assembleProfile(context, input.nickname);

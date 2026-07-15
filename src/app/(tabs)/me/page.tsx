@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { currentDaeun } from "@/lib/engine/daeun";
+import { daeunSeasonText } from "@/lib/interpret/content/daeun";
 import { toKstParts } from "@/lib/engine/kst";
 import { assembleProfile } from "@/lib/interpret/templates";
 import { cardQuery } from "@/lib/share/card-copy";
@@ -95,8 +96,8 @@ export default async function MePage() {
           </h2>
           <p className="mt-2 leading-relaxed text-text-main">
             지금 당신은 <span className="font-medium">{seasonCard.ganzhi}</span> 대운을 지나고
-            있어요 — {seasonCard.fromAge}세부터 {seasonCard.toAge}세까지, 10년의 큰 계절이에요.
-            계절이 바뀌듯 운도 천천히 흐르니, 이 시기의 결을 믿고 걸어가 보아요.
+            있어요 — {seasonCard.fromAge}세부터 {seasonCard.toAge}세까지, 10년의 큰 계절이에요.{" "}
+            {daeunSeasonText(seasonCard.ganzhi)}
           </p>
         </section>
       )}
