@@ -1,6 +1,6 @@
 import type { EngineInput, FourPillars } from "./types";
 import { HEAVENLY_STEMS, EARTHLY_BRANCHES, ELEMENTS, stemElement, stemYang } from "./constants";
-import { computePillars } from "./pillars";
+import { computePillars, resolveBirthInstant } from "./pillars";
 import { elementDistribution, type ElementDistribution } from "./elements";
 import { computeDaeun, type Daeun, type Gender } from "./daeun";
 import { tenGods, type TenGodChart } from "./ten-gods";
@@ -52,8 +52,11 @@ export function computeProfile(input: EngineInput): ProfileContext {
   if (!isMbti(input.mbti)) throw new Error(`MBTI 오류: ${input.mbti}`);
   if (!isBloodType(input.bloodType)) throw new Error(`혈액형 오류: ${input.bloodType}`);
 
-  const instant = parseKstInstant(input);
-  const fp: FourPillars = computePillars(instant, { timeUnknown: input.timeUnknown });
+  const rawInstant = parseKstInstant(input);
+  const fp: FourPillars = computePillars(rawInstant, { timeUnknown: input.timeUnknown });
+  // 대운도 4주와 같은 시각을 봐야 한다 — 기록 벽시계(raw)를 그대로 넘기면 서머타임·표준시
+  // 보정이 빠져 절입까지의 거리가 최대 1시간 어긋난다(대운수가 뒤집힐 수 있다).
+  const birthInstant = resolveBirthInstant(rawInstant, input.timeUnknown);
   const [, mo, d] = input.birthDate.split("-").map(Number);
 
   const dm = fp.day.stem;
@@ -75,9 +78,9 @@ export function computeProfile(input: EngineInput): ProfileContext {
     zodiac: zodiacSign(mo, d),
     mbti: mbtiTrait(input.mbti),
     blood: bloodTrait(input.bloodType),
-    // 성별을 알면 대운까지 — 시 미상이어도 그날 기준 근사(대운수 오차 미미)
+    // 성별을 알면 대운까지 — 시 미상이어도 그날 정오 기준 근사(대운수 오차 미미)
     ...(input.gender
-      ? { gender: input.gender, daeun: computeDaeun(instant, fp, input.gender) }
+      ? { gender: input.gender, daeun: computeDaeun(birthInstant, fp, input.gender) }
       : {}),
     meta: { timeUnknown: input.timeUnknown },
   };

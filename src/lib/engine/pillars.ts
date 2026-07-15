@@ -1,7 +1,7 @@
 import type { Pillar, FourPillars } from "./types";
 import { sexagenary } from "./constants";
 import { resolveMonth } from "./solar-terms";
-import { applyDst } from "./dst";
+import { toTrueInstant } from "./clock";
 import { toKstParts, kstPartsToInstant, type KstParts } from "./kst";
 
 // ─────────────────────────────────────────────────────────────
@@ -85,33 +85,32 @@ export function hourPillar(instant: Date): Pillar {
 }
 
 /**
- * 통합: DST 보정 → 4주 산출. 출생시간 미상이면 hour=null,
- * 일주는 경계(23시)를 피하도록 그날 정오 기준으로 계산.
+ * 기록된 출생 벽시계 → 사주를 세울 절대 instant. 사주의 모든 갈래(4주·대운)가 이 한 시각을 쓴다.
+ *
+ * - 시간을 알면: 역사적 시계 보정(서머타임 −1h, 표준시 오프셋 +30m)만 되돌린다.
+ * - 시간 미상이면: 그날 정오를 쓴다. 입력은 00:00으로 들어오는데 그대로 보정하면
+ *   −1h가 전날로 밀어 일주가 하루 어긋난다. 정오는 어느 보정에도 같은 날에 머물고,
+ *   하루의 중간이라 대운수 근사 오차도 가장 작다.
+ */
+export function resolveBirthInstant(rawInstant: Date, timeUnknown: boolean): Date {
+  if (!timeUnknown) return toTrueInstant(rawInstant);
+  const p = toKstParts(rawInstant); // 날짜는 '기록된' 출생일 기준
+  const noon: KstParts = { y: p.y, mo: p.mo, d: p.d, h: 12, mi: 0 };
+  return toTrueInstant(kstPartsToInstant(noon));
+}
+
+/**
+ * 통합: 역사적 시계 보정(서머타임·표준시 오프셋) → 4주 산출. 출생시간 미상이면 hour=null.
  */
 export function computePillars(
   rawInstant: Date,
   opts: { timeUnknown: boolean },
 ): FourPillars {
-  const instant = applyDst(rawInstant); // 서머타임 구간이면 −1h
-
-  if (opts.timeUnknown) {
-    // 날짜는 입력된 출생일(raw) 기준으로 잡는다 — 시간 미상은 00:00으로 들어오므로
-    // DST −1h를 먼저 적용하면 전날로 밀려 일주가 하루 어긋난다. 정오로 옮긴 뒤
-    // DST를 적용하면(정오−1h=11시) 같은 날 안에 머물러 년·월·일주가 안전하다.
-    const p = toKstParts(rawInstant);
-    const noon: KstParts = { y: p.y, mo: p.mo, d: p.d, h: 12, mi: 0 };
-    const noonInstant = applyDst(kstPartsToInstant(noon));
-    return {
-      year: yearPillar(noonInstant),
-      month: monthPillar(noonInstant),
-      day: dayPillar(noonInstant),
-      hour: null,
-    };
-  }
+  const instant = resolveBirthInstant(rawInstant, opts.timeUnknown);
   return {
     year: yearPillar(instant),
     month: monthPillar(instant),
     day: dayPillar(instant),
-    hour: hourPillar(instant),
+    hour: opts.timeUnknown ? null : hourPillar(instant),
   };
 }
