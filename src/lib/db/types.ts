@@ -43,6 +43,21 @@ export interface ConnectionRow {
   accepted_at: string | null;
 }
 
+/** P7-3 결제 기록 — 쓰기는 service role 전용(0007), 클라이언트는 본인 행 조회만. */
+export interface PaymentRow {
+  id: string;
+  user_id: string;
+  order_id: string;
+  payment_key: string | null;
+  amount: number;
+  status: "pending" | "done" | "failed";
+  raw: Record<string, unknown> | null;
+  created_at: string;
+  approved_at: string | null;
+  /** 이 주문으로 연장된 premium_until. done인데 null이면 부여 누락 — 재확인 시 자가 복구. */
+  granted_until: string | null;
+}
+
 export interface ChatMessageRow {
   id: string;
   user_id: string;
