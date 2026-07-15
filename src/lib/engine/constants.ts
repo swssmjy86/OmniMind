@@ -10,6 +10,13 @@ const STEM_ELEMENT: readonly ElementIndex[] = [0,0,1,1,2,2,3,3,4,4];
 const BRANCH_ELEMENT: readonly ElementIndex[] = [4,2,0,0,2,1,1,2,3,3,2,4];
 // 지지 지장간 정기(대표 천간): 자癸 축己 인甲 묘乙 진戊 사丙 오丁 미己 신庚 유辛 술戊 해壬
 const BRANCH_PRIMARY_STEM: readonly number[] = [9,5,0,1,4,2,3,5,6,7,4,8];
+// 지지 지장간 전체(여기→중기→정기 순, 표준 월률분야):
+// 자[임계] 축[계신기] 인[무병갑] 묘[갑을] 진[을계무] 사[무경병]
+// 오[병기정] 미[정을기] 신[무임경] 유[경신] 술[신정무] 해[무갑임]
+const BRANCH_HIDDEN_STEMS: readonly (readonly number[])[] = [
+  [8, 9], [9, 7, 5], [4, 2, 0], [0, 1], [1, 9, 4], [4, 6, 2],
+  [2, 5, 3], [3, 1, 5], [4, 8, 6], [6, 7], [7, 3, 4], [4, 0, 8],
+];
 
 /** 양(陽)=true. 천간·지지 모두 짝수 인덱스가 양. (지지는 자인진오신술=양) */
 export const isYang = (index: number): boolean => index % 2 === 0;
@@ -19,6 +26,9 @@ export const stemYang = (stem: number): boolean => isYang(stem);
 export const branchElement = (branch: number): ElementIndex => BRANCH_ELEMENT[branch];
 export const branchYang = (branch: number): boolean => isYang(branch);
 export const branchPrimaryStem = (branch: number): number => BRANCH_PRIMARY_STEM[branch];
+/** 지장간 전체(여기→중기→정기 순). 마지막 원소 = 정기(branchPrimaryStem과 일치). */
+export const branchHiddenStems = (branch: number): readonly number[] =>
+  BRANCH_HIDDEN_STEMS[branch];
 
 /** 60갑자 인덱스(0~59) → {stem, branch}. 갑자=0 */
 export const sexagenary = (index: number) => {

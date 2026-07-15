@@ -1,4 +1,5 @@
 import type { ChatInput, InterpretProvider } from "./provider";
+import { dominantCategory } from "./content/ten-gods";
 
 // Gemini 무료티어 Provider(1단계). REST 직접 호출(SDK 의존 없음). 서버 전용.
 // 키 없음/오류 시 throw → 상위 폴백 체인이 템플릿으로 대체(설계서 §8).
@@ -16,6 +17,10 @@ function systemPrompt(input: ChatInput): string {
     "- 2~4문장으로 짧고 다정하게.",
     `상대의 이름: ${input.nickname}`,
     `상대의 결: 일간 ${p.dayMaster.stem}(${p.dayMaster.element}), 강한 오행 ${p.elements.dominant}, 별자리 ${p.zodiac}, MBTI ${p.mbti.type}.`,
+    // 사주 전체 맥락 — 네 기둥·옅은 오행·십성 갈래까지 알고 대화한다(토큰 소폭).
+    `사주 네 기둥: 년 ${p.pillars.year} · 월 ${p.pillars.month} · 일 ${p.pillars.day} · 시 ${p.pillars.hour ?? "미상"}.`,
+    `옅은 오행: ${p.elements.lacking.length ? p.elements.lacking.join("·") : "없음"} / 두드러진 십성 갈래: ${dominantCategory(p.tenGods)}.`,
+    ...(p.daeun ? [`지금의 큰 흐름: ${p.daeun.direction} 대운, ${p.daeun.startAge}세 시작.`] : []),
   ].join("\n");
 }
 

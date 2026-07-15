@@ -14,6 +14,8 @@ export interface CreateProfileInput {
   timeUnknown: boolean;
   bloodType: BloodType;
   mbti: Mbti;
+  /** 선택 — 있으면 대운까지 계산해 profile_context에 담는다 */
+  gender?: "male" | "female" | null;
 }
 
 /**
@@ -35,6 +37,7 @@ export async function saveProfile(
       timeUnknown: input.timeUnknown,
       bloodType: input.bloodType,
       mbti: input.mbti,
+      gender: input.gender ?? undefined,
     });
 
     const { error: upErr } = await supabase.from("profiles").upsert({

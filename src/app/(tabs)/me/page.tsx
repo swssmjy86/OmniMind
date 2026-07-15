@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { currentDaeun } from "@/lib/engine/daeun";
+import { toKstParts } from "@/lib/engine/kst";
 import { assembleProfile } from "@/lib/interpret/templates";
 import { cardQuery } from "@/lib/share/card-copy";
 import SajuChart from "@/components/profile/SajuChart";
@@ -65,8 +67,17 @@ export default async function MePage() {
 
   const ctx = profile.profile_context;
 
+  // 운의 계절(대운) — 성별을 알 때만. 만 나이 근사(햇수 나이 - 1 보정 없이 연 단위).
+  let seasonCard: { ganzhi: string; fromAge: number; toAge: number } | null = null;
+  if (ctx.daeun) {
+    const t = toKstParts(new Date());
+    const birthYear = Number(profile.birth_date.slice(0, 4));
+    const age = Math.max(0, t.y - birthYear);
+    seasonCard = currentDaeun(ctx.daeun, age);
+  }
+
   return (
-    <main className="p-6 pb-24">
+    <main className="fade-rise p-6 pb-24">
       <p className="text-text-soft">온전한 나</p>
       <h1 className="mt-1 font-[family-name:var(--font-serif-kr)] text-3xl text-primary-green">
         {profile.nickname}님의 이야기
@@ -75,6 +86,39 @@ export default async function MePage() {
       <div className="mt-6">
         <SajuChart ctx={ctx} />
       </div>
+
+      {/* 운의 계절 — 10년 단위 큰 흐름(대운) */}
+      {seasonCard && (
+        <section className="mt-4 rounded-card bg-warm-surface p-5">
+          <h2 className="font-[family-name:var(--font-serif-kr)] text-lg text-primary-green">
+            운의 계절
+          </h2>
+          <p className="mt-2 leading-relaxed text-text-main">
+            지금 당신은 <span className="font-medium">{seasonCard.ganzhi}</span> 대운을 지나고
+            있어요 — {seasonCard.fromAge}세부터 {seasonCard.toAge}세까지, 10년의 큰 계절이에요.
+            계절이 바뀌듯 운도 천천히 흐르니, 이 시기의 결을 믿고 걸어가 보아요.
+          </p>
+        </section>
+      )}
+      {!seasonCard && ctx.daeun && (
+        <section className="mt-4 rounded-card bg-warm-surface p-5">
+          <h2 className="font-[family-name:var(--font-serif-kr)] text-lg text-primary-green">
+            운의 계절
+          </h2>
+          <p className="mt-2 leading-relaxed text-text-main">
+            당신의 첫 대운은 {ctx.daeun.startAge}세에 시작돼요. 아직은 타고난 결이 자라나는
+            계절이에요.
+          </p>
+        </section>
+      )}
+      {!ctx.daeun && (
+        <p className="mt-4 rounded-card bg-warm-surface p-4 text-sm text-text-soft">
+          성별을 알려주시면 10년 단위 운의 흐름(대운)까지 읽어드려요 —{" "}
+          <Link href="/onboarding" className="underline">
+            이야기 다시 잇기
+          </Link>
+        </p>
+      )}
 
       <div className="mt-6 space-y-4">
         {sections.map((s) => (

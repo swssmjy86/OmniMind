@@ -1,5 +1,8 @@
 import type { ProfileContext } from "@/lib/engine";
-import { HEAVENLY_STEMS, EARTHLY_BRANCHES, ELEMENTS, stemElement, branchElement } from "@/lib/engine/constants";
+import {
+  HEAVENLY_STEMS, EARTHLY_BRANCHES, ELEMENTS,
+  stemElement, branchElement, branchHiddenStems,
+} from "@/lib/engine/constants";
 
 // 한자 표기 — 전통 명식표 느낌.
 const STEM_HANJA: Record<string, string> = {
@@ -25,6 +28,12 @@ function stemEl(ch: string): string {
 function branchEl(ch: string): string {
   const i = EARTHLY_BRANCHES.indexOf(ch as (typeof EARTHLY_BRANCHES)[number]);
   return i >= 0 ? ELEMENTS[branchElement(i)] : "토";
+}
+/** 지지 글자 → 지장간(여기·중기·정기) 한글 나열 "무·병·갑" */
+function hiddenStemsOf(branchCh: string): string {
+  const i = EARTHLY_BRANCHES.indexOf(branchCh as (typeof EARTHLY_BRANCHES)[number]);
+  if (i < 0) return "";
+  return branchHiddenStems(i).map((s) => HEAVENLY_STEMS[s]).join("·");
 }
 
 function GanjiCell({ ch, hanja, el }: { ch: string; hanja: string; el: string }) {
@@ -84,10 +93,24 @@ export default function SajuChart({ ctx }: { ctx: ProfileContext }) {
         )}
       </div>
 
+      {/* 지장간 (여기·중기·정기) — 전통 명식표 관행 */}
+      <div className="mt-1 grid grid-cols-4 gap-2 text-center text-[10px] text-text-soft/80">
+        {cols.map((c) => (
+          <div key={c.label}>{c.pillar ? hiddenStemsOf(c.pillar[1]) : ""}</div>
+        ))}
+      </div>
+
       {/* 지지 십성 */}
       <div className="mt-1 grid grid-cols-4 gap-2 text-center text-[10px] text-text-soft">
         {cols.map((c) => <div key={c.label}>{c.pillar ? c.branchGod : ""}</div>)}
       </div>
+
+      {/* 시주 미상 안내 */}
+      {!ctx.pillars.hour && (
+        <p className="mt-3 text-center text-[11px] text-text-soft">
+          태어난 시간을 알게 되면, 비어 있는 두 글자(시주)도 채워드려요.
+        </p>
+      )}
 
       {/* 오행 분포 */}
       <div className="mt-4 flex items-center justify-between gap-1.5">

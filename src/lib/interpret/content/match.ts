@@ -60,11 +60,14 @@ const MODE_CLOSING: Record<MatchMode, string> = {
     "함께 일할 땐 서로의 강점에 기대보아요. 역할의 결을 나누고 나면, 이 조합은 생각보다 큰 일을 해낼 수 있어요.",
 };
 
-/** 점수 → 따뜻한 온도 표현(서열화 없이). */
+/**
+ * 점수 → 따뜻한 온도 표현(서열화 없이).
+ * 실제 점수 분포(약 54~100, 합충·보완 반영)에 맞춘 경계 — 모든 구간이 도달 가능하다.
+ */
 export function scoreLine(score: number): string {
-  if (score >= 85) return "함께 있을 때 서로가 더 커지는, 보기 드문 결이에요.";
-  if (score >= 70) return "결이 잘 스며드는, 편안하고 든든한 조합이에요.";
-  if (score >= 55) return "서로 다른 결이 리듬을 맞춰가는, 자라나는 조합이에요.";
+  if (score >= 90) return "함께 있을 때 서로가 더 커지는, 보기 드문 결이에요.";
+  if (score >= 78) return "결이 잘 스며드는, 편안하고 든든한 조합이에요.";
+  if (score >= 65) return "서로 다른 결이 리듬을 맞춰가는, 자라나는 조합이에요.";
   return "낯선 결이 만나 서로의 세계를 넓혀주는 조합이에요.";
 }
 
@@ -103,12 +106,12 @@ export function assembleDeepMatch(input: {
       body: `${myName}님과 ${partnerName}님, 두 분의 온도는 ${match.score}°예요. ${scoreLine(match.score)}`,
     },
     {
-      title: "기운의 결",
+      title: "기운의 흐름",
       body: `${myName}님은 ${myElement}(${match.myDayGanzhi}), ${partnerName}님은 ${match.partner.element}(${match.partner.dayGanzhi})의 기운이에요. ${RELATION_TEXT[match.elementRelation]}${bond ? ` ${bond}` : ""}`,
     },
     { title: "서로를 채우는 조각", body: complementText(match.complement) },
     { title: "별이 말하길", body: HARMONY_TEXT[match.zodiacHarmony] },
-    { title: "마음의 결", body: synergyText(match.mbtiSynergy) },
+    { title: "마음이 만나는 자리", body: synergyText(match.mbtiSynergy) },
     { title: `${match.mode}로서 함께할 때`, body: MODE_CLOSING[match.mode] },
   ];
 }
@@ -124,11 +127,11 @@ export function assembleMatch(input: MatchAssembleInput): InterpretationSection[
       body: `${who}상대의 조합, 우리의 온도는 ${match.score}°예요. ${scoreLine(match.score)}`,
     },
     {
-      title: "기운의 결",
+      title: "기운의 흐름",
       body: `당신은 ${myElement}, 상대는 ${match.partner.element}(${match.partner.dayGanzhi})의 기운이에요. ${RELATION_TEXT[match.elementRelation]}${bond ? ` ${bond}` : ""}`,
     },
     { title: "별이 말하길", body: HARMONY_TEXT[match.zodiacHarmony] },
-    { title: "마음의 결", body: synergyText(match.mbtiSynergy) },
+    { title: "마음이 만나는 자리", body: synergyText(match.mbtiSynergy) },
     { title: `${match.mode}로서 함께할 때`, body: MODE_CLOSING[match.mode] },
   ];
 }

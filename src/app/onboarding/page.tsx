@@ -27,7 +27,7 @@ export default function OnboardingPage() {
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<Draft>({
     nickname: "", birthDate: "", birthTime: "", timeUnknown: false,
-    bloodType: null, mbti: null,
+    bloodType: null, mbti: null, gender: null,
   });
   const [result, setResult] = useState<Result | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -43,6 +43,7 @@ export default function OnboardingPage() {
         timeUnknown: d.timeUnknown,
         bloodType: d.bloodType!,
         mbti: d.mbti!,
+        gender: d.gender ?? undefined,
       });
       const nickname = d.nickname.trim() || "당신";
       const sections = assembleProfile(ctx, nickname);
@@ -59,6 +60,7 @@ export default function OnboardingPage() {
         timeUnknown: d.timeUnknown,
         bloodType: d.bloodType!,
         mbti: d.mbti!,
+        gender: d.gender ?? null,
       }).then((r) => {
         if (r.saved) {
           clearDraft();
@@ -152,6 +154,24 @@ export default function OnboardingPage() {
               />
               태어난 시간을 몰라요
             </label>
+
+            <label className="mt-5 mb-2 block text-sm text-text-soft">
+              성별 (알려주시면 10년 단위 운의 흐름까지 읽어드려요)
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <Choice
+                selected={draft.gender === "male"}
+                onClick={() => set({ gender: draft.gender === "male" ? null : "male" })}
+              >
+                남성
+              </Choice>
+              <Choice
+                selected={draft.gender === "female"}
+                onClick={() => set({ gender: draft.gender === "female" ? null : "female" })}
+              >
+                여성
+              </Choice>
+            </div>
           </Field>
         )}
 

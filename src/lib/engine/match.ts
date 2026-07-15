@@ -117,7 +117,8 @@ export function partnerFromBirth(birthDate: string): {
 const RELATION_POINTS: Record<DailyRelation, number> = {
   채움: 13, 발산: 13, 동행: 10, 결실: 7, 단련: 7,
 };
-const HARMONY_POINTS: Record<ZodiacHarmony, number> = { 어울림: 12, 닮음: 10, 다름: 6 };
+// 점성 관행: 같은 원소(트라인)가 가장 조화롭고, 상생 짝(섹스타일)이 그다음.
+const HARMONY_POINTS: Record<ZodiacHarmony, number> = { 닮음: 12, 어울림: 10, 다름: 6 };
 
 /** 두 일주 간지("갑자")의 인연 — 천간합·일지 육합/충. 대칭 함수. */
 export function computeBond(aGanzhi: string, bGanzhi: string): MatchBond | null {

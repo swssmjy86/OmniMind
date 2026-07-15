@@ -11,15 +11,22 @@ const ELEMENT_TRAIT: Record<string, string> = {
 
 /**
  * 여덟 글자의 오행 분포를 실제 개수와 형태로 서술한다.
- * 지배 오행의 짙기 + 성향 + 옅은 오행을 '여백'으로 다정하게 안내.
+ * 지배 오행(월지 득령 가중)의 짙기 + 성향 + 옅은 오행을 '여백'으로 다정하게 안내.
+ * 동률이면 "나란히 흐른다"로 — 임의로 한쪽을 단정하지 않는다(명리적 정직함).
  */
 export function ELEMENT_BALANCE_TEXT(el: ProfileContext["elements"]): string {
   const strong = el.dominant;
-  const n = el.counts[strong];
+  const co = el.coDominant ?? [strong]; // 구버전 캐시(coDominant 없음) 호환
   const trait = ELEMENT_TRAIT[strong];
-  let s = `당신의 여덟 글자에는 ${strong}의 기운이 ${n}개로 가장 짙게 흐르고 있어요. ${trait}`;
+  let s: string;
+  if (co.length > 1) {
+    s = `당신의 여덟 글자에는 ${co.join("·")}의 기운이 나란히 짙게 흐르고 있어요. 그중에서도 태어난 계절의 흐름을 타는 ${strong}의 기운을 보면 — ${trait}`;
+  } else {
+    const n = el.counts[strong];
+    s = `당신의 여덟 글자에는 ${strong}의 기운이 ${n}개로 가장 짙게 흐르고 있어요. ${trait}`;
+  }
   if (el.lacking.length) {
-    s += ` ${el.lacking.join("·")}의 결은 옅은 편인데, 모자람이라기보다 앞으로 천천히 채워갈 여백이라 생각하면 마음이 한결 가벼워져요.`;
+    s += ` ${el.lacking.join("·")}의 기운은 옅은 편인데, 모자람이라기보다 앞으로 천천히 채워갈 여백이라 생각하면 마음이 한결 가벼워져요.`;
   } else {
     s += ` 다섯 기운이 크게 치우치지 않아, 어느 자리에서도 당신다운 균형을 지켜가는 편이고요.`;
   }

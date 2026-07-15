@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   HEAVENLY_STEMS, EARTHLY_BRANCHES, stemElement, branchElement,
-  isYang, sexagenary, generates, controls, branchPrimaryStem,
+  isYang, sexagenary, generates, controls, branchPrimaryStem, branchHiddenStems,
   stemsCombine, branchesSixCombine, branchesClash,
 } from "./constants";
 
@@ -32,6 +32,18 @@ describe("천간·지지 상수", () => {
   it("지장간 정기: 자→계, 인→갑", () => {
     expect(branchPrimaryStem(0)).toBe(9);
     expect(branchPrimaryStem(2)).toBe(0);
+  });
+  it("지장간 전체: 마지막 원소(정기)가 branchPrimaryStem과 항상 일치", () => {
+    for (let b = 0; b < 12; b++) {
+      const hidden = branchHiddenStems(b);
+      expect(hidden.length).toBeGreaterThanOrEqual(2);
+      expect(hidden.length).toBeLessThanOrEqual(3);
+      expect(hidden[hidden.length - 1]).toBe(branchPrimaryStem(b));
+    }
+    // 대표 검증: 인[무병갑], 오[병기정], 유[경신]
+    expect(branchHiddenStems(2)).toEqual([4, 2, 0]);
+    expect(branchHiddenStems(6)).toEqual([2, 5, 3]);
+    expect(branchHiddenStems(9)).toEqual([6, 7]);
   });
 });
 

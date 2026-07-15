@@ -38,3 +38,23 @@ body {
   color: var(--text-main);
   font-family: var(--font-sans);
 }
+
+/* 페이지 콘텐츠가 부드럽게 스며드는 전환 (§5.3 무드 — 로그인 전후 화면 전환 등) */
+@keyframes fade-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.fade-rise {
+  animation: fade-rise 0.45s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fade-rise {
+    animation: none;
+  }
+}

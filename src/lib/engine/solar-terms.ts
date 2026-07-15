@@ -27,6 +27,28 @@ export function termInstant(year: number, orderIndex: number): Date {
 export const ipchunInstant = (year: number): Date => termInstant(year, 2);
 
 /**
+ * 주어진 instant의 직전·다음 절입(12절) 시각 — 대운수 계산용.
+ * 순행 대운수 = 다음 절입까지 일수/3, 역행 = 직전 절입부터 일수/3.
+ */
+export function adjacentMonthNodes(instant: Date): { prev: Date; next: Date } {
+  const kstYear = toKstParts(instant).y;
+  const t = instant.getTime();
+  const times: number[] = [];
+  for (const yy of [kstYear - 1, kstYear, kstYear + 1]) {
+    if (yy < YEAR_MIN || yy > YEAR_MAX) continue;
+    for (const termIdx of MONTH_NODE_TERMS) times.push(termInstant(yy, termIdx).getTime());
+  }
+  times.sort((a, b) => a - b);
+  let prev = times[0];
+  let next = times[times.length - 1];
+  for (const at of times) {
+    if (at <= t) prev = at;
+    if (at > t) { next = at; break; }
+  }
+  return { prev: new Date(prev), next: new Date(next) };
+}
+
+/**
  * 주어진 instant가 속한 사주 '월'의 월지와, 그 월이 귀속되는 절기해(년주 기준 해).
  * monthBranch: 0~11(지지), solarYear: 입춘 기준 조정 연도.
  */

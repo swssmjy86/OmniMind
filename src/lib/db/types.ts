@@ -12,6 +12,8 @@ export interface ProfileRow {
   profile_context: ProfileContext;
   /** P7 프리미엄 — 구독 만료 시각(0004 마이그레이션 전이거나 무료면 null/undefined). */
   premium_until?: string | null;
+  /** P8 대운 — 성별(선택). 0006 마이그레이션 전이거나 미입력이면 null/undefined. */
+  gender?: string | null;
   created_at: string;
   updated_at: string;
 }

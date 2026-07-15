@@ -2,6 +2,7 @@ import type { EngineInput, FourPillars } from "./types";
 import { HEAVENLY_STEMS, EARTHLY_BRANCHES, ELEMENTS, stemElement, stemYang } from "./constants";
 import { computePillars } from "./pillars";
 import { elementDistribution, type ElementDistribution } from "./elements";
+import { computeDaeun, type Daeun, type Gender } from "./daeun";
 import { tenGods, type TenGodChart } from "./ten-gods";
 import { zodiacSign, type ZodiacSign } from "./zodiac";
 import { mbtiTrait, isMbti, type MbtiTrait } from "./mbti";
@@ -20,6 +21,9 @@ interface ProfileContext {
   zodiac: ZodiacSign;
   mbti: MbtiTrait;
   blood: BloodTrait;
+  /** 성별을 알 때만 — 10년 단위 운의 흐름(대운) */
+  daeun?: Daeun;
+  gender?: Gender;
   meta: { timeUnknown: boolean };
 }
 
@@ -71,6 +75,10 @@ export function computeProfile(input: EngineInput): ProfileContext {
     zodiac: zodiacSign(mo, d),
     mbti: mbtiTrait(input.mbti),
     blood: bloodTrait(input.bloodType),
+    // 성별을 알면 대운까지 — 시 미상이어도 그날 기준 근사(대운수 오차 미미)
+    ...(input.gender
+      ? { gender: input.gender, daeun: computeDaeun(instant, fp, input.gender) }
+      : {}),
     meta: { timeUnknown: input.timeUnknown },
   };
 }

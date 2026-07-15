@@ -11,6 +11,8 @@ export interface Draft {
   timeUnknown: boolean;
   bloodType: BloodType | null;
   mbti: Mbti | null;
+  /** 선택 — 있으면 대운(10년 흐름)까지 계산. 구버전 draft 호환을 위해 optional */
+  gender?: "male" | "female" | null;
 }
 
 export const DRAFT_KEY = "om_onboarding_draft";
@@ -44,7 +46,8 @@ export function loadDraft(): Draft | null {
       typeof d.birthTime !== "string" ||
       typeof d.timeUnknown !== "boolean" ||
       (d.bloodType !== null && !isBloodType(String(d.bloodType))) ||
-      (d.mbti !== null && !isMbti(String(d.mbti)))
+      (d.mbti !== null && !isMbti(String(d.mbti))) ||
+      (d.gender != null && d.gender !== "male" && d.gender !== "female")
     )
       return null;
     return d as Draft;

@@ -27,4 +27,6 @@ export interface EngineInput {
   timeUnknown: boolean;
   bloodType: BloodType;
   mbti: Mbti;
+  /** 선택 — 있으면 대운(10년 단위 운의 흐름)까지 계산한다 */
+  gender?: "male" | "female";
 }
