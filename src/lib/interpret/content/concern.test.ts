@@ -20,6 +20,7 @@ const daily = (relation: DailyRelation | null): DailyContext => ({
   element: "목",
   elementIndex: 0,
   relation,
+  tenGod: null,
 });
 
 describe("고민 조언 조립 (P6)", () => {

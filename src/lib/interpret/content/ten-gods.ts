@@ -25,6 +25,16 @@ const THEME: Record<TenGodCategory, string> = {
     "당신은 받아들이고 곱씹는 힘이 깊어요. 배움을 즐기고, 서두르기보다 안으로 새기며 자기만의 깊이를 쌓아가는 사람이죠. 그 차분한 사색이 흔들릴 때마다 당신을 붙들어주는 든든한 심지가 되어줘요.",
 };
 
+// 문장 조립용 명사구 — "…님에게는 ○○이 있어요" 꼴에 끼워도 문법이 깨지지 않도록
+// 주어 없이, 전부 '힘'으로 끝나는 형태를 유지한다(조사 '이' 고정).
+const STRENGTH: Record<TenGodCategory, string> = {
+  비겁: "스스로 서고자 하는 곧은 힘",
+  식상: "마음속 이야기를 꺼내 빚어내는 힘",
+  재성: "바라는 바를 손에 잡히는 결실로 바꿔내는 힘",
+  관성: "맡은 자리를 끝까지 지켜내는 힘",
+  인성: "받아들이고 곱씹어 깊이를 쌓는 힘",
+};
+
 /** 사주 차트에서 가장 많이 나타난 십성 갈래. */
 export function dominantCategory(chart: TenGodChart): TenGodCategory {
   const counts: Record<TenGodCategory, number> = { 비겁: 0, 식상: 0, 재성: 0, 관성: 0, 인성: 0 };
@@ -43,4 +53,9 @@ export function dominantCategory(chart: TenGodChart): TenGodCategory {
 /** '타고난 재능과 관계' 섹션 본문. */
 export function tenGodTheme(chart: TenGodChart): string {
   return THEME[dominantCategory(chart)];
+}
+
+/** 조립용 명사구("…힘"). "○○님에게는 ${tenGodStrength(chart)}이 있어요" 꼴로 사용. */
+export function tenGodStrength(chart: TenGodChart): string {
+  return STRENGTH[dominantCategory(chart)];
 }

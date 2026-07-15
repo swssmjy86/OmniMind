@@ -28,6 +28,7 @@ export default async function HomePage() {
   const daily = computeDaily(
     { y: todayKst.y, mo: todayKst.mo, d: todayKst.d },
     profile?.profile_context.dayMaster.element,
+    profile?.profile_context.dayMaster.stem, // 십성(비견~정인)까지 세밀 개인화
   );
   const guide = assembleDaily(daily, profile?.nickname);
 

@@ -1,7 +1,7 @@
 import type { ProfileContext } from "@/lib/engine";
 import type { DailyContext, DailyRelation } from "@/lib/engine/daily";
 import type { InterpretationSection } from "../types";
-import { tenGodTheme } from "./ten-gods";
+import { tenGodStrength } from "./ten-gods";
 
 // P6 의사결정 도우미 — 고민 카테고리별 조언 조립(템플릿, 항상 동작). §5.4 문체.
 
@@ -50,7 +50,7 @@ export interface ConcernInput {
 /** 고민 조언 조립 — 공감 → 오늘의 기운 → 타고난 결 → 방향 제안. */
 export function assembleConcern(input: ConcernInput): InterpretationSection[] {
   const { profile, daily, category, nickname } = input;
-  const talent = tenGodTheme(profile.tenGods).split(".")[0];
+  const strength = tenGodStrength(profile.tenGods); // "…힘" 명사구
   const relationLine = daily.relation
     ? RELATION_HINT[daily.relation]
     : "오늘의 기운을 가만히 느끼며, 마음의 속도에 맞춰 가요.";
@@ -63,7 +63,7 @@ export function assembleConcern(input: ConcernInput): InterpretationSection[] {
     },
     {
       title: "당신의 결",
-      body: `${profile.dayMaster.element}의 기운을 타고난 당신에게는 이런 결이 있어요. ${talent}. 이 힘은 고민 앞에서도 당신 편이에요.`,
+      body: `${profile.dayMaster.element}의 기운을 타고난 당신에게는 ${strength}이 있어요. 이 힘은 고민 앞에서도 당신 편이에요.`,
     },
     { title: "함께 생각해볼 방향", body: DIRECTION[category] },
   ];

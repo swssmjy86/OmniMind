@@ -4,7 +4,7 @@ import { ZODIAC_TEXT } from "./zodiac";
 import { BLOOD_TEXT } from "./blood";
 import { MBTI_AXIS_TEXT } from "./mbti";
 import { ELEMENT_BALANCE_TEXT } from "./elements";
-import { tenGodTheme, dominantCategory } from "./ten-gods";
+import { tenGodTheme, tenGodStrength, dominantCategory } from "./ten-gods";
 import { mbtiTrait } from "@/lib/engine/mbti";
 import { checkTone } from "../tone-guard";
 import type { TenGodChart } from "@/lib/engine/ten-gods";
@@ -56,6 +56,20 @@ describe("콘텐츠 톤 준수 (§5.4)", () => {
       };
       expect(dominantCategory(chart)).toBeDefined();
       expect(checkTone(tenGodTheme(chart))).toHaveLength(0);
+    }
+  });
+
+  it("십성 힘 명사구 — 주어 없이 '힘'으로 끝나 조립에 안전(이중 주어 회귀 방지)", () => {
+    const gods = ["비견","식신","편재","정관","정인"] as const;
+    for (const g of gods) {
+      const chart: TenGodChart = {
+        yearStem: g, monthStem: g, hourStem: g,
+        yearBranch: g, monthBranch: g, dayBranch: g, hourBranch: g,
+      };
+      const s = tenGodStrength(chart);
+      expect(s.endsWith("힘")).toBe(true); // "…힘이 있어요" 조사 고정
+      expect(s.startsWith("당신")).toBe(false); // "님에게는 당신…" 비문 방지
+      expect(checkTone(s)).toHaveLength(0);
     }
   });
 });

@@ -25,6 +25,36 @@ describe("assembleDaily", () => {
     expect(checkTone(g.personal!)).toHaveLength(0);
   });
 
+  it("같은 오행이라도 천간이 다르면(갑/을) 무드가 다르다 — 이틀 연속 반복 방지", () => {
+    // 2000-01-07 갑자, 2000-01-08 을축 — 둘 다 목이지만 다른 하루여야 한다.
+    const gap = assembleDaily(computeDaily({ y: 2000, mo: 1, d: 7 }));
+    const eul = assembleDaily(computeDaily({ y: 2000, mo: 1, d: 8 }));
+    expect(gap.mind).not.toBe(eul.mind);
+    expect(gap.keyword).not.toBe(eul.keyword);
+  });
+
+  it("일간 천간까지 주면 십성(비견~정인) 개인화가 나오고 톤 통과", () => {
+    // 오늘 갑자(갑): 내 일간 갑 → 비견, 계 → 상관
+    const bi = assembleDaily(computeDaily({ y: 2000, mo: 1, d: 7 }, "목", "갑"));
+    expect(bi.personal).toContain("비견");
+    const sang = assembleDaily(computeDaily({ y: 2000, mo: 1, d: 7 }, "수", "계"));
+    expect(sang.personal).toContain("상관");
+    for (const p of [bi.personal!, sang.personal!]) expect(checkTone(p)).toHaveLength(0);
+  });
+
+  it("십성 10종 개인화 문구가 전부 존재하고 톤 통과", () => {
+    // 내 일간 10종 × 오늘 갑 — 십성 10갈래가 모두 나온다.
+    const stems = ["갑","을","병","정","무","기","경","신","임","계"];
+    const seen = new Set<string>();
+    for (const s of stems) {
+      const g = assembleDaily(computeDaily({ y: 2000, mo: 1, d: 7 }, undefined, s));
+      expect(g.personal).not.toBeNull();
+      expect(checkTone(g.personal!)).toHaveLength(0);
+      seen.add(g.personal!);
+    }
+    expect(seen.size).toBe(10);
+  });
+
   it("dailyToSections는 personal 유무에 따라 4~5섹션", () => {
     const withP = assembleDaily(computeDaily({ y: 2000, mo: 1, d: 7 }, "수"));
     const noP = assembleDaily(computeDaily({ y: 2000, mo: 1, d: 7 }));

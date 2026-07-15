@@ -1,5 +1,5 @@
 import type { ChatInput, InterpretProvider } from "./provider";
-import { tenGodTheme } from "./content/ten-gods";
+import { tenGodStrength } from "./content/ten-gods";
 
 // LLM 없이도 항상 동작하는 규칙 기반 공감 Provider(0단계).
 // 메시지의 결(감정·주제)을 가늠해, 프로필의 기운(일간 오행)을 담아 응답한다. §5.4 문체.
@@ -40,11 +40,11 @@ export class TemplateProvider implements InterpretProvider {
   async chat(input: ChatInput): Promise<string> {
     const mood = detectMood(input.message);
     const el = input.profile.dayMaster.element;
-    const talent = tenGodTheme(input.profile.tenGods).split(".")[0];
+    const strength = tenGodStrength(input.profile.tenGods); // "…힘" 명사구 — 문장에 끼워도 안전
     const bridge =
       mood === "일상"
         ? `${el}의 기운을 지닌 ${input.nickname}님답게, 오늘의 결을 그대로 따라가 봐요.`
-        : `${el}의 기운을 타고난 ${input.nickname}님에게는 ${talent}. 그 힘이 지금의 당신도 지켜줄 거예요.`;
+        : `${el}의 기운을 타고난 ${input.nickname}님에게는 ${strength}이 있어요. 그 힘이 지금의 당신도 지켜줄 거예요.`;
     return `${OPENER[mood]} ${bridge} ${CLOSER[mood]}`;
   }
 }

@@ -1,4 +1,4 @@
-import type { DeepMatchContext, MatchContext, MatchMode, ZodiacHarmony } from "@/lib/engine/match";
+import type { DeepMatchContext, MatchBond, MatchContext, MatchMode, ZodiacHarmony } from "@/lib/engine/match";
 import type { DailyRelation } from "@/lib/engine/daily";
 import type { InterpretationSection } from "../types";
 
@@ -26,6 +26,19 @@ const HARMONY_TEXT: Record<ZodiacHarmony, string> = {
   다름:
     "별자리의 원소가 서로 다른 결이에요. 처음엔 낯설 수 있지만, 그만큼 서로가 못 보던 풍경을 보여줄 수 있는 사이죠.",
 };
+
+/** 간지의 인연(천간합·일지 합충) — 있을 때만 '기운의 결'에 덧붙는 한 문장. */
+export function bondText(bond: MatchBond | null): string {
+  if (!bond) return "";
+  const parts: string[] = [];
+  if (bond.stemCombine)
+    parts.push("두 분의 일간은 서로를 끌어안는 합(合)의 짝이라, 처음 만나도 오래 안 사이처럼 마음이 기우는 인연이에요.");
+  if (bond.branchBond === "육합")
+    parts.push("두 분의 일지도 손을 맞잡는 육합의 자리라, 함께 있는 시간이 자연스럽게 편안해지죠.");
+  else if (bond.branchBond === "충")
+    parts.push("두 분의 일지는 서로 마주 보는 충(沖)의 자리이기도 해요. 부딪히는 날도 있겠지만, 그만큼 서로를 벼리며 자라게 하는 인연이죠.");
+  return parts.join(" ");
+}
 
 // MBTI 어울림 0~5 → 3단 문구
 function synergyText(synergy: number | null): string {
@@ -83,6 +96,7 @@ export function assembleDeepMatch(input: {
   partnerName: string;
 }): InterpretationSection[] {
   const { match, myElement, myName, partnerName } = input;
+  const bond = bondText(match.bond);
   return [
     {
       title: "우리의 온도",
@@ -90,7 +104,7 @@ export function assembleDeepMatch(input: {
     },
     {
       title: "기운의 결",
-      body: `${myName}님은 ${myElement}(${match.myDayGanzhi}), ${partnerName}님은 ${match.partner.element}(${match.partner.dayGanzhi})의 기운이에요. ${RELATION_TEXT[match.elementRelation]}`,
+      body: `${myName}님은 ${myElement}(${match.myDayGanzhi}), ${partnerName}님은 ${match.partner.element}(${match.partner.dayGanzhi})의 기운이에요. ${RELATION_TEXT[match.elementRelation]}${bond ? ` ${bond}` : ""}`,
     },
     { title: "서로를 채우는 조각", body: complementText(match.complement) },
     { title: "별이 말하길", body: HARMONY_TEXT[match.zodiacHarmony] },
@@ -103,6 +117,7 @@ export function assembleDeepMatch(input: {
 export function assembleMatch(input: MatchAssembleInput): InterpretationSection[] {
   const { match, myElement, nickname } = input;
   const who = nickname ? `${nickname}님과 ` : "";
+  const bond = bondText(match.bond);
   return [
     {
       title: "우리의 온도",
@@ -110,7 +125,7 @@ export function assembleMatch(input: MatchAssembleInput): InterpretationSection[
     },
     {
       title: "기운의 결",
-      body: `당신은 ${myElement}, 상대는 ${match.partner.element}(${match.partner.dayGanzhi})의 기운이에요. ${RELATION_TEXT[match.elementRelation]}`,
+      body: `당신은 ${myElement}, 상대는 ${match.partner.element}(${match.partner.dayGanzhi})의 기운이에요. ${RELATION_TEXT[match.elementRelation]}${bond ? ` ${bond}` : ""}`,
     },
     { title: "별이 말하길", body: HARMONY_TEXT[match.zodiacHarmony] },
     { title: "마음의 결", body: synergyText(match.mbtiSynergy) },

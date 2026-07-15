@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { computeProfile } from "./index";
 import {
-  computeMatch, computeDeepMatch, partnerFromBirth, zodiacElement, mbtiSynergy,
-  fillingElements, SLUG_TO_MODE, MODE_TO_SLUG, isMatchModeSlug,
+  computeMatch, computeDeepMatch, computeBond, partnerFromBirth, zodiacElement,
+  mbtiSynergy, fillingElements, SLUG_TO_MODE, MODE_TO_SLUG, isMatchModeSlug,
 } from "./match";
 
 describe("partnerFromBirth — 상대 기운 산출", () => {
@@ -90,6 +90,48 @@ describe("computeMatch — 우리의 조합", () => {
     const b = computeMatch(me, { birthDate: "1992-11-03", mbti: "ISTP" }, "친구");
     expect(a.score).toBe(b.score);
   });
+
+  it("대칭성 — 같은 커플은 누가 계산해도 같은 온도", () => {
+    // A: 2000-01-07 갑자(목)·염소자리, B: 2000-01-09 병인(화)·염소자리
+    const a = partnerFromBirth("2000-01-07");
+    const b = partnerFromBirth("2000-01-09");
+    for (const mode of ["연인", "친구", "동료"] as const) {
+      const ab = computeMatch(
+        { element: a.element, zodiac: a.zodiac, mbti: "INFP", dayGanzhi: a.dayGanzhi },
+        { birthDate: "2000-01-09", mbti: "ENFJ" }, mode,
+      );
+      const ba = computeMatch(
+        { element: b.element, zodiac: b.zodiac, mbti: "ENFJ", dayGanzhi: b.dayGanzhi },
+        { birthDate: "2000-01-07", mbti: "INFP" }, mode,
+      );
+      expect(ab.score).toBe(ba.score);
+    }
+  });
+});
+
+describe("computeBond — 간지의 인연", () => {
+  it("천간합: 갑자 × 기사(갑기합)", () => {
+    expect(computeBond("갑자", "기사")).toEqual({ stemCombine: true, branchBond: null });
+  });
+  it("일지 육합: 갑자 × 을축(자축합)", () => {
+    expect(computeBond("갑자", "을축")).toEqual({ stemCombine: false, branchBond: "육합" });
+  });
+  it("일지 충: 갑자 × 경오(자오충)", () => {
+    expect(computeBond("갑자", "경오")).toEqual({ stemCombine: false, branchBond: "충" });
+  });
+  it("아무 관계도 아니면 둘 다 없음, 대칭", () => {
+    expect(computeBond("갑자", "병인")).toEqual({ stemCombine: false, branchBond: null });
+    expect(computeBond("기사", "갑자")).toEqual(computeBond("갑자", "기사"));
+  });
+  it("computeMatch — 내 일주를 주면 bond가 점수·결과에 반영된다", () => {
+    const base = { element: "목", zodiac: "사자자리", mbti: "INFP" } as const;
+    // 2000-01-12 = 기사 (갑자와 갑기합)
+    const withBond = computeMatch({ ...base, dayGanzhi: "갑자" }, { birthDate: "2000-01-12" }, "친구");
+    const noBond = computeMatch(base, { birthDate: "2000-01-12" }, "친구");
+    expect(withBond.bond).toEqual({ stemCombine: true, branchBond: null });
+    expect(noBond.bond).toBeNull();
+    expect(withBond.score).toBeGreaterThan(noBond.score);
+  });
 });
 
 describe("computeDeepMatch — 양방향 심층 궁합 (P7-2)", () => {
@@ -126,6 +168,17 @@ describe("computeDeepMatch — 양방향 심층 궁합 (P7-2)", () => {
 
   it("결정적 — 같은 입력이면 같은 결과", () => {
     expect(computeDeepMatch(a, b, "동료")).toEqual(computeDeepMatch(a, b, "동료"));
+  });
+
+  it("대칭성 — 방향을 바꿔도 온도는 같다", () => {
+    for (const mode of ["연인", "친구", "동료"] as const) {
+      expect(computeDeepMatch(a, b, mode).score).toBe(computeDeepMatch(b, a, mode).score);
+    }
+  });
+
+  it("bond가 항상 산출된다(두 일주를 모두 아는 심층 궁합)", () => {
+    const m = computeDeepMatch(a, b, "연인");
+    expect(m.bond).not.toBeNull();
   });
 });
 

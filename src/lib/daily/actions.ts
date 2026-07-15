@@ -25,6 +25,7 @@ export async function recordTodayDaily(): Promise<void> {
     const daily = computeDaily(
       { y: t.y, mo: t.mo, d: t.d },
       profile.profile_context.dayMaster.element,
+      profile.profile_context.dayMaster.stem,
     );
 
     // 이미 오늘 것이 있으면 생성 skip(무료 쿼터 보호 패턴; 템플릿도 동일 규칙 적용).

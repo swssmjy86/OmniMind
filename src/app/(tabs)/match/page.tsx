@@ -42,6 +42,7 @@ export default async function MatchPage() {
     element: ctx.dayMaster.element,
     zodiac: ctx.zodiac,
     mbti: ctx.mbti.type,
+    dayGanzhi: ctx.pillars.day, // 천간합·일지 합충(간지의 인연)까지 읽는다
   };
 
   // P7-2 — 내가 초대했거나 수락한 연결 목록(마이그레이션 0005 전이면 조용히 빈 목록).

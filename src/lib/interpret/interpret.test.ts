@@ -33,6 +33,15 @@ describe("TemplateProvider", () => {
       expect(checkTone(out)).toHaveLength(0);
     }
   });
+
+  it("이중 주어 비문이 없다 — '님에게는 당신…' 회귀 방지", async () => {
+    const tp = new TemplateProvider();
+    for (const msg of ["너무 힘들어요", "고민이 있어요", "친구랑 싸웠어요", "합격했어요"]) {
+      const out = await tp.chat(base(msg));
+      expect(out).not.toMatch(/님에게는 당신/);
+      expect(out).toMatch(/힘이 있어요/); // 명사구 조립이 문법에 맞게 끼워짐
+    }
+  });
 });
 
 describe("respond — 3단 폴백", () => {

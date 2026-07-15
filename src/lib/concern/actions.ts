@@ -47,6 +47,7 @@ export async function submitConcern(category: string, text: string): Promise<Con
     const daily = computeDaily(
       { y: t.y, mo: t.mo, d: t.d },
       profile.profile_context.dayMaster.element,
+      profile.profile_context.dayMaster.stem,
     );
     const input = {
       profile: profile.profile_context,

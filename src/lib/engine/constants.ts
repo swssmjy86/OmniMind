@@ -29,3 +29,12 @@ export const sexagenary = (index: number) => {
 /** 오행 생: e → (e+1)%5, 오행 극: e → (e+2)%5 */
 export const generates = (e: ElementIndex): ElementIndex => ((e + 1) % 5) as ElementIndex;
 export const controls = (e: ElementIndex): ElementIndex => ((e + 2) % 5) as ElementIndex;
+
+// ── 간지 관계(궁합·일진용) ──
+// 천간합(五合): 갑기·을경·병신·정임·무계 — 인덱스 차가 5인 짝.
+export const stemsCombine = (a: number, b: number): boolean => Math.abs(a - b) === 5;
+// 지지 육합(六合): 자축·인해·묘술·진유·사신·오미 — (a+b)%12 === 1.
+export const branchesSixCombine = (a: number, b: number): boolean =>
+  a !== b && (a + b) % 12 === 1;
+// 지지 충(沖): 마주 보는 자리 — 인덱스 차가 6.
+export const branchesClash = (a: number, b: number): boolean => Math.abs(a - b) === 6;

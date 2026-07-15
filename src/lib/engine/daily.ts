@@ -1,5 +1,6 @@
 import type { ElementIndex } from "./types";
 import { dayPillar } from "./pillars";
+import { tenGodOf, type TenGod } from "./ten-gods";
 import { HEAVENLY_STEMS, EARTHLY_BRANCHES, ELEMENTS, stemElement } from "./constants";
 import { kstPartsToInstant } from "./kst";
 
@@ -12,6 +13,8 @@ export interface DailyContext {
   element: string; // 오늘을 이끄는 오행(일간 오행)
   elementIndex: ElementIndex;
   relation: DailyRelation | null; // 내 일간 오행과 오늘 오행의 관계
+  /** 내 일간 기준 오늘 천간의 십성(음양까지 반영한 세밀한 개인화). 내 일간 미상이면 null */
+  tenGod: TenGod | null;
 }
 
 /** 내 오행(mine)과 오늘 오행(today)의 관계. today 기준으로 판정. */
@@ -27,12 +30,14 @@ export function relateElement(mine: ElementIndex, today: ElementIndex): DailyRel
 }
 
 /**
- * 오늘의 기운. today는 KST 달력 날짜. myElement가 주어지면(내 일간 오행) 관계까지.
+ * 오늘의 기운. today는 KST 달력 날짜. myElement가 주어지면(내 일간 오행) 관계까지,
+ * myStem(내 일간 천간 "갑" 등)까지 주어지면 십성 관계도 산출한다.
  * 일진은 그날 정오 기준으로 계산(경계 회피).
  */
 export function computeDaily(
   today: { y: number; mo: number; d: number },
   myElement?: string,
+  myStem?: string,
 ): DailyContext {
   const instant = kstPartsToInstant({ y: today.y, mo: today.mo, d: today.d, h: 12, mi: 0 });
   const p = dayPillar(instant);
@@ -43,11 +48,17 @@ export function computeDaily(
     const mineIdx = ELEMENTS.indexOf(myElement as (typeof ELEMENTS)[number]);
     if (mineIdx >= 0) relation = relateElement(mineIdx as ElementIndex, elementIndex);
   }
+  let tenGod: TenGod | null = null;
+  if (myStem) {
+    const stemIdx = HEAVENLY_STEMS.indexOf(myStem as (typeof HEAVENLY_STEMS)[number]);
+    if (stemIdx >= 0) tenGod = tenGodOf(stemIdx, p.stem);
+  }
   return {
     date: dateStr,
     dayGanzhi: HEAVENLY_STEMS[p.stem] + EARTHLY_BRANCHES[p.branch],
     element: ELEMENTS[elementIndex],
     elementIndex,
     relation,
+    tenGod,
   };
 }

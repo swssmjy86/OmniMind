@@ -31,6 +31,14 @@ describe("computeDaily", () => {
   it("내 오행을 주면 관계를 산출한다", () => {
     const d = computeDaily({ y: 2000, mo: 1, d: 7 }, "수"); // 오늘 목, 내 수 → 수생목=발산
     expect(d.relation).toBe("발산");
+    expect(d.tenGod).toBeNull(); // 일간 천간 미상이면 십성은 없음
+  });
+  it("내 일간 천간까지 주면 십성 관계를 산출한다", () => {
+    // 오늘 갑(양목): 내 일간 갑 → 비견, 을 → 겁재, 임(양수) → 식신, 계(음수) → 상관
+    expect(computeDaily({ y: 2000, mo: 1, d: 7 }, "목", "갑").tenGod).toBe("비견");
+    expect(computeDaily({ y: 2000, mo: 1, d: 7 }, "목", "을").tenGod).toBe("겁재");
+    expect(computeDaily({ y: 2000, mo: 1, d: 7 }, "수", "임").tenGod).toBe("식신");
+    expect(computeDaily({ y: 2000, mo: 1, d: 7 }, "수", "계").tenGod).toBe("상관");
   });
   it("같은 날짜는 항상 같은 결과(결정론)", () => {
     const a = computeDaily({ y: 2026, mo: 7, d: 14 });

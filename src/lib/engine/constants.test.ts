@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   HEAVENLY_STEMS, EARTHLY_BRANCHES, stemElement, branchElement,
   isYang, sexagenary, generates, controls, branchPrimaryStem,
+  stemsCombine, branchesSixCombine, branchesClash,
 } from "./constants";
 
 describe("천간·지지 상수", () => {
@@ -31,5 +32,29 @@ describe("천간·지지 상수", () => {
   it("지장간 정기: 자→계, 인→갑", () => {
     expect(branchPrimaryStem(0)).toBe(9);
     expect(branchPrimaryStem(2)).toBe(0);
+  });
+});
+
+describe("간지 관계", () => {
+  it("천간합: 갑기·을경·무계는 합, 갑을·갑경은 아님", () => {
+    expect(stemsCombine(0, 5)).toBe(true); // 갑기
+    expect(stemsCombine(6, 1)).toBe(true); // 경을(대칭)
+    expect(stemsCombine(4, 9)).toBe(true); // 무계
+    expect(stemsCombine(0, 1)).toBe(false); // 갑을
+    expect(stemsCombine(0, 6)).toBe(false); // 갑경
+    expect(stemsCombine(3, 3)).toBe(false); // 동일
+  });
+  it("지지 육합: 자축·인해·오미는 합, 자자·자오는 아님", () => {
+    expect(branchesSixCombine(0, 1)).toBe(true); // 자축
+    expect(branchesSixCombine(11, 2)).toBe(true); // 해인(대칭)
+    expect(branchesSixCombine(6, 7)).toBe(true); // 오미
+    expect(branchesSixCombine(0, 0)).toBe(false);
+    expect(branchesSixCombine(0, 6)).toBe(false); // 자오는 충
+  });
+  it("지지 충: 자오·묘유·사해는 충, 자축은 아님", () => {
+    expect(branchesClash(0, 6)).toBe(true); // 자오
+    expect(branchesClash(9, 3)).toBe(true); // 유묘(대칭)
+    expect(branchesClash(5, 11)).toBe(true); // 사해
+    expect(branchesClash(0, 1)).toBe(false); // 자축(육합)
   });
 });

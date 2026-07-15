@@ -89,6 +89,9 @@ export default function MatchForm({ me, nickname }: { me: MatchMe; nickname: str
             onChange={(e) => setBirthDate(e.target.value)}
             className="mt-1.5 w-full rounded-card border border-text-soft/30 bg-warm-base px-4 py-2.5 outline-none focus:border-primary-green"
           />
+          <span className="mt-1 block text-xs text-text-soft">
+            태어난 시간까지는 몰라도 괜찮아요 — 그날의 기운(일주)으로 읽어드려요.
+          </span>
         </label>
         <label className="block">
           <span className="text-sm text-text-soft">상대의 MBTI (알고 있다면)</span>

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { computeProfile } from "@/lib/engine";
 import { computeMatch, computeDeepMatch, MATCH_MODES, type MatchMe } from "@/lib/engine/match";
-import { assembleMatch, assembleDeepMatch, complementText, scoreLine } from "./match";
+import { assembleMatch, assembleDeepMatch, bondText, complementText, scoreLine } from "./match";
 import { checkTone } from "../tone-guard";
 
 const me: MatchMe = { element: "목", zodiac: "사자자리", mbti: "INFP" };
@@ -46,6 +46,32 @@ describe("궁합 해석 조립 (P7)", () => {
       expect(scoreLine(s).length).toBeGreaterThan(0);
       expect(checkTone(scoreLine(s))).toHaveLength(0);
     }
+  });
+
+  it("bondText — 합·충 전 갈래 문구 존재 + 톤 통과, 없으면 빈 문자열", () => {
+    const cases = [
+      { stemCombine: true, branchBond: null },
+      { stemCombine: true, branchBond: "육합" },
+      { stemCombine: false, branchBond: "육합" },
+      { stemCombine: false, branchBond: "충" },
+    ] as const;
+    for (const b of cases) {
+      const t = bondText(b);
+      expect(t.length).toBeGreaterThan(0);
+      expect(checkTone(t)).toHaveLength(0);
+    }
+    expect(bondText({ stemCombine: false, branchBond: null })).toBe("");
+    expect(bondText(null)).toBe("");
+  });
+
+  it("내 일주를 알면 간지의 인연이 '기운의 결'에 실린다", () => {
+    // 갑자 × 기사(2000-01-12) = 갑기 천간합
+    const m = computeMatch(
+      { ...me, dayGanzhi: "갑자" }, { birthDate: "2000-01-12" }, "연인",
+    );
+    const sections = assembleMatch({ match: m, myElement: me.element });
+    expect(sections[1].body).toContain("합(合)");
+    expect(checkTone(sections[1].body)).toHaveLength(0);
   });
 });
 
