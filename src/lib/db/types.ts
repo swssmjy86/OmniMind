@@ -54,6 +54,8 @@ export interface PaymentRow {
   raw: Record<string, unknown> | null;
   created_at: string;
   approved_at: string | null;
+  /** 이 주문으로 연장된 premium_until. done인데 null이면 부여 누락 — 재확인 시 자가 복구. */
+  granted_until: string | null;
 }
 
 export interface ChatMessageRow {

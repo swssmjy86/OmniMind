@@ -3,12 +3,8 @@ import Link from "next/link";
 export const dynamic = "force-dynamic";
 
 // 토스 failUrl 랜딩 — 인증 단계에서 중단·실패한 경우라 돈은 나가지 않았다.
-export default async function PaymentFailPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ code?: string; message?: string }>;
-}) {
-  const q = await searchParams;
+// 쿼리스트링(code/message)은 누구나 링크로 조작할 수 있는 외부 문자열이라 화면에 반영하지 않는다.
+export default async function PaymentFailPage() {
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center gap-6 p-6 text-center">
       <h1 className="font-[family-name:var(--font-serif-kr)] text-2xl text-primary-green">
@@ -17,7 +13,6 @@ export default async function PaymentFailPage({
       <p className="text-text-soft">
         괜찮아요, 결제된 금액은 없어요. 마음이 준비되면 언제든 다시 이어볼 수 있어요.
       </p>
-      {q.message && <p className="text-xs text-text-soft/70">({q.message})</p>}
       <Link
         href="/premium"
         className="block w-full rounded-card bg-accent-coral py-3.5 font-medium text-white"

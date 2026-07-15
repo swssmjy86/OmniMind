@@ -41,14 +41,18 @@ export default async function PaymentSuccessPage({
     );
   }
 
-  const t = toKstParts(new Date(result.premiumUntil));
+  // 부여 로직상 항상 유효한 ISO여야 하지만, 깨진 값으로 NaN 날짜를 보여주느니 날짜만 생략한다
+  const ts = new Date(result.premiumUntil).getTime();
+  const t = Number.isFinite(ts) ? toKstParts(new Date(result.premiumUntil)) : null;
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center gap-6 p-6 text-center">
       <h1 className="font-[family-name:var(--font-serif-kr)] text-2xl text-primary-green">
         {result.already ? "이미 이어져 있어요" : "마음이 이어졌어요 ✨"}
       </h1>
       <p className="text-text-soft">
-        {t.y}년 {t.mo}월 {t.d}일까지, 마음 이야기를 제한 없이 나눌 수 있어요.
+        {t
+          ? `${t.y}년 ${t.mo}월 ${t.d}일까지, 마음 이야기를 제한 없이 나눌 수 있어요.`
+          : "마음 이야기를 제한 없이 나눌 수 있어요."}
       </p>
       <Link
         href="/mind"

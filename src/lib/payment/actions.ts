@@ -5,8 +5,8 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { createAdminSupabase } from "@/lib/supabase/admin";
 import { recordEvent } from "@/lib/metrics/events";
 import { confirmTossPayment } from "./toss";
-import { extendPremium } from "./period";
-import { PASS_PRICE } from "./constants";
+import { PASS_PRICE, PASS_DAYS } from "./constants";
+import type { PaymentRow } from "@/lib/db/types";
 
 export type CreateOrderResult =
   | { ok: true; orderId: string; amount: number }
@@ -39,8 +39,12 @@ export type ConfirmOrderResult =
   | { ok: false; reason: "auth" | "not-found" | "amount" | "confirm" | "error"; message?: string };
 
 /**
- * 결제 승인 — successUrl 파라미터를 검증하고 토스 confirm 후 premium_until을 연장한다.
- * 같은 주문의 재승인 요청(새로고침)은 이미 처리된 결과를 그대로 돌려준다(멱등).
+ * 결제 승인 — successUrl 파라미터를 검증하고 토스 confirm 후 프리미엄을 부여한다.
+ *
+ * 부여는 grant_premium_for_order(0007, security definer)가 주문 행 락으로 1회만 수행:
+ * - 새로고침·중복 탭의 재승인 요청은 이미 부여된 값을 그대로 받는다(멱등)
+ * - 승인은 됐는데 부여가 누락된 주문(done + granted_until null)은 재호출로 자가 복구된다
+ * - 서로 다른 주문의 동시 부여도 단일 SQL UPDATE라 연장이 유실되지 않는다
  */
 export async function confirmOrder(
   paymentKey: string,
@@ -53,48 +57,56 @@ export async function confirmOrder(
     if (!user) return { ok: false, reason: "auth" };
 
     const admin = createAdminSupabase();
+    const grant = async (): Promise<string | null> => {
+      const { data, error } = await admin.rpc("grant_premium_for_order", {
+        p_order: orderId,
+        p_days: PASS_DAYS,
+      });
+      return !error && typeof data === "string" ? data : null;
+    };
+
     const { data: order } = await admin
-      .from("payments").select("*").eq("order_id", orderId).maybeSingle();
+      .from("payments").select("*").eq("order_id", orderId).maybeSingle<PaymentRow>();
     // 주문이 없거나 남의 주문이면 동일하게 not-found (존재 여부를 흘리지 않는다)
     if (!order || order.user_id !== user.id) return { ok: false, reason: "not-found" };
 
     if (order.status === "done") {
-      const { data: p } = await admin
-        .from("profiles").select("premium_until").eq("user_id", user.id).maybeSingle();
-      return { ok: true, premiumUntil: p?.premium_until ?? "", already: true };
+      if (order.granted_until) return { ok: true, premiumUntil: order.granted_until, already: true };
+      const until = await grant(); // 부여 누락 자가 복구
+      if (!until) return { ok: false, reason: "error" };
+      return { ok: true, premiumUntil: until, already: true };
     }
 
     // 금액의 진실은 서버가 만든 pending 행 — 쿼리스트링 변조를 여기서 차단
     if (order.amount !== amount) return { ok: false, reason: "amount" };
 
+    // failed 행도 재승인을 시도한다 — 네트워크 오류로 failed 처리됐지만 토스는 승인한 경우,
+    // 재요청 시 ALREADY_PROCESSED_PAYMENT가 와서 아래에서 done으로 복구된다.
     const confirmed = await confirmTossPayment({ paymentKey, orderId, amount });
-    if (!confirmed.ok) {
+    const approvedElsewhere = !confirmed.ok && confirmed.code === "ALREADY_PROCESSED_PAYMENT";
+    if (!confirmed.ok && !approvedElsewhere) {
+      // 완료된 행은 절대 덮지 않는다(동시 요청 경합에서 done 보호)
       await admin.from("payments")
         .update({ status: "failed", raw: { code: confirmed.code, message: confirmed.message } })
-        .eq("order_id", orderId);
+        .eq("order_id", orderId).neq("status", "done");
       return { ok: false, reason: "confirm", message: confirmed.message };
     }
 
-    const now = new Date();
-    const { data: profile } = await admin
-      .from("profiles").select("premium_until").eq("user_id", user.id).maybeSingle();
-    const premiumUntil = extendPremium(profile?.premium_until ?? null, now);
-
-    const { error: upErr } = await admin.from("profiles")
-      .update({ premium_until: premiumUntil }).eq("user_id", user.id);
-    if (upErr) {
-      // 승인은 됐는데 부여가 실패한 상태 — raw를 남겨 CS로 복구 가능하게 한다
-      await admin.from("payments")
-        .update({ status: "done", payment_key: paymentKey, raw: confirmed.raw, approved_at: now.toISOString() })
-        .eq("order_id", orderId);
-      return { ok: false, reason: "error" };
-    }
     await admin.from("payments")
-      .update({ status: "done", payment_key: paymentKey, raw: confirmed.raw, approved_at: now.toISOString() })
-      .eq("order_id", orderId);
+      .update({
+        status: "done",
+        payment_key: paymentKey,
+        raw: confirmed.ok ? confirmed.raw : { code: "ALREADY_PROCESSED_PAYMENT" },
+        approved_at: new Date().toISOString(),
+      })
+      .eq("order_id", orderId).neq("status", "done");
 
-    await recordEvent("premium_purchase", { amount });
-    return { ok: true, premiumUntil, already: false };
+    const until = await grant();
+    // 실패해도 주문은 done + granted_until null로 남아, 다음 확인에서 자가 복구된다
+    if (!until) return { ok: false, reason: "error" };
+
+    if (!approvedElsewhere) await recordEvent("premium_purchase", { amount });
+    return { ok: true, premiumUntil: until, already: approvedElsewhere };
   } catch {
     return { ok: false, reason: "error" };
   }
