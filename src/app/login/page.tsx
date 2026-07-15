@@ -18,20 +18,22 @@ function GoogleLogo() {
 }
 
 // /login?error=auth 여부 — useSearchParams(Suspense 요구) 없이 안전하게 읽는다.
-// 서버 스냅샷은 false라 정적 프리렌더와도 어긋나지 않는다.
+// 서버 스냅샷은 ""라 정적 프리렌더와도 어긋나지 않는다.
 const noopSubscribe = () => () => {};
-const useUrlHasError = () =>
+const useUrlSearch = () =>
   useSyncExternalStore(
     noopSubscribe,
-    () => new URLSearchParams(window.location.search).has("error"),
-    () => false,
+    () => window.location.search,
+    () => "",
   );
 
 export default function LoginPage() {
   const [pending, setPending] = useState<Provider | null>(null);
   // 사용자가 버튼을 누르면(override) URL의 오류 안내 대신 이 값을 쓴다.
   const [override, setOverride] = useState<{ notice: string | null } | null>(null);
-  const urlHasError = useUrlHasError();
+  const params = new URLSearchParams(useUrlSearch());
+  const urlHasError = params.has("error");
+  const reason = params.get("reason"); // 콜백이 전달한 실패 사유(진단용)
 
   const notice = override
     ? override.notice
@@ -86,6 +88,9 @@ export default function LoginPage() {
           <p role="status" className="mt-1 text-center text-sm text-accent-coral">
             {notice}
           </p>
+        )}
+        {!override && notice && reason && (
+          <p className="break-all text-center text-xs text-text-soft">({reason})</p>
         )}
       </div>
       <p className="text-xs text-text-soft">

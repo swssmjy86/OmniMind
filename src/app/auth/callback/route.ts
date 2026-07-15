@@ -29,6 +29,15 @@ export async function GET(request: Request) {
       res.cookies.delete("om_next");
       return res;
     }
+    // 교환 실패 — 사유를 로그인 화면에 전달(진단용, 민감정보 없음)
+    return NextResponse.redirect(
+      `${base}/login?error=auth&reason=${encodeURIComponent(error.message)}`,
+    );
   }
-  return NextResponse.redirect(`${base}/login?error=auth`);
+  // code 없이 돌아온 경우 — provider가 보낸 오류 설명을 전달
+  const providerErr =
+    searchParams.get("error_description") ?? searchParams.get("error") ?? "no_code";
+  return NextResponse.redirect(
+    `${base}/login?error=auth&reason=${encodeURIComponent(providerErr)}`,
+  );
 }

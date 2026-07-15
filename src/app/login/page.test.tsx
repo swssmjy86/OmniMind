@@ -51,4 +51,13 @@ describe("로그인 페이지", () => {
     const notice = await screen.findByRole("status");
     expect(notice.textContent).toContain("잠시 길이 어긋났어요");
   });
+
+  it("실패 사유(reason)가 있으면 진단용으로 함께 표기한다", async () => {
+    window.history.replaceState(
+      {}, "", "/login?error=auth&reason=invalid%20flow%20state",
+    );
+    render(<LoginPage />);
+    await screen.findByRole("status");
+    expect(screen.getByText("(invalid flow state)")).toBeInTheDocument();
+  });
 });
