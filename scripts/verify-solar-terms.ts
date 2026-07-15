@@ -23,26 +23,40 @@ const TERM_NAMES = [
 
 interface KasiItem { dateName: string; locdate: number; kst?: number | string }
 
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+// 공공데이터포털 무료 키는 초당 호출 제한이 있어 간헐적으로 거절된다 — 재시도로 흡수한다.
 async function fetchYear(year: number, key: string): Promise<Map<string, string> | null> {
   const url =
     "https://apis.data.go.kr/B090041/openapi/service/SpcdeInfoService/get24DivisionsInfo" +
     `?solYear=${year}&numOfRows=30&pageNo=1&_type=json&ServiceKey=${encodeURIComponent(key)}`;
-  const res = await fetch(url);
-  if (!res.ok) return null;
-  const body = await res.json().catch(() => null);
-  const items: KasiItem[] | KasiItem | undefined = body?.response?.body?.items?.item;
-  if (!items) return null;
-  const list = Array.isArray(items) ? items : [items];
-  const map = new Map<string, string>();
-  for (const it of list) {
-    const d = String(it.locdate); // YYYYMMDD
-    const t = String(it.kst ?? "0000").padStart(4, "0"); // HHmm
-    map.set(
-      it.dateName,
-      `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}T${t.slice(0, 2)}:${t.slice(2, 4)}`,
-    );
+  for (let attempt = 1; attempt <= 4; attempt++) {
+    try {
+      const res = await fetch(url);
+      if (res.ok) {
+        const body = await res.json().catch(() => null);
+        const items: KasiItem[] | KasiItem | undefined = body?.response?.body?.items?.item;
+        if (items) {
+          const list = Array.isArray(items) ? items : [items];
+          const map = new Map<string, string>();
+          for (const it of list) {
+            if (map.has(it.dateName)) continue; // KASI 라벨 중복 quirk(예: 2000년 입춘×2) — 첫 항목만
+            const d = String(it.locdate); // YYYYMMDD
+            const t = String(it.kst ?? "0000").trim().padStart(4, "0"); // "HHmm" (후행 공백 방어)
+            map.set(
+              it.dateName,
+              `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)}T${t.slice(0, 2)}:${t.slice(2, 4)}`,
+            );
+          }
+          if (map.size >= TERM_NAMES.length - 2) return map; // 한두 개 누락은 항목별로 건너뛴다
+        }
+      }
+    } catch {
+      // 네트워크 오류 — 재시도
+    }
+    await sleep(1200 * attempt);
   }
-  return map;
+  return null;
 }
 
 function localTable(source: string, year: number): string[] | null {
@@ -66,8 +80,9 @@ async function main() {
   let totalDiff = 0;
 
   for (let year = from; year <= to; year++) {
+    await sleep(400); // 초당 호출 제한 회피
     const kasi = await fetchYear(year, key);
-    if (!kasi || kasi.size < TERM_NAMES.length) {
+    if (!kasi) {
       console.log(`${year}: KASI 조회 불가(커버 범위 밖이거나 응답 이상) — 건너뜀`);
       continue;
     }
@@ -81,7 +96,15 @@ async function main() {
     const diffs: string[] = [];
     TERM_NAMES.forEach((name, i) => {
       const k = kasi.get(name);
-      if (!k) return;
+      if (!k) {
+        console.log(`  ${name}: KASI 항목 없음 — 로컬 값 유지`);
+        return;
+      }
+      // 이름이 같아도 날짜가 크게 어긋나면 KASI 라벨 오류 — 신뢰하지 않는다
+      if (Math.abs(Date.parse(`${k}:00+09:00`) - Date.parse(`${local[i]}:00+09:00`)) > 3 * 86400_000) {
+        console.log(`  ${name}: KASI 값(${k})이 로컬(${local[i]})과 3일 이상 차이 — 라벨 오류로 보고 건너뜀`);
+        return;
+      }
       if (local[i] !== k) {
         const dMin = Math.round((Date.parse(`${k}:00+09:00`) - Date.parse(`${local[i]}:00+09:00`)) / 60000);
         diffs.push(`  ${name}: 로컬 ${local[i]} → KASI ${k} (${dMin > 0 ? "+" : ""}${dMin}분)`);
