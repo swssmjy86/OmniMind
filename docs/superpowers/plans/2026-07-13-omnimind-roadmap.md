@@ -137,7 +137,7 @@
 
 ## P7. 성장 (v2.0) — 🟡 결제 연동만 남음 (2026-07-15) · 상세 플랜: `2026-07-14-p6-p7.md`
 
-**진행:** 입력형 궁합 ✅ — `engine/match.ts`(오행 관계·천간합·육합·충·별자리 4원소·MBTI 어울림, TDD, 점수 대칭) + `content/match.ts`(관계 해석, 톤 통과) + `/match`(연인/친구/동료 모드). 양방향 심층 궁합 ✅ — `connections`(0005, 토큰 초대장·프로필 스냅샷·RLS) + `computeDeepMatch`(오행 상호 보완 보너스) + `/connect/[token]`(열람→수락→심층 결과). 프리미엄 게이트 ✅ — `premium_until`(0004) + 챗 무제한 게이트 + 소진 화면 판매 포인트. **마이그레이션 0004·0005 실행 완료(2026-07-15) — 두 기능 모두 프로덕션 활성.** **남음: 결제 연동(외부 계정 필요 — PG 가입 후 진행).**
+**진행:** 입력형 궁합 ✅ — `engine/match.ts`(오행 관계·천간합·육합·충·별자리 4원소·MBTI 어울림, TDD, 점수 대칭) + `content/match.ts`(관계 해석, 톤 통과) + `/match`(연인/친구/동료 모드). 양방향 심층 궁합 ✅ — `connections`(0005, 토큰 초대장·프로필 스냅샷·RLS) + `computeDeepMatch`(오행 상호 보완 보너스) + `/connect/[token]`(열람→수락→심층 결과). 프리미엄 게이트 ✅ — `premium_until`(0004) + 챗 무제한 게이트 + 소진 화면 판매 포인트. **마이그레이션 0004·0005 실행 완료(2026-07-15) — 두 기능 모두 프로덕션 활성.** 결제 연동(토스페이먼츠) 코드 완료 — 30일 이용권 단건 결제(`/premium` → 토스 결제창 → `/premium/success` 서버 승인 → `premium_until` 연장). 금액 진실은 서버 `payments` 행, 재승인 멱등, `premium_until`은 컬럼 GRANT로 잠가 service role 경로만 갱신 가능(0007). **남은 수동 설정: ① 마이그레이션 0007 실행 ② 토스 개발자센터에서 테스트 키 발급 → `NEXT_PUBLIC_TOSS_CLIENT_KEY`/`TOSS_SECRET_KEY` ③ Supabase `SUPABASE_SERVICE_ROLE_KEY` — 셋 다 Vercel env 등록. 실 판매 전 PG 계약(라이브 키 교체)만 하면 된다.**
 
 | # | 태스크 | 산출물 |
 |---|--------|--------|
