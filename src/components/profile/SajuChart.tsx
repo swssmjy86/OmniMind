@@ -3,6 +3,7 @@ import {
   HEAVENLY_STEMS, EARTHLY_BRANCHES, ELEMENTS,
   stemElement, branchElement, branchHiddenStems,
 } from "@/lib/engine/constants";
+import { twelveStageByChar } from "@/lib/engine/twelve-stages";
 
 // 한자 표기 — 전통 명식표 느낌.
 const STEM_HANJA: Record<string, string> = {
@@ -103,6 +104,15 @@ export default function SajuChart({ ctx }: { ctx: ProfileContext }) {
       {/* 지지 십성 */}
       <div className="mt-1 grid grid-cols-4 gap-2 text-center text-[10px] text-text-soft">
         {cols.map((c) => <div key={c.label}>{c.pillar ? c.branchGod : ""}</div>)}
+      </div>
+
+      {/* 12운성 — 일간 기운의 생멸 단계(장생~양), 전통 명식표 관행 */}
+      <div className="mt-1 grid grid-cols-4 gap-2 text-center text-[10px] text-text-soft/80">
+        {cols.map((c) => (
+          <div key={c.label}>
+            {c.pillar ? (twelveStageByChar(ctx.pillars.day[0], c.pillar[1]) ?? "") : ""}
+          </div>
+        ))}
       </div>
 
       {/* 시주 미상 안내 */}

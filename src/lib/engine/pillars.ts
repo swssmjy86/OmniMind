@@ -95,9 +95,12 @@ export function computePillars(
   const instant = applyDst(rawInstant); // 서머타임 구간이면 −1h
 
   if (opts.timeUnknown) {
-    const p = toKstParts(instant);
+    // 날짜는 입력된 출생일(raw) 기준으로 잡는다 — 시간 미상은 00:00으로 들어오므로
+    // DST −1h를 먼저 적용하면 전날로 밀려 일주가 하루 어긋난다. 정오로 옮긴 뒤
+    // DST를 적용하면(정오−1h=11시) 같은 날 안에 머물러 년·월·일주가 안전하다.
+    const p = toKstParts(rawInstant);
     const noon: KstParts = { y: p.y, mo: p.mo, d: p.d, h: 12, mi: 0 };
-    const noonInstant = kstPartsToInstant(noon);
+    const noonInstant = applyDst(kstPartsToInstant(noon));
     return {
       year: yearPillar(noonInstant),
       month: monthPillar(noonInstant),
