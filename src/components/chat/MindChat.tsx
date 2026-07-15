@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { sendMessage } from "@/lib/chat/actions";
 import type { ChatMsg } from "@/lib/interpret/provider";
 
@@ -69,10 +70,13 @@ export default function MindChat({
       {exhausted ? (
         <div className="border-t border-text-soft/15 px-6 py-4 text-center">
           <p className="text-sm text-text-soft">내일 아침, 새로운 기운과 함께 기다릴게요.</p>
-          {/* §6.4 — 제한이 프리미엄 판매 포인트가 되도록 자리를 심어둠 */}
-          <p className="mt-1.5 text-xs text-text-soft/70">
-            마음 이야기를 무제한으로 나눌 수 있는 날도 준비하고 있어요 🌙
-          </p>
+          {/* §6.4 — 제한이 프리미엄 판매 포인트가 되는 자리 (P7-3 결제로 연결) */}
+          <Link
+            href="/premium"
+            className="mt-2 inline-block text-sm text-accent-coral underline underline-offset-4"
+          >
+            마음 이야기, 제한 없이 이어가기 🌙
+          </Link>
         </div>
       ) : (
         <div className="flex items-end gap-2 border-t border-text-soft/15 px-4 py-3">
