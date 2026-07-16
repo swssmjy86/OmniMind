@@ -4,6 +4,16 @@ import ShareSheet from "./ShareSheet";
 
 const QUERY = "dm=%EA%B0%91&el=%EB%AA%A9&mbti=ENFJ&zo=%EC%82%AC%EC%9E%90%EC%9E%90%EB%A6%AC&blood=O";
 
+/** 시그니처 + IHDR 청크(폭·높이)만 있는 최소 PNG 바이트 — pngDimensions가 읽을 수 있으면 충분. */
+function fakePngBytes(width: number, height: number): Uint8Array {
+  const bytes = new Uint8Array(24);
+  bytes.set([137, 80, 78, 71, 13, 10, 26, 10], 0);
+  bytes.set([0x49, 0x48, 0x44, 0x52], 12);
+  new DataView(bytes.buffer).setUint32(16, width, false);
+  new DataView(bytes.buffer).setUint32(20, height, false);
+  return bytes;
+}
+
 const { addImageMock, saveMock } = vi.hoisted(() => ({ addImageMock: vi.fn(), saveMock: vi.fn() }));
 vi.mock("jspdf", () => ({
   // 화살표 함수는 new로 호출할 수 없어 일반 함수로 생성자를 흉내낸다.
@@ -56,20 +66,33 @@ describe("ShareSheet", () => {
   });
 
   it("PDF로 저장은 카드 이미지를 페이지 크기에 맞는 한 장짜리 PDF로 감싸 내려받는다", async () => {
+    const bytes = fakePngBytes(1080, 1350);
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue({
-        blob: () => Promise.resolve(new Blob(["png-bytes"], { type: "image/png" })),
-      }),
+      vi.fn().mockResolvedValue({ arrayBuffer: () => Promise.resolve(bytes.buffer) }),
     );
-    vi.stubGlobal("createImageBitmap", vi.fn().mockResolvedValue({ width: 1080, height: 1350 }));
 
     render(<ShareSheet query={QUERY} via="daily" label="오늘의 나 카드" />);
     fireEvent.click(screen.getByText("오늘의 나 카드 만들기 ✨"));
     fireEvent.click(screen.getByText("PDF로 저장"));
 
     await waitFor(() => expect(saveMock).toHaveBeenCalledWith("omnimind-daily.pdf"));
-    expect(addImageMock).toHaveBeenCalledWith(expect.any(String), "PNG", 0, 0, 1080, 1350);
+    expect(addImageMock).toHaveBeenCalledWith(expect.any(Uint8Array), "PNG", 0, 0, 1080, 1350);
+  });
+
+  it("세로로 긴 나의 조각 카드도 페이지 크기를 정확히 잡는다", async () => {
+    const bytes = fakePngBytes(1080, 4200);
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ arrayBuffer: () => Promise.resolve(bytes.buffer) }),
+    );
+
+    render(<ShareSheet query={QUERY} via="profile" label="나의 조각 카드" />);
+    fireEvent.click(screen.getByText("나의 조각 카드 만들기 ✨"));
+    fireEvent.click(screen.getByText("PDF로 저장"));
+
+    await waitFor(() => expect(saveMock).toHaveBeenCalledWith("omnimind-profile.pdf"));
+    expect(addImageMock).toHaveBeenCalledWith(expect.any(Uint8Array), "PNG", 0, 0, 1080, 4200);
   });
 
   it("PDF 생성이 실패하면 오류 문구를 보여주고 다른 버튼은 계속 동작한다", async () => {

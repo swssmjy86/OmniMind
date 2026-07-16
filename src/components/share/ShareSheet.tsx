@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { recordClientEvent } from "@/lib/metrics/actions";
+import { pngDimensions } from "@/lib/share/pdf";
 
 interface Props {
   query: string; // /api/card 쿼리 문자열 (유형 조합만, 개인정보 없음)
@@ -53,33 +54,31 @@ export default function ShareSheet({ query, via, label }: Props) {
 
   function openSheet() {
     setOpen(true);
+    setPdfError(false); // 이전에 실패했던 흔적을 새로 열 때는 지운다
     void recordClientEvent("card_open", { via });
   }
 
   /** 카드 PNG를 그대로 한 장짜리 PDF로 감싸 저장. 페이지 크기를 이미지 픽셀 크기에 맞춰
-   * "나의 조각"처럼 세로로 긴 카드도 잘리지 않는다. jsPDF는 클릭 시에만 동적 로드(초기
-   * 번들에 영향 없음) — 무료 클라이언트 처리라 서버 비용도 들지 않는다. */
+   * "나의 조각"처럼 세로로 긴 카드도 잘리지 않는다. PNG 바이트에서 폭·높이를 직접 읽어
+   * createImageBitmap/FileReader 없이 한 번의 fetch로 끝낸다(구형 브라우저 호환성도 좋아짐).
+   * jsPDF는 클릭 시에만 동적 로드(초기 번들 영향 없음) — 클라이언트 처리라 서버 비용도 없다. */
   async function downloadPdf() {
     if (pdfPending) return;
     setPdfPending(true);
     setPdfError(false);
     try {
-      const blob = await (await fetch(cardSrc)).blob();
-      const bitmap = await createImageBitmap(blob);
-      const dataUrl: string = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.onerror = () => reject(reader.error);
-        reader.readAsDataURL(blob);
-      });
+      const bytes = new Uint8Array(await (await fetch(cardSrc)).arrayBuffer());
+      const size = pngDimensions(bytes);
+      if (!size) throw new Error("png-dimensions");
 
       const { jsPDF } = await import("jspdf");
       const doc = new jsPDF({
-        orientation: bitmap.width >= bitmap.height ? "landscape" : "portrait",
+        orientation: size.width >= size.height ? "landscape" : "portrait",
         unit: "px",
-        format: [bitmap.width, bitmap.height],
+        format: [size.width, size.height],
+        hotfixes: ["px_scaling"], // px 단위 스케일 보정 — 없으면 이미지가 페이지보다 크게 그려진다
       });
-      doc.addImage(dataUrl, "PNG", 0, 0, bitmap.width, bitmap.height);
+      doc.addImage(bytes, "PNG", 0, 0, size.width, size.height);
       doc.save(`omnimind-${via}.pdf`);
       void recordClientEvent("card_download_pdf", { via });
     } catch {
