@@ -85,6 +85,8 @@ export default function MatchForm({ me, nickname }: { me: MatchMe; nickname: str
           <span className="text-sm text-text-soft">상대가 세상에 온 날</span>
           <input
             type="date"
+            min="1900-01-01"
+            max="2100-12-31"
             value={birthDate}
             onChange={(e) => setBirthDate(e.target.value)}
             className="mt-1.5 w-full rounded-card border border-text-soft/30 bg-warm-base px-4 py-2.5 outline-none focus:border-primary-green"
@@ -93,19 +95,21 @@ export default function MatchForm({ me, nickname }: { me: MatchMe; nickname: str
             태어난 시간까지는 몰라도 괜찮아요 — 그날의 기운(일주)으로 읽어드려요.
           </span>
         </label>
-        <label className="block">
+        <div>
           <span className="text-sm text-text-soft">상대의 MBTI (알고 있다면)</span>
-          <select
-            value={mbti}
-            onChange={(e) => setMbti(e.target.value as "" | Mbti)}
-            className="mt-1.5 w-full rounded-card border border-text-soft/30 bg-warm-base px-4 py-2.5 outline-none focus:border-primary-green"
-          >
-            <option value="">아직 몰라요</option>
-            {MBTIS.map((m) => (
-              <option key={m} value={m}>{m}</option>
-            ))}
-          </select>
-        </label>
+          <div className="mt-1.5 space-y-2">
+            <MbtiPill selected={mbti === ""} onClick={() => setMbti("")}>
+              아직 몰라요
+            </MbtiPill>
+            <div className="grid grid-cols-4 gap-2">
+              {MBTIS.map((m) => (
+                <MbtiPill key={m} selected={mbti === m} onClick={() => setMbti(m)}>
+                  {m}
+                </MbtiPill>
+              ))}
+            </div>
+          </div>
+        </div>
         {error && <p className="text-sm text-accent-coral">{error}</p>}
         <button
           onClick={compute}
@@ -144,5 +148,25 @@ export default function MatchForm({ me, nickname }: { me: MatchMe; nickname: str
         </div>
       )}
     </div>
+  );
+}
+
+// 네이티브 <select>는 OS별로 브랜드 톤과 어긋나게 렌더링돼(온보딩 MBTI 선택과도 이질감) 알약형
+// 버튼 그리드로 대체한다 — 온보딩(app/onboarding/page.tsx)의 Choice와 같은 결.
+function MbtiPill({
+  children, selected, onClick,
+}: { children: React.ReactNode; selected: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-card border py-2 text-sm font-medium transition-colors ${
+        selected
+          ? "border-primary-green bg-primary-green text-white"
+          : "border-text-soft/30 bg-warm-base text-text-main"
+      }`}
+    >
+      {children}
+    </button>
   );
 }
