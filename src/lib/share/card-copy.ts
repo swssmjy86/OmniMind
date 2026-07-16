@@ -7,11 +7,23 @@ import { isMbti } from "@/lib/engine/mbti";
 import { isBloodType } from "@/lib/engine/blood";
 import { isZodiacSign, type ZodiacSign } from "@/lib/engine/zodiac";
 import type { DailyGuide } from "@/lib/interpret/content/daily";
+import type { InterpretationSection } from "@/lib/interpret/types";
 
 const STEM_HANJA: Record<string, string> = {
   갑: "甲", 을: "乙", 병: "丙", 정: "丁", 무: "戊", 기: "己", 경: "庚", 신: "辛", 임: "壬", 계: "癸",
 };
 const ELEMENT_HANJA: Record<string, string> = { 목: "木", 화: "火", 토: "土", 금: "金", 수: "水" };
+
+/** 일간 천간↔오행 일치 검증. 모든 카드 모드의 dm/el 쿼리 파라미터가 공유. */
+function validDmEl(dm: string, el: string): boolean {
+  const si = (HEAVENLY_STEMS as readonly string[]).indexOf(dm);
+  return si >= 0 && ELEMENTS[stemElement(si)] === el;
+}
+
+/** 일간 한자 조합("甲木") — 카드 장식 심볼. dm/el 유효성은 호출 전 validDmEl로 확인돼 있어야 한다. */
+function hanjaOf(dm: string, el: string): string {
+  return `${STEM_HANJA[dm]}${ELEMENT_HANJA[el]}`;
+}
 
 // 조합 수(일간 10 × MBTI 16 × 별자리 12 = 1,920). 궁금증 유발용 훅.
 export const COMBO_COUNT = 10 * 16 * 12;
@@ -34,13 +46,13 @@ export interface CardCopy {
 }
 
 export function copyFromParams(p: CardParams): CardCopy {
-  const dm = `${p.dm}${p.el}(${STEM_HANJA[p.dm]}${ELEMENT_HANJA[p.el]})`;
+  const hanja = hanjaOf(p.dm, p.el);
   return {
-    line1: `${dm}의 ${p.mbti}`,
+    line1: `${p.dm}${p.el}(${hanja})의 ${p.mbti}`,
     line2: p.blood ? `${p.zo} · ${p.blood}형` : p.zo,
     hook: `${COMBO_COUNT.toLocaleString("en-US")}가지 조합 중 하나의 나`,
     slogan: "나보다 나를 더 잘 아는, 옴니마인드",
-    hanja: `${STEM_HANJA[p.dm]}${ELEMENT_HANJA[p.el]}`,
+    hanja,
   };
 }
 
@@ -75,9 +87,7 @@ export function parseCardParams(sp: URLSearchParams): CardParams | null {
   const zo = sp.get("zo") ?? "";
   const blood = sp.get("blood");
 
-  const si = (HEAVENLY_STEMS as readonly string[]).indexOf(dm);
-  if (si < 0) return null;
-  if (ELEMENTS[stemElement(si)] !== el) return null;
+  if (!validDmEl(dm, el)) return null;
   if (!isMbti(mbti)) return null;
   if (!isZodiacSign(zo)) return null;
   if (blood !== null && !isBloodType(blood)) return null;
@@ -128,7 +138,7 @@ export function dailyCardParams(ctx: ProfileContext, guide: DailyGuide): DailyCa
 
 export function dailyCopyFromParams(p: DailyCardParams): DailyCardCopy {
   return {
-    hanja: `${STEM_HANJA[p.dm]}${ELEMENT_HANJA[p.el]}`,
+    hanja: hanjaOf(p.dm, p.el),
     headline: p.headline,
     mind: p.mind,
     personal: p.personal,
@@ -168,9 +178,7 @@ export function parseDailyCardParams(sp: URLSearchParams): DailyCardParams | nul
   const lucky = sp.get("lucky") ?? "";
   const personal = sp.get("personal");
 
-  const si = (HEAVENLY_STEMS as readonly string[]).indexOf(dm);
-  if (si < 0) return null;
-  if (ELEMENTS[stemElement(si)] !== el) return null;
+  if (!validDmEl(dm, el)) return null;
   if (!headline || !mind || !color || !keyword || !lucky) return null;
   if (
     headline.length > DAILY_FIELD_MAX.headline ||
@@ -184,4 +192,105 @@ export function parseDailyCardParams(sp: URLSearchParams): DailyCardParams | nul
   }
 
   return { dm, el, headline, mind, personal, color, keyword, lucky };
+}
+
+// ── 나의 조각 카드 — "온전한 나" 프로필 전체 섹션(§P4-보강: 조각들을 전부 이미지로) ──
+
+const PROFILE_FIELD_MAX = { nickname: 20, sectionTitle: 20, sectionBody: 260 };
+const PROFILE_MAX_SECTIONS = 10; // assembleProfile은 7섹션 고정이지만 LLM 캐시본을 대비해 여유를 둔다.
+
+export interface ProfileCardParams {
+  dm: string;
+  el: string;
+  nickname: string;
+  sections: InterpretationSection[];
+}
+
+export interface ProfileCardCopy {
+  hanja: string;
+  nickname: string;
+  sections: InterpretationSection[];
+  cta: string;
+  slogan: string;
+}
+
+/**
+ * nickname·sections 길이를 카드 표시 상한에 맞춰 방어적으로 자른다. 호출부(온보딩 등)의
+ * 입력 검증이 느슨해지거나 향후 LLM 개인화 섹션이 더 길어져도, 쿼리가 항상
+ * parseProfileCardParams를 통과해 공유 카드가 조용히 깨지는 일이 없도록 한다.
+ */
+export function profileCardParams(
+  ctx: ProfileContext,
+  nickname: string,
+  sections: InterpretationSection[],
+): ProfileCardParams {
+  return {
+    dm: ctx.dayMaster.stem,
+    el: ctx.dayMaster.element,
+    nickname: nickname.slice(0, PROFILE_FIELD_MAX.nickname),
+    sections: sections.slice(0, PROFILE_MAX_SECTIONS).map((s) => ({
+      title: s.title.slice(0, PROFILE_FIELD_MAX.sectionTitle),
+      body: s.body.slice(0, PROFILE_FIELD_MAX.sectionBody),
+    })),
+  };
+}
+
+export function profileCopyFromParams(p: ProfileCardParams): ProfileCardCopy {
+  return {
+    hanja: hanjaOf(p.dm, p.el),
+    nickname: p.nickname,
+    sections: p.sections,
+    cta: "나의 조각 다시 보기 →",
+    slogan: "나보다 나를 더 잘 아는, 옴니마인드",
+  };
+}
+
+/** /api/card?mode=profile 쿼리 문자열. sections는 JSON으로 직렬화해 담는다. */
+export function profileCardQuery(
+  ctx: ProfileContext,
+  nickname: string,
+  sections: InterpretationSection[],
+): string {
+  const p = profileCardParams(ctx, nickname, sections);
+  const sp = new URLSearchParams({
+    mode: "profile",
+    dm: p.dm,
+    el: p.el,
+    nickname: p.nickname,
+    sections: JSON.stringify(p.sections),
+  });
+  return sp.toString();
+}
+
+function isValidSection(v: unknown): v is InterpretationSection {
+  if (typeof v !== "object" || v === null) return false;
+  const s = v as Record<string, unknown>;
+  return (
+    typeof s.title === "string" && typeof s.body === "string" &&
+    s.title.length > 0 && s.title.length <= PROFILE_FIELD_MAX.sectionTitle &&
+    s.body.length > 0 && s.body.length <= PROFILE_FIELD_MAX.sectionBody
+  );
+}
+
+/** 쿼리 파라미터 검증·파싱. 길이 초과·형식 오류·일간↔오행 불일치면 null. */
+export function parseProfileCardParams(sp: URLSearchParams): ProfileCardParams | null {
+  const dm = sp.get("dm") ?? "";
+  const el = sp.get("el") ?? "";
+  const nickname = sp.get("nickname") ?? "";
+  const raw = sp.get("sections") ?? "";
+
+  if (!validDmEl(dm, el)) return null;
+  if (!nickname || nickname.length > PROFILE_FIELD_MAX.nickname) return null;
+  if (!raw) return null;
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return null;
+  }
+  if (!Array.isArray(parsed) || parsed.length === 0 || parsed.length > PROFILE_MAX_SECTIONS) return null;
+  if (!parsed.every(isValidSection)) return null;
+
+  return { dm, el, nickname, sections: parsed };
 }

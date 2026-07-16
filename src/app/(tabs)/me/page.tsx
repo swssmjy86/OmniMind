@@ -5,7 +5,7 @@ import { currentDaeun } from "@/lib/engine/daeun";
 import { daeunSeasonText } from "@/lib/interpret/content/daeun";
 import { toKstParts } from "@/lib/engine/kst";
 import { assembleProfile } from "@/lib/interpret/templates";
-import { cardQuery } from "@/lib/share/card-copy";
+import { profileCardQuery } from "@/lib/share/card-copy";
 import SajuChart from "@/components/profile/SajuChart";
 import ShareSheet from "@/components/share/ShareSheet";
 import type { ProfileRow, InterpretationRow } from "@/lib/db/types";
@@ -132,7 +132,11 @@ export default async function MePage() {
         ))}
       </div>
 
-      <ShareSheet query={cardQuery(ctx)} via="profile" label="나의 조각 카드" />
+      <ShareSheet
+        query={profileCardQuery(ctx, profile.nickname, sections)}
+        via="profile"
+        label="나의 조각 카드"
+      />
 
       {/* P7 궁합 — 우리의 조합 입구 */}
       <Link
