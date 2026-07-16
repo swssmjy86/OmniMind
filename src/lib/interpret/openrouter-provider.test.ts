@@ -54,7 +54,7 @@ describe("OpenRouterProvider", () => {
       }),
     );
     const body = JSON.parse(fetchMock.mock.calls[0][1].body);
-    expect(body.model).toBe("deepseek/deepseek-chat-v3.1:free");
+    expect(body.model).toBe("google/gemma-4-26b-a4b-it:free");
     expect(body.messages[0]).toEqual({ role: "system", content: expect.stringContaining("달빛") });
     expect(body.messages.at(-1)).toEqual({ role: "user", content: "오늘 좀 힘들어요" });
     // 이전 대화 이력이 순서대로 이어 붙는다.
