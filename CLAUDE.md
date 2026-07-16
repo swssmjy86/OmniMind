@@ -72,7 +72,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - **Next.js** (TypeScript, App Router) — Vercel 무료 티어 배포
 - **Supabase** — PostgreSQL DB + 카카오/구글 소셜 로그인
-- **Gemini API 무료 티어** — LLM 해석 (Provider 인터페이스 뒤에 배치, 수익 발생 시 유료 모델로 교체)
+- **OpenRouter 무료 모델** — LLM 해석 (Provider 인터페이스 뒤에 배치, 수익 발생 시 유료 모델로 교체). Gemini 어댑터(`gemini-provider.ts`)도 같은 인터페이스로 남아있어 설정만 바꾸면 전환 가능
 - **운영 비용 원칙: 월 고정비 0원** — 무료 티어/무료 API만 사용
 
 ### 핵심 아키텍처 원칙

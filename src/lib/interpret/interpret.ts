@@ -1,6 +1,6 @@
 import type { ChatInput, InterpretProvider } from "./provider";
 import { TemplateProvider } from "./template-provider";
-import { GeminiProvider } from "./gemini-provider";
+import { OpenRouterProvider } from "./openrouter-provider";
 import { checkTone } from "./tone-guard";
 
 export interface ChatResponse {
@@ -16,18 +16,20 @@ function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
 }
 
 /**
- * 3단 폴백 체인: Gemini(1단계) 시도 → 실패/톤위반/타임아웃 → 템플릿(0단계).
+ * 3단 폴백 체인: LLM(1단계, OpenRouter 무료 모델) 시도 → 실패/톤위반/타임아웃 → 템플릿(0단계).
  * 절대 예외를 밖으로 던지지 않는다. LLM 장애는 정상 경로(설계서 §8).
  */
 export async function respond(
   input: ChatInput,
   deps: { llm?: InterpretProvider; template?: InterpretProvider } = {},
 ): Promise<ChatResponse> {
-  const llm = deps.llm ?? new GeminiProvider();
+  const llm = deps.llm ?? new OpenRouterProvider();
   const template = deps.template ?? new TemplateProvider();
 
   try {
-    const text = await withTimeout(llm.chat(input), 8000);
+    // 무료 티어 모델(OpenRouter :free 등)은 부하 시 대기열에 걸려 응답이 느려질 수 있어
+    // 여유를 두었다 — 그래도 넘기면 정상 경로인 템플릿 폴백으로(설계서 §8).
+    const text = await withTimeout(llm.chat(input), 12000);
     if (text.trim() && checkTone(text).length === 0) {
       return { text: text.trim(), source: "llm" };
     }

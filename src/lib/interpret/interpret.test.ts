@@ -65,7 +65,7 @@ describe("respond — 3단 폴백", () => {
     expect(r.source).toBe("llm");
   });
 
-  it("키 없는 기본 Gemini는 템플릿으로 폴백(예외 없음)", async () => {
+  it("키 없는 기본 OpenRouter는 템플릿으로 폴백(예외 없음)", async () => {
     const r = await respond(base("안녕"));
     expect(r.source).toBe("template");
     expect(r.text).toContain("다인");
