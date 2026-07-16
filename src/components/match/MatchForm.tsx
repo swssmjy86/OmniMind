@@ -8,6 +8,7 @@ import {
 import { assembleMatch } from "@/lib/interpret/content/match";
 import { createInvite } from "@/lib/match/actions";
 import { recordClientEvent } from "@/lib/metrics/actions";
+import Choice from "@/components/ui/Choice";
 import type { InterpretationSection } from "@/lib/interpret/types";
 import type { Mbti } from "@/lib/engine/types";
 
@@ -98,14 +99,20 @@ export default function MatchForm({ me, nickname }: { me: MatchMe; nickname: str
         <div>
           <span className="text-sm text-text-soft">상대의 MBTI (알고 있다면)</span>
           <div className="mt-1.5 space-y-2">
-            <MbtiPill selected={mbti === ""} onClick={() => setMbti("")}>
+            <Choice small unselectedBg="bg-warm-base" selected={mbti === ""} onClick={() => setMbti("")}>
               아직 몰라요
-            </MbtiPill>
+            </Choice>
             <div className="grid grid-cols-4 gap-2">
               {MBTIS.map((m) => (
-                <MbtiPill key={m} selected={mbti === m} onClick={() => setMbti(m)}>
+                <Choice
+                  key={m}
+                  small
+                  unselectedBg="bg-warm-base"
+                  selected={mbti === m}
+                  onClick={() => setMbti(m)}
+                >
                   {m}
-                </MbtiPill>
+                </Choice>
               ))}
             </div>
           </div>
@@ -148,25 +155,5 @@ export default function MatchForm({ me, nickname }: { me: MatchMe; nickname: str
         </div>
       )}
     </div>
-  );
-}
-
-// 네이티브 <select>는 OS별로 브랜드 톤과 어긋나게 렌더링돼(온보딩 MBTI 선택과도 이질감) 알약형
-// 버튼 그리드로 대체한다 — 온보딩(app/onboarding/page.tsx)의 Choice와 같은 결.
-function MbtiPill({
-  children, selected, onClick,
-}: { children: React.ReactNode; selected: boolean; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`rounded-card border py-2 text-sm font-medium transition-colors ${
-        selected
-          ? "border-primary-green bg-primary-green text-white"
-          : "border-text-soft/30 bg-warm-base text-text-main"
-      }`}
-    >
-      {children}
-    </button>
   );
 }
