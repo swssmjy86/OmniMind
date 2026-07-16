@@ -1,10 +1,13 @@
 // P4-1 공유 카드 이미지 — GET /api/card?dm=갑&el=목&mbti=ENFJ&zo=사자자리&blood=O (유형 조합 티저)
 // 또는 GET /api/card?mode=daily&dm=갑&el=목&headline=…&mind=…&color=…&keyword=…&lucky=… (오늘의 나, 전체 문구)
-// 기본 9:16(1080×1920), ?ratio=1 → 1:1(1080×1080). 쿼리는 생년월일시를 절대 담지 않는다.
+// 또는 GET /api/card?mode=profile&dm=갑&el=목&nickname=…&sections=[…] (나의 조각, 프로필 전체 섹션)
+// 너비는 항상 1080, 높이는 모드별 콘텐츠 분량에 맞춘다(각 render* 함수가 함께 정한다).
+// ?ratio=1은 정방형(1080×1080)을 강제. 쿼리는 생년월일시를 절대 담지 않는다.
 import { ImageResponse } from "next/og";
 import {
   parseCardParams, copyFromParams,
   parseDailyCardParams, dailyCopyFromParams,
+  parseProfileCardParams, profileCopyFromParams,
 } from "@/lib/share/card-copy";
 
 export const runtime = "edge";
@@ -139,7 +142,7 @@ function renderTeaser(searchParams: URLSearchParams, square: boolean) {
     </CardFrame>
   );
 
-  return { node, fontText };
+  return { node, fontText, height: square ? 1080 : 1920 };
 }
 
 function renderDaily(searchParams: URLSearchParams, square: boolean) {
@@ -245,7 +248,94 @@ function renderDaily(searchParams: URLSearchParams, square: boolean) {
     </CardFrame>
   );
 
-  return { node, fontText };
+  // 문구가 짧아 1080×1920(스토리) 캔버스를 쓰면 아래쪽이 크게 비므로, 더 낮은 4:5 캔버스를 쓴다.
+  return { node, fontText, height: square ? 1080 : 1350 };
+}
+
+// 한 줄에 들어가는 글자 수를 살짝 보수적으로(넓게) 잡아 줄 수를 과소평가하지 않는다 —
+// 텍스트가 캔버스 밖으로 잘리는 쪽보다 아래쪽 여백이 조금 느는 쪽이 낫다.
+function estimateLines(text: string, fontSize: number, boxWidth: number): number {
+  const charsPerLine = Math.max(1, Math.floor(boxWidth / (fontSize * 1.05)));
+  return Math.max(1, Math.ceil(text.length / charsPerLine));
+}
+
+function estimateProfileHeight(nickname: string, sections: { title: string; body: string }[]): number {
+  const pad = 96;
+  const boxWidth = 1080 - pad * 2;
+  let h = pad * 2; // 상하 패딩
+  h += 30 + 8 + 24 + 24; // OmniMind 워드마크 + eyebrow + 제목 앞 여백
+  h += estimateLines(`${nickname}님의 이야기`, 44, boxWidth) * 44 * 1.3;
+  h += 28 * 2 + 4; // 구분선 블록(margin 28+28 + height 4)
+  for (const s of sections) {
+    h += 28 * 1.3 + 8; // 섹션 제목 한 줄 + 제목-본문 간격
+    h += estimateLines(s.body, 24, boxWidth) * 24 * 1.6;
+    h += 32; // 다음 섹션과의 간격
+  }
+  h += 40 + 32 * 1.4 + 24 + 24 * 1.4; // 하단 CTA 버튼 + 슬로건
+  return Math.min(4200, Math.max(1400, Math.round(h)));
+}
+
+function renderProfile(searchParams: URLSearchParams) {
+  const p = parseProfileCardParams(searchParams);
+  if (!p) return null;
+  const c = profileCopyFromParams(p);
+  const fontText =
+    c.nickname + c.cta + c.slogan + c.hanja +
+    c.sections.flatMap((s) => [s.title, s.body]).join("") +
+    "OmniMind나의 조각님의 이야기";
+
+  const height = estimateProfileHeight(c.nickname, c.sections);
+
+  const node = (
+    <CardFrame square={false} hanjaSize={560} hanja={c.hanja} eyebrow="나의 조각">
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        <div
+          style={{
+            display: "flex", fontSize: 44, marginTop: 24, color: C.green, lineHeight: 1.3, fontWeight: 600,
+          }}
+        >
+          {c.nickname}님의 이야기
+        </div>
+        <div
+          style={{
+            width: 120,
+            height: 4,
+            marginTop: 28,
+            marginBottom: 28,
+            backgroundColor: C.coral,
+            opacity: 0.6,
+          }}
+        />
+        {c.sections.map((s, i) => (
+          <div
+            key={i}
+            style={{ display: "flex", flexDirection: "column", marginBottom: 32 }}
+          >
+            <div style={{ fontSize: 28, color: C.green, fontWeight: 600 }}>{s.title}</div>
+            <div style={{ marginTop: 8, fontSize: 24, color: C.text, lineHeight: 1.6 }}>{s.body}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", marginTop: 40 }}>
+        <div
+          style={{
+            display: "flex",
+            backgroundColor: C.coral,
+            color: C.surface,
+            fontSize: 32,
+            padding: "18px 40px",
+            borderRadius: 999,
+          }}
+        >
+          {c.cta}
+        </div>
+        <div style={{ fontSize: 24, marginTop: 24, color: C.softText }}>{c.slogan}</div>
+      </div>
+    </CardFrame>
+  );
+
+  return { node, fontText, height };
 }
 
 export async function GET(req: Request) {
@@ -253,18 +343,19 @@ export async function GET(req: Request) {
   const square = searchParams.get("ratio") === "1";
   const mode = searchParams.get("mode");
 
-  const rendered = mode === "daily" ? renderDaily(searchParams, square) : renderTeaser(searchParams, square);
+  // 각 render* 함수가 자신의 콘텐츠 분량에 맞는 height까지 함께 정해 돌려준다 —
+  // 모드가 늘어나도 GET에서 캔버스 크기 분기를 따로 유지할 필요가 없다.
+  const rendered =
+    mode === "daily" ? renderDaily(searchParams, square) :
+    mode === "profile" ? renderProfile(searchParams) :
+    renderTeaser(searchParams, square);
   if (!rendered) return new Response("잘못된 카드 파라미터예요", { status: 400 });
 
   const serif = await loadNotoSerifKR(rendered.fontText);
 
-  // 오늘의 나 카드는 문구가 짧아 1080×1920(스토리) 캔버스를 쓰면 아래쪽이 크게 비므로,
-  // 더 낮은 4:5 캔버스를 쓴다. 유형 조합 티저 카드는 기존 스토리 규격을 유지한다.
-  const height = square ? 1080 : mode === "daily" ? 1350 : 1920;
-
   return new ImageResponse(rendered.node, {
     width: 1080,
-    height,
+    height: rendered.height,
     fonts: [{ name: "NotoSerifKR", data: serif, weight: 600, style: "normal" }],
     headers: {
       "Cache-Control": "public, max-age=31536000, immutable",

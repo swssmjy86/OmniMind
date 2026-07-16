@@ -13,6 +13,10 @@ import {
   dailyCardParams,
   dailyCopyFromParams,
   parseDailyCardParams,
+  profileCardQuery,
+  profileCardParams,
+  profileCopyFromParams,
+  parseProfileCardParams,
 } from "./card-copy";
 
 const ctx = computeProfile({
@@ -156,6 +160,87 @@ describe("오늘의 나 카드 — dailyCardQuery ↔ parseDailyCardParams", () 
 
   it("고정 카피(cta·slogan)는 톤 가드를 통과한다", () => {
     const c = dailyCopyFromParams(dailyCardParams(ctx, guide));
+    expect(checkTone(c.cta)).toEqual([]);
+    expect(checkTone(c.slogan)).toEqual([]);
+  });
+});
+
+describe("나의 조각 카드 — profileCardQuery ↔ parseProfileCardParams", () => {
+  const sections = [
+    { title: "당신을 만나서", body: "달빛님, 여름의 한가운데에서 태어난 당신은 스스로 빛을 내는 기운이 있어요." },
+    { title: "타고난 결", body: "사주의 중심이 되는 일간은 '무', 토의 기운을 타고났어요." },
+  ];
+
+  it("왕복하면 동일 파라미터", () => {
+    const q = profileCardQuery(ctx, "달빛", sections);
+    const p = parseProfileCardParams(new URLSearchParams(q));
+    expect(p).toEqual({
+      dm: ctx.dayMaster.stem,
+      el: ctx.dayMaster.element,
+      nickname: "달빛",
+      sections,
+    });
+  });
+
+  it("mode=profile이 쿼리에 포함된다", () => {
+    expect(profileCardQuery(ctx, "달빛", sections)).toMatch(/(?:^|&)mode=profile(?:&|$)/);
+  });
+
+  it("생년월일시가 쿼리에 절대 포함되지 않는다", () => {
+    expect(profileCardQuery(ctx, "달빛", sections)).not.toMatch(/1995|08-15|10:30/);
+  });
+
+  it("닉네임이 비거나 상한을 넘으면 null", () => {
+    const sp = new URLSearchParams(profileCardQuery(ctx, "달빛", sections));
+    sp.set("nickname", "가".repeat(30));
+    expect(parseProfileCardParams(sp)).toBeNull();
+  });
+
+  it("sections가 JSON이 아니면 null", () => {
+    const sp = new URLSearchParams(profileCardQuery(ctx, "달빛", sections));
+    sp.set("sections", "이건 JSON이 아니에요");
+    expect(parseProfileCardParams(sp)).toBeNull();
+  });
+
+  it("sections가 빈 배열이면 null", () => {
+    const sp = new URLSearchParams(profileCardQuery(ctx, "달빛", []));
+    expect(parseProfileCardParams(sp)).toBeNull();
+  });
+
+  it("섹션 개수가 상한을 넘으면 null", () => {
+    const many = Array.from({ length: 11 }, (_, i) => ({ title: `섹션${i}`, body: "본문" }));
+    const sp = new URLSearchParams(profileCardQuery(ctx, "달빛", many));
+    expect(parseProfileCardParams(sp)).toBeNull();
+  });
+
+  it("섹션 본문 길이가 상한을 넘으면 null", () => {
+    const tooLong = [{ title: "제목", body: "가".repeat(300) }];
+    const sp = new URLSearchParams(profileCardQuery(ctx, "달빛", tooLong));
+    expect(parseProfileCardParams(sp)).toBeNull();
+  });
+
+  it("섹션에 title·body가 아닌 필드가 섞이면 null", () => {
+    const sp = new URLSearchParams(profileCardQuery(ctx, "달빛", sections));
+    sp.set("sections", JSON.stringify([{ title: "제목" }]));
+    expect(parseProfileCardParams(sp)).toBeNull();
+  });
+
+  it("일간↔오행이 불일치하면 null", () => {
+    const sp = new URLSearchParams(profileCardQuery(ctx, "달빛", sections));
+    sp.set("el", ctx.dayMaster.element === "화" ? "수" : "화");
+    expect(parseProfileCardParams(sp)).toBeNull();
+  });
+
+  it("profileCopyFromParams는 섹션을 그대로 옮긴다", () => {
+    const p = parseProfileCardParams(new URLSearchParams(profileCardQuery(ctx, "달빛", sections)));
+    const c = profileCopyFromParams(p!);
+    expect(c.nickname).toBe("달빛");
+    expect(c.sections).toEqual(sections);
+    expect(c.hanja).toHaveLength(2);
+  });
+
+  it("고정 카피(cta·slogan)는 톤 가드를 통과한다", () => {
+    const c = profileCopyFromParams(profileCardParams(ctx, "달빛", sections));
     expect(checkTone(c.cta)).toEqual([]);
     expect(checkTone(c.slogan)).toEqual([]);
   });
