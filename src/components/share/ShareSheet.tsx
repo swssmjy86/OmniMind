@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { recordClientEvent } from "@/lib/metrics/actions";
+import { pngDimensions } from "@/lib/share/pdf";
 
 interface Props {
   query: string; // /api/card 쿼리 문자열 (유형 조합만, 개인정보 없음)
@@ -13,6 +14,8 @@ interface Props {
 export default function ShareSheet({ query, via, label }: Props) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [pdfPending, setPdfPending] = useState(false);
+  const [pdfError, setPdfError] = useState(false);
 
   const cardSrc = `/api/card?${query}`;
   const shareUrl = () => `${window.location.origin}/?ref=card&via=${via}`;
@@ -51,7 +54,38 @@ export default function ShareSheet({ query, via, label }: Props) {
 
   function openSheet() {
     setOpen(true);
+    setPdfError(false); // 이전에 실패했던 흔적을 새로 열 때는 지운다
     void recordClientEvent("card_open", { via });
+  }
+
+  /** 카드 PNG를 그대로 한 장짜리 PDF로 감싸 저장. 페이지 크기를 이미지 픽셀 크기에 맞춰
+   * "나의 조각"처럼 세로로 긴 카드도 잘리지 않는다. PNG 바이트에서 폭·높이를 직접 읽어
+   * createImageBitmap/FileReader 없이 한 번의 fetch로 끝낸다(구형 브라우저 호환성도 좋아짐).
+   * jsPDF는 클릭 시에만 동적 로드(초기 번들 영향 없음) — 클라이언트 처리라 서버 비용도 없다. */
+  async function downloadPdf() {
+    if (pdfPending) return;
+    setPdfPending(true);
+    setPdfError(false);
+    try {
+      const bytes = new Uint8Array(await (await fetch(cardSrc)).arrayBuffer());
+      const size = pngDimensions(bytes);
+      if (!size) throw new Error("png-dimensions");
+
+      const { jsPDF } = await import("jspdf");
+      const doc = new jsPDF({
+        orientation: size.width >= size.height ? "landscape" : "portrait",
+        unit: "px",
+        format: [size.width, size.height],
+        hotfixes: ["px_scaling"], // px 단위 스케일 보정 — 없으면 이미지가 페이지보다 크게 그려진다
+      });
+      doc.addImage(bytes, "PNG", 0, 0, size.width, size.height);
+      doc.save(`omnimind-${via}.pdf`);
+      void recordClientEvent("card_download_pdf", { via });
+    } catch {
+      setPdfError(true);
+    } finally {
+      setPdfPending(false);
+    }
   }
 
   if (!open) {
@@ -74,27 +108,39 @@ export default function ShareSheet({ query, via, label }: Props) {
         alt={label}
         className="mt-3 w-full rounded-card border border-warm-base"
       />
-      <div className="mt-4 flex gap-2">
+      <div className="mt-4 grid grid-cols-2 gap-2">
         <button
           onClick={share}
-          className="flex-1 rounded-card bg-accent-coral py-3 text-center font-medium text-white"
+          className="rounded-card bg-accent-coral py-3 text-center font-medium text-white"
         >
           공유하기
         </button>
         <a
           href={cardSrc}
           download="omnimind-card.png"
-          className="flex-1 rounded-card border border-primary-green/30 py-3 text-center font-medium text-primary-green"
+          className="rounded-card border border-primary-green/30 py-3 text-center font-medium text-primary-green"
         >
           이미지 저장
         </a>
         <button
+          onClick={() => void downloadPdf()}
+          disabled={pdfPending}
+          className="rounded-card border border-primary-green/30 py-3 text-center font-medium text-primary-green disabled:opacity-40"
+        >
+          {pdfPending ? "PDF 만드는 중…" : "PDF로 저장"}
+        </button>
+        <button
           onClick={copyLink}
-          className="flex-1 rounded-card border border-primary-green/30 py-3 text-center font-medium text-primary-green"
+          className="rounded-card border border-primary-green/30 py-3 text-center font-medium text-primary-green"
         >
           {copied ? "복사했어요 ✓" : "링크 복사"}
         </button>
       </div>
+      {pdfError && (
+        <p className="mt-2 text-center text-sm text-accent-coral">
+          PDF를 만들지 못했어요. 잠시 후 다시 시도해주세요.
+        </p>
+      )}
     </section>
   );
 }
