@@ -7,6 +7,12 @@
   --primary-green: #2d5a4a;
   --text-main: #3e3a36;
   --text-soft: #8a8178;
+  /* PC 앱 셸 폭 — layout.tsx의 app-shell과 BottomNav가 함께 참조하는 단일 소스. */
+  --shell-width: 480px;
+  --shell-width-lg: 560px;
+  /* 데스크톱 배경 비네트 세기·그림자 — 라이트/다크 각각 눈에 보이는 값으로 분리(§5.2). */
+  --shell-tint-amount: 10%;
+  --shell-shadow: 0 0 80px rgba(0, 0, 0, 0.08);
 }
 
 /* 다크 모드: 딥 그린 바탕 + 베이지 텍스트 (설계서 §5.2) */
@@ -18,6 +24,10 @@
     --primary-green: #f5efe6;
     --text-main: #f5efe6;
     --text-soft: #cfc6b8;
+    /* 어두운 바탕에서는 같은 10%/검정 그림자가 거의 안 보여 세기를 올리고, 그림자는
+       검정 대신 옅은 빛 번짐으로 바꿔 딥 그린 배경 위에서도 카드가 떠 보이게 한다. */
+    --shell-tint-amount: 22%;
+    --shell-shadow: 0 0 80px rgba(245, 239, 230, 0.05);
   }
 }
 
@@ -66,13 +76,13 @@ body {
   body {
     background: radial-gradient(
       1100px circle at 12% 8%,
-      color-mix(in srgb, var(--accent-coral) 10%, var(--warm-base)),
+      color-mix(in srgb, var(--accent-coral) var(--shell-tint-amount), var(--warm-base)),
       var(--warm-base) 55%
     );
   }
   .app-shell {
     border-left: 1px solid color-mix(in srgb, var(--text-soft) 15%, transparent);
     border-right: 1px solid color-mix(in srgb, var(--text-soft) 15%, transparent);
-    box-shadow: 0 0 80px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--shell-shadow);
   }
 }
