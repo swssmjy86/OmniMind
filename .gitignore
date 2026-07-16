@@ -44,3 +44,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# 스킬 패키징 산출물(빌드 결과물 — 소스는 각 스킬의 SKILL.md)
+.claude/skills/*.zip
