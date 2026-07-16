@@ -1,7 +1,11 @@
-// P4-1 공유 카드 이미지 — GET /api/card?dm=갑&el=목&mbti=ENFJ&zo=사자자리&blood=O
-// 기본 9:16(1080×1920), ?ratio=1 → 1:1(1080×1080). 쿼리는 유형 조합만(생년월일시 금지).
+// P4-1 공유 카드 이미지 — GET /api/card?dm=갑&el=목&mbti=ENFJ&zo=사자자리&blood=O (유형 조합 티저)
+// 또는 GET /api/card?mode=daily&dm=갑&el=목&headline=…&mind=…&color=…&keyword=…&lucky=… (오늘의 나, 전체 문구)
+// 기본 9:16(1080×1920), ?ratio=1 → 1:1(1080×1080). 쿼리는 생년월일시를 절대 담지 않는다.
 import { ImageResponse } from "next/og";
-import { parseCardParams, copyFromParams } from "@/lib/share/card-copy";
+import {
+  parseCardParams, copyFromParams,
+  parseDailyCardParams, dailyCopyFromParams,
+} from "@/lib/share/card-copy";
 
 export const runtime = "edge";
 
@@ -11,6 +15,7 @@ const C = {
   surface: "#fdfbf7",
   coral: "#e8927c",
   green: "#2d5a4a",
+  text: "#3e3a36",
   softText: "#8a8178",
 };
 
@@ -28,110 +33,241 @@ async function loadNotoSerifKR(text: string): Promise<ArrayBuffer> {
   return res.arrayBuffer();
 }
 
-export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
+function CardFrame({
+  square, hanjaSize, hanja, eyebrow, children,
+}: {
+  square: boolean;
+  hanjaSize: number;
+  hanja: string;
+  eyebrow: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+        position: "relative",
+        backgroundColor: C.base,
+        padding: square ? 72 : 96,
+        fontFamily: "NotoSerifKR",
+      }}
+    >
+      {/* 장식 심볼 — 일간 한자 워터마크 */}
+      <div
+        style={{
+          position: "absolute",
+          top: square ? -40 : 60,
+          right: -20,
+          fontSize: hanjaSize,
+          color: C.green,
+          opacity: 0.07,
+          lineHeight: 1,
+        }}
+      >
+        {hanja}
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        <div style={{ fontSize: 30, letterSpacing: 6, color: C.softText }}>OmniMind</div>
+        <div style={{ fontSize: 24, marginTop: 8, color: C.softText }}>{eyebrow}</div>
+      </div>
+
+      {children}
+    </div>
+  );
+}
+
+function renderTeaser(searchParams: URLSearchParams, square: boolean) {
   const p = parseCardParams(searchParams);
-  if (!p) return new Response("잘못된 카드 파라미터예요", { status: 400 });
-
-  const square = searchParams.get("ratio") === "1";
-  const width = 1080;
-  const height = square ? 1080 : 1920;
+  if (!p) return null;
   const c = copyFromParams(p);
-
   const fontText =
     c.line1 + c.line2 + c.hook + c.slogan + c.hanja + "나의 조합 보기 →OmniMind온전한";
-  const serif = await loadNotoSerifKR(fontText);
 
   // 규격별 스케일 — 1:1은 세로 여백이 없어 전체적으로 조밀하게.
   const s = square
-    ? { pad: 72, hanja: 420, hook: 34, line1: 72, line2: 44, cta: 34, slogan: 26 }
-    : { pad: 96, hanja: 560, hook: 38, line1: 84, line2: 50, cta: 38, slogan: 30 };
+    ? { hanja: 420, hook: 34, line1: 72, line2: 44, cta: 34, slogan: 26 }
+    : { hanja: 560, hook: 38, line1: 84, line2: 50, cta: 38, slogan: 30 };
 
-  return new ImageResponse(
-    (
-      <div
-        style={{
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-between",
-          position: "relative",
-          backgroundColor: C.base,
-          padding: s.pad,
-          fontFamily: "NotoSerifKR",
-        }}
-      >
-        {/* 장식 심볼 — 일간 한자 워터마크 */}
+  const node = (
+    <CardFrame square={square} hanjaSize={s.hanja} hanja={c.hanja} eyebrow="온전한 나">
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        <div style={{ fontSize: s.hook, color: C.coral }}>{c.hook}</div>
         <div
           style={{
-            position: "absolute",
-            top: square ? -40 : 60,
-            right: -20,
-            fontSize: s.hanja,
+            fontSize: s.line1,
+            marginTop: 24,
             color: C.green,
-            opacity: 0.07,
-            lineHeight: 1,
+            lineHeight: 1.25,
+            fontWeight: 600,
           }}
         >
-          {c.hanja}
+          {c.line1}
         </div>
+        <div
+          style={{
+            width: 120,
+            height: 4,
+            marginTop: 36,
+            marginBottom: 36,
+            backgroundColor: C.coral,
+            opacity: 0.6,
+          }}
+        />
+        <div style={{ fontSize: s.line2, color: C.softText }}>{c.line2}</div>
+      </div>
 
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          <div style={{ fontSize: 30, letterSpacing: 6, color: C.softText }}>OmniMind</div>
-          <div style={{ fontSize: 24, marginTop: 8, color: C.softText }}>온전한 나</div>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
+        <div
+          style={{
+            display: "flex",
+            backgroundColor: C.coral,
+            color: C.surface,
+            fontSize: s.cta,
+            padding: "20px 44px",
+            borderRadius: 999,
+          }}
+        >
+          나의 조합 보기 →
         </div>
+        <div style={{ fontSize: s.slogan, marginTop: 28, color: C.softText }}>{c.slogan}</div>
+      </div>
+    </CardFrame>
+  );
 
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          <div style={{ fontSize: s.hook, color: C.coral }}>{c.hook}</div>
-          <div
-            style={{
-              fontSize: s.line1,
-              marginTop: 24,
-              color: C.green,
-              lineHeight: 1.25,
-              fontWeight: 600,
-            }}
-          >
-            {c.line1}
-          </div>
-          <div
-            style={{
-              width: 120,
-              height: 4,
-              marginTop: 36,
-              marginBottom: 36,
-              backgroundColor: C.coral,
-              opacity: 0.6,
-            }}
-          />
-          <div style={{ fontSize: s.line2, color: C.softText }}>{c.line2}</div>
+  return { node, fontText };
+}
+
+function renderDaily(searchParams: URLSearchParams, square: boolean) {
+  const p = parseDailyCardParams(searchParams);
+  if (!p) return null;
+  const d = dailyCopyFromParams(p);
+  const fontText =
+    d.headline + d.mind + (d.personal ?? "") + d.color + d.keyword + d.lucky +
+    d.cta + d.slogan + d.hanja + "OmniMind오늘의 나오늘의 색 · 🍀 행운 포인트 — ";
+
+  const s = square
+    ? { hanja: 420, headline: 40, mind: 26, personal: 24, chip: 20, lucky: 22, cta: 28, slogan: 20 }
+    : { hanja: 560, headline: 46, mind: 32, personal: 28, chip: 24, lucky: 26, cta: 32, slogan: 24 };
+
+  const node = (
+    <CardFrame square={square} hanjaSize={s.hanja} hanja={d.hanja} eyebrow="오늘의 나">
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        <div
+          style={{
+            fontSize: s.headline,
+            color: C.green,
+            lineHeight: 1.35,
+            fontWeight: 600,
+          }}
+        >
+          {d.headline}
         </div>
+        <div
+          style={{
+            width: 120,
+            height: 4,
+            marginTop: 28,
+            marginBottom: 28,
+            backgroundColor: C.coral,
+            opacity: 0.6,
+          }}
+        />
+        <div style={{ fontSize: s.mind, color: C.text, lineHeight: 1.6 }}>{d.mind}</div>
 
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
+        {d.personal && (
           <div
             style={{
               display: "flex",
-              backgroundColor: C.coral,
-              color: C.surface,
-              fontSize: s.cta,
-              padding: "20px 44px",
+              marginTop: 24,
+              padding: 26,
+              borderRadius: 20,
+              backgroundColor: C.surface,
+              fontSize: s.personal,
+              color: C.text,
+              lineHeight: 1.6,
+            }}
+          >
+            {d.personal}
+          </div>
+        )}
+
+        <div style={{ display: "flex", marginTop: 28, gap: 12 }}>
+          <div
+            style={{
+              display: "flex",
+              backgroundColor: C.surface,
+              color: C.softText,
+              fontSize: s.chip,
+              padding: "12px 22px",
               borderRadius: 999,
             }}
           >
-            나의 조합 보기 →
+            오늘의 색 · {d.color}
           </div>
-          <div style={{ fontSize: s.slogan, marginTop: 28, color: C.softText }}>{c.slogan}</div>
+          <div
+            style={{
+              display: "flex",
+              backgroundColor: C.surface,
+              color: C.softText,
+              fontSize: s.chip,
+              padding: "12px 22px",
+              borderRadius: 999,
+            }}
+          >
+            {d.keyword}
+          </div>
+        </div>
+        <div style={{ display: "flex", fontSize: s.lucky, marginTop: 20, color: C.softText }}>
+          🍀 행운 포인트 — {d.lucky}
         </div>
       </div>
-    ),
-    {
-      width,
-      height,
-      fonts: [{ name: "NotoSerifKR", data: serif, weight: 600, style: "normal" }],
-      headers: {
-        "Cache-Control": "public, max-age=31536000, immutable",
-      },
-    },
+
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
+        <div
+          style={{
+            display: "flex",
+            backgroundColor: C.coral,
+            color: C.surface,
+            fontSize: s.cta,
+            padding: "18px 40px",
+            borderRadius: 999,
+          }}
+        >
+          {d.cta}
+        </div>
+        <div style={{ fontSize: s.slogan, marginTop: 24, color: C.softText }}>{d.slogan}</div>
+      </div>
+    </CardFrame>
   );
+
+  return { node, fontText };
+}
+
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const square = searchParams.get("ratio") === "1";
+  const mode = searchParams.get("mode");
+
+  const rendered = mode === "daily" ? renderDaily(searchParams, square) : renderTeaser(searchParams, square);
+  if (!rendered) return new Response("잘못된 카드 파라미터예요", { status: 400 });
+
+  const serif = await loadNotoSerifKR(rendered.fontText);
+
+  // 오늘의 나 카드는 문구가 짧아 1080×1920(스토리) 캔버스를 쓰면 아래쪽이 크게 비므로,
+  // 더 낮은 4:5 캔버스를 쓴다. 유형 조합 티저 카드는 기존 스토리 규격을 유지한다.
+  const height = square ? 1080 : mode === "daily" ? 1350 : 1920;
+
+  return new ImageResponse(rendered.node, {
+    width: 1080,
+    height,
+    fonts: [{ name: "NotoSerifKR", data: serif, weight: 600, style: "normal" }],
+    headers: {
+      "Cache-Control": "public, max-age=31536000, immutable",
+    },
+  });
 }

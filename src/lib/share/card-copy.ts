@@ -1,11 +1,12 @@
-// P4-1 공유 카드 카피 — §6.2 궁금증 유발형. 개인정보(생년월일시)는 절대 담지 않고
-// 유형 조합(일간·오행·MBTI·별자리·혈액형)만 다룬다. /api/card 쿼리와 1:1 대응.
+// P4-1 공유 카드 카피 — 유형 조합 티저 카드(§6.2) + 오늘의 나 카드(전체 문구). 개인정보
+// (생년월일시)는 절대 담지 않는다. /api/card 쿼리와 1:1 대응.
 import type { ProfileContext } from "@/lib/engine";
 import type { BloodType, Mbti } from "@/lib/engine/types";
 import { HEAVENLY_STEMS, ELEMENTS, stemElement } from "@/lib/engine/constants";
 import { isMbti } from "@/lib/engine/mbti";
 import { isBloodType } from "@/lib/engine/blood";
 import { isZodiacSign, type ZodiacSign } from "@/lib/engine/zodiac";
+import type { DailyGuide } from "@/lib/interpret/content/daily";
 
 const STEM_HANJA: Record<string, string> = {
   갑: "甲", 을: "乙", 병: "丙", 정: "丁", 무: "戊", 기: "己", 경: "庚", 신: "辛", 임: "壬", 계: "癸",
@@ -82,4 +83,105 @@ export function parseCardParams(sp: URLSearchParams): CardParams | null {
   if (blood !== null && !isBloodType(blood)) return null;
 
   return { dm, el, mbti, zo, blood: blood as BloodType | null };
+}
+
+// ── 오늘의 나 카드 — 데일리 가이드 전체 문구(§P4-보강: 티저가 아니라 그날의 이야기를 담는다) ──
+
+/** 필드별 최대 길이 — 정상 문구 길이보다 넉넉히, 쿼리 남용(과도한 폰트 서브셋 요청) 방지용. */
+const DAILY_FIELD_MAX = { headline: 120, mind: 160, personal: 220, color: 20, keyword: 20, lucky: 30 };
+
+export interface DailyCardParams {
+  dm: string; // 일간 천간 — 카드 장식 심볼용
+  el: string;
+  headline: string;
+  mind: string;
+  personal: string | null;
+  color: string;
+  keyword: string;
+  lucky: string;
+}
+
+export interface DailyCardCopy {
+  hanja: string;
+  headline: string;
+  mind: string;
+  personal: string | null;
+  color: string;
+  keyword: string;
+  lucky: string;
+  cta: string;
+  slogan: string;
+}
+
+export function dailyCardParams(ctx: ProfileContext, guide: DailyGuide): DailyCardParams {
+  return {
+    dm: ctx.dayMaster.stem,
+    el: ctx.dayMaster.element,
+    headline: guide.headline,
+    mind: guide.mind,
+    personal: guide.personal,
+    color: guide.color,
+    keyword: guide.keyword,
+    lucky: guide.lucky,
+  };
+}
+
+export function dailyCopyFromParams(p: DailyCardParams): DailyCardCopy {
+  return {
+    hanja: `${STEM_HANJA[p.dm]}${ELEMENT_HANJA[p.el]}`,
+    headline: p.headline,
+    mind: p.mind,
+    personal: p.personal,
+    color: p.color,
+    keyword: p.keyword,
+    lucky: p.lucky,
+    cta: "오늘의 이야기 더 보기 →",
+    slogan: "나보다 나를 더 잘 아는, 옴니마인드",
+  };
+}
+
+/** /api/card?mode=daily 쿼리 문자열. */
+export function dailyCardQuery(ctx: ProfileContext, guide: DailyGuide): string {
+  const p = dailyCardParams(ctx, guide);
+  const sp = new URLSearchParams({
+    mode: "daily",
+    dm: p.dm,
+    el: p.el,
+    headline: p.headline,
+    mind: p.mind,
+    color: p.color,
+    keyword: p.keyword,
+    lucky: p.lucky,
+  });
+  if (p.personal) sp.set("personal", p.personal);
+  return sp.toString();
+}
+
+/** 쿼리 파라미터 검증·파싱. 길이 초과·필드 누락·일간↔오행 불일치면 null. */
+export function parseDailyCardParams(sp: URLSearchParams): DailyCardParams | null {
+  const dm = sp.get("dm") ?? "";
+  const el = sp.get("el") ?? "";
+  const headline = sp.get("headline") ?? "";
+  const mind = sp.get("mind") ?? "";
+  const color = sp.get("color") ?? "";
+  const keyword = sp.get("keyword") ?? "";
+  const lucky = sp.get("lucky") ?? "";
+  const personal = sp.get("personal");
+
+  const si = (HEAVENLY_STEMS as readonly string[]).indexOf(dm);
+  if (si < 0) return null;
+  if (ELEMENTS[stemElement(si)] !== el) return null;
+  if (!headline || !mind || !color || !keyword || !lucky) return null;
+  if (
+    headline.length > DAILY_FIELD_MAX.headline ||
+    mind.length > DAILY_FIELD_MAX.mind ||
+    color.length > DAILY_FIELD_MAX.color ||
+    keyword.length > DAILY_FIELD_MAX.keyword ||
+    lucky.length > DAILY_FIELD_MAX.lucky ||
+    (personal && personal.length > DAILY_FIELD_MAX.personal)
+  ) {
+    return null;
+  }
+
+  return { dm, el, headline, mind, personal, color, keyword, lucky };
 }

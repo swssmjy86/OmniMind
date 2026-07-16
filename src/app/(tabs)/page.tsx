@@ -8,7 +8,7 @@ import { toKstParts } from "@/lib/engine/kst";
 import AdSlot from "@/components/ads/AdSlot";
 import DailyRecorder from "@/components/DailyRecorder";
 import ShareSheet from "@/components/share/ShareSheet";
-import { cardQuery } from "@/lib/share/card-copy";
+import { dailyCardQuery } from "@/lib/share/card-copy";
 import type { ProfileRow } from "@/lib/db/types";
 
 export const dynamic = "force-dynamic"; // 날짜·세션에 따라 매번 렌더
@@ -93,7 +93,7 @@ export default async function HomePage() {
         <>
           <DailyRecorder />
           <ShareSheet
-            query={cardQuery(profile.profile_context)}
+            query={dailyCardQuery(profile.profile_context, guide)}
             via="daily"
             label="오늘의 나 카드"
           />
