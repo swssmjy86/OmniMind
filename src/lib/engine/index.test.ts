@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeProfile } from "./index";
+import { computeProfile, PROFILE_CONTEXT_VERSION } from "./index";
 import { CASES } from "./fixtures/manseryeok-cases";
 
 describe("computeProfile — 만세력 대조 코퍼스", () => {
@@ -20,7 +20,7 @@ describe("computeProfile — 통합·계약", () => {
 
   it("전체 컨텍스트를 채운다", () => {
     const p = computeProfile(base);
-    expect(p.version).toBe(1);
+    expect(p.version).toBe(PROFILE_CONTEXT_VERSION);
     expect(p.dayMaster.stem).toBe("계"); // 계묘일 → 일간 계
     expect(p.dayMaster.element).toBe("수");
     expect(p.dayMaster.yang).toBe(false);

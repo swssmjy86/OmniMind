@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { toTrueInstant, inHalfHourEra } from "./clock";
 import { computePillars, hourBranchIndex } from "./pillars";
+import { computeProfile } from "./index";
 import { kstStringToInstant, toKstParts } from "./kst";
 
 const at = (s: string) => kstStringToInstant(s);
@@ -73,5 +74,32 @@ describe("표준시 보정이 사주에 미치는 영향", () => {
       const knownNoon = computePillars(at(`${date}T12:00`), { timeUnknown: false });
       expect(unknown.day, `${date} 일주`).toEqual(knownNoon.day);
     }
+  });
+});
+
+// 대운도 4주와 같은 시각을 봐야 한다. 대운수 = 절입까지의 일수÷3이라 30분·12시간의 차이가
+// 그대로 나이를 바꾼다 — 아래 두 사례는 보정을 빼면 값이 달라지므로, 되돌리면 실패한다.
+// (탐색 결과 1954~61 구간에서만 135건, 시간미상은 1990~2000 3년치에서 305건이 갈렸다.)
+describe("대운이 4주와 같은 보정 시각을 쓴다", () => {
+  const base = { bloodType: "A", mbti: "INFP", timeUnknown: false } as const;
+
+  it("UTC+8:30 시대: 보정(+30분)이 대운수를 바꾼다 — 1954-03-22 23:45 여성", () => {
+    // 보정 없이 기록 시각을 그대로 쓰면 startAge=5가 된다.
+    const ctx = computeProfile({ ...base, birthDate: "1954-03-22", birthTime: "23:45", gender: "female" });
+    expect(ctx.daeun!.startAge).toBe(6);
+  });
+
+  it("서머타임 밖 UTC+8:30 시대: 1956-11-08 23:45 남성", () => {
+    // 보정 없이는 startAge=10.
+    const ctx = computeProfile({ ...base, birthDate: "1956-11-08", birthTime: "23:45", gender: "male" });
+    expect(ctx.daeun!.startAge).toBe(9);
+  });
+
+  it("시간 미상은 자정이 아니라 그날 정오 기준 — 1990-01-01 여성", () => {
+    // 자정(옛 동작)이면 startAge=2, 정오(현 동작)면 1.
+    const ctx = computeProfile({
+      ...base, timeUnknown: true, birthDate: "1990-01-01", birthTime: null, gender: "female",
+    });
+    expect(ctx.daeun!.startAge).toBe(1);
   });
 });

@@ -20,6 +20,17 @@ const DATA_PATH = join(__dirname, "..", "src", "lib", "engine", "solar-terms.dat
 /** 이 이상 차이나면 KASI 원본 데이터 오류를 의심한다(정상 차이는 KASI의 분 단위 표기뿐). */
 const SUSPECT_THRESHOLD_MS = 2 * 60_000;
 
+/**
+ * 이미 사람이 확인한 KASI API 원본 오류 — 이 도구는 '새로운' 이상만 실패로 다룬다.
+ * 여기 없는 이상이 나오면 종료 코드 1로 알린다.
+ */
+const KNOWN_KASI_DEFECTS = new Map<string, string>([
+  ["2011 대한", "locdate가 하루 뒤(1/21)로 기록됨 — 테이블 1/20이 맞다"],
+  ["2011 입동", "kst가 09:26으로 기록됨 — 테이블 03:35가 맞다(약 6시간 오차)"],
+  ["2015 하지", "kst가 01:58로 기록됨 — 테이블 01:37이 맞다(USNO 6/21 16:38 UTC와 일치)"],
+  ["2019 대한", "kst가 '1760'(60분)이라는 불법 시각 — 조회 단계에서 버려진다"],
+]);
+
 // solar-terms.data.ts 연도 배열 순서(소한부터)와 같은 KASI 절기명
 const TERM_NAMES = [
   "소한", "대한", "입춘", "우수", "경칩", "춘분", "청명", "곡우",
@@ -80,14 +91,32 @@ async function main() {
     console.error("KASI_SERVICE_KEY 환경변수가 필요합니다 (공공데이터포털 '특일 정보' 인증키).");
     process.exit(1);
   }
+  // 인자를 검증하지 않으면 오타·옛 플래그(--write)가 NaN이 되어 루프가 한 번도 돌지 않고
+  // "이상 없음"으로 끝난다 — 아무것도 대조하지 않았는데 통과한 것처럼 보이는 게 최악이다.
   const args = process.argv.slice(2);
+  const bad = args.filter((a) => !/^\d{4}$/.test(a));
+  if (bad.length) {
+    console.error(`알 수 없는 인자: ${bad.join(" ")}`);
+    if (bad.includes("--write")) {
+      console.error("패치(--write) 기능은 제거되었습니다. 이 도구는 대조·보고만 합니다.");
+      console.error("테이블 값은 scripts/gen-solar-terms.ts(astronomy-engine)가 생성합니다.");
+    }
+    console.error("사용법: npx tsx scripts/verify-solar-terms.ts [시작연도] [끝연도]");
+    process.exit(2);
+  }
   const from = Number(args[0] ?? 2000);
   const to = Number(args[1] ?? 2028);
+  if (from > to) {
+    console.error(`연도 범위가 뒤집혔습니다: ${from} > ${to}`);
+    process.exit(2);
+  }
 
   const source = readFileSync(DATA_PATH, "utf-8");
   let checked = 0;
   let withinMinute = 0;
+  let yearsCompared = 0;
   const suspects: string[] = [];
+  const unparsable: string[] = [];
 
   for (let year = from; year <= to; year++) {
     await sleep(400); // 초당 호출 제한 회피
@@ -110,6 +139,12 @@ async function main() {
         return;
       }
       const diff = at(local[i]) - at(k);
+      if (!Number.isFinite(diff)) {
+        // 어느 쪽이든 파싱 실패 — 조용히 넘어가면 '대조했다'고 착각하게 된다.
+        unparsable.push(`${year} ${name}: 테이블 "${local[i]}" vs KASI "${k}"`);
+        notes.push(`  ⚠ ${year} ${name}: 시각을 해석할 수 없어 대조 실패`);
+        return;
+      }
       checked++;
       if (Math.abs(diff) < 60_000) {
         withinMinute++; // KASI는 분 단위 표기 — 1분 미만 차이는 같은 값으로 본다
@@ -117,28 +152,45 @@ async function main() {
       }
       const line = `${year} ${name}: 테이블 ${local[i]} vs KASI ${k} (${(diff / 60_000).toFixed(1)}분)`;
       if (Math.abs(diff) > SUSPECT_THRESHOLD_MS) {
-        suspects.push(line);
-        notes.push(`  ⚠ ${line} — KASI 원본 오류 의심(사람 확인 필요)`);
+        const known = KNOWN_KASI_DEFECTS.get(`${year} ${name}`);
+        if (known) {
+          notes.push(`  · ${line} — 확인된 KASI 오류(${known})`);
+        } else {
+          suspects.push(line);
+          notes.push(`  ⚠ ${line} — KASI 원본 오류 의심(사람 확인 필요)`);
+        }
       } else {
         notes.push(`  ${line}`);
       }
     });
+    yearsCompared++;
     console.log(`${year}: 대조 완료${notes.length ? "" : " — 전부 일치"}`);
     notes.forEach((n) => console.log(n));
   }
 
   console.log(`\n=== 요약 ===`);
-  console.log(`대조: ${checked}건 / 1분 이내 일치: ${withinMinute}건`);
-  if (suspects.length) {
-    console.log(`\n⚠ ${SUSPECT_THRESHOLD_MS / 60_000}분 초과 차이 ${suspects.length}건 — KASI 원본 오류 의심:`);
-    suspects.forEach((s) => console.log("  " + s));
-    console.log(
-      `\n판단 기준: 테이블 값은 USNO 공표 분점·지점과 1분 이내로 일치함이 검증된다` +
-        `(solar-terms.usno.test.ts). 과거 사례는 모두 KASI API 측 오류였다.`,
-    );
+  console.log(`대조한 연도: ${yearsCompared} / 절기: ${checked}건 / 1분 이내 일치: ${withinMinute}건`);
+
+  // 아무것도 대조하지 못했으면 '이상 없음'이 아니라 실패다(키 만료·네트워크·범위 오지정).
+  if (checked === 0) {
+    console.error("\n⚠ 대조된 절기가 0건입니다 — 인증키·네트워크·연도 범위를 확인하세요.");
     process.exit(1);
   }
-  console.log("KASI와 유의미한 차이 없음.");
+  if (unparsable.length) {
+    console.error(`\n⚠ 해석 불가 ${unparsable.length}건:`);
+    unparsable.forEach((s) => console.error("  " + s));
+  }
+  if (suspects.length) {
+    console.error(`\n⚠ 새로운 ${SUSPECT_THRESHOLD_MS / 60_000}분 초과 차이 ${suspects.length}건:`);
+    suspects.forEach((s) => console.error("  " + s));
+    console.error(
+      `\n판단 기준: 테이블 값은 USNO 공표 분점·지점과 1분 이내로 일치함이 검증된다` +
+        `(solar-terms.usno.test.ts). 지금까지 벗어난 값은 모두 KASI API 측 오류였다.` +
+        `\n확인 후 KASI 오류로 판명되면 KNOWN_KASI_DEFECTS에 등록하고, 아니면 테이블을 조사하세요.`,
+    );
+  }
+  if (suspects.length || unparsable.length) process.exit(1);
+  console.log(`KASI와 새로운 차이 없음(확인된 KASI 오류 ${KNOWN_KASI_DEFECTS.size}건은 위에 '·'로 표시).`);
 }
 
 main();

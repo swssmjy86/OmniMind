@@ -12,8 +12,16 @@ import { kstStringToInstant } from "./kst";
 
 export type { ProfileContext };
 
+/**
+ * 계산 '의미'가 바뀔 때 올린다. 저장된 프로필의 version이 이 값보다 낮으면 지금 엔진과
+ * 다른 값을 담고 있다는 뜻이다(재계산 대상). 입력만 있으면 언제든 다시 계산할 수 있으므로
+ * 저장값은 캐시일 뿐이다.
+ *   1 → 2 (2026-07-16): 표준시 UTC+8:30 보정, 절기 초 단위 경계, 대운이 4주와 같은 시각 사용.
+ */
+export const PROFILE_CONTEXT_VERSION = 2;
+
 interface ProfileContext {
-  version: 1;
+  version: number;
   pillars: { year: string; month: string; day: string; hour: string | null }; // "갑자" 등
   dayMaster: { stem: string; element: string; yang: boolean }; // 일간=아신
   elements: ElementDistribution;
@@ -41,7 +49,9 @@ function parseKstInstant(input: EngineInput): Date {
   let hhmm = "00:00";
   if (!input.timeUnknown) {
     if (!input.birthTime) throw new Error("birthTime 필요(timeUnknown=false)");
-    if (!/^(\d{2}):(\d{2})$/.test(input.birthTime))
+    // 형식만 보면 "99:99"도 통과해 Invalid Date가 되므로 값 범위까지 확인한다.
+    const t = /^(\d{2}):(\d{2})$/.exec(input.birthTime);
+    if (!t || Number(t[1]) > 23 || Number(t[2]) > 59)
       throw new Error(`birthTime 형식 오류: ${input.birthTime}`);
     hhmm = input.birthTime;
   }
@@ -61,7 +71,7 @@ export function computeProfile(input: EngineInput): ProfileContext {
 
   const dm = fp.day.stem;
   return {
-    version: 1,
+    version: PROFILE_CONTEXT_VERSION,
     pillars: {
       year: gz(fp.year),
       month: gz(fp.month),
