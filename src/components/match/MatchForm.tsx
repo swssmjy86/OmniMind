@@ -8,6 +8,7 @@ import {
 import { assembleMatch } from "@/lib/interpret/content/match";
 import { createInvite } from "@/lib/match/actions";
 import { recordClientEvent } from "@/lib/metrics/actions";
+import Choice from "@/components/ui/Choice";
 import type { InterpretationSection } from "@/lib/interpret/types";
 import type { Mbti } from "@/lib/engine/types";
 
@@ -85,6 +86,8 @@ export default function MatchForm({ me, nickname }: { me: MatchMe; nickname: str
           <span className="text-sm text-text-soft">상대가 세상에 온 날</span>
           <input
             type="date"
+            min="1900-01-01"
+            max="2100-12-31"
             value={birthDate}
             onChange={(e) => setBirthDate(e.target.value)}
             className="mt-1.5 w-full rounded-card border border-text-soft/30 bg-warm-base px-4 py-2.5 outline-none focus:border-primary-green"
@@ -93,19 +96,27 @@ export default function MatchForm({ me, nickname }: { me: MatchMe; nickname: str
             태어난 시간까지는 몰라도 괜찮아요 — 그날의 기운(일주)으로 읽어드려요.
           </span>
         </label>
-        <label className="block">
+        <div>
           <span className="text-sm text-text-soft">상대의 MBTI (알고 있다면)</span>
-          <select
-            value={mbti}
-            onChange={(e) => setMbti(e.target.value as "" | Mbti)}
-            className="mt-1.5 w-full rounded-card border border-text-soft/30 bg-warm-base px-4 py-2.5 outline-none focus:border-primary-green"
-          >
-            <option value="">아직 몰라요</option>
-            {MBTIS.map((m) => (
-              <option key={m} value={m}>{m}</option>
-            ))}
-          </select>
-        </label>
+          <div className="mt-1.5 space-y-2">
+            <Choice small unselectedBg="bg-warm-base" selected={mbti === ""} onClick={() => setMbti("")}>
+              아직 몰라요
+            </Choice>
+            <div className="grid grid-cols-4 gap-2">
+              {MBTIS.map((m) => (
+                <Choice
+                  key={m}
+                  small
+                  unselectedBg="bg-warm-base"
+                  selected={mbti === m}
+                  onClick={() => setMbti(m)}
+                >
+                  {m}
+                </Choice>
+              ))}
+            </div>
+          </div>
+        </div>
         {error && <p className="text-sm text-accent-coral">{error}</p>}
         <button
           onClick={compute}

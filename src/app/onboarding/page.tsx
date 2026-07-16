@@ -10,6 +10,7 @@ import type { BloodType, Mbti } from "@/lib/engine/types";
 import { saveProfile } from "./actions";
 import { saveDraft, loadDraft, clearDraft, isCompleteDraft, type Draft } from "./draft";
 import SajuChart from "@/components/profile/SajuChart";
+import Choice from "@/components/ui/Choice";
 
 const BLOODS: BloodType[] = ["A", "B", "O", "AB"];
 const MBTIS: Mbti[] = [
@@ -265,23 +266,6 @@ function Field({ title, hint, children }: { title: string; hint: string; childre
       <p className="mt-2 mb-6 text-text-soft">{hint}</p>
       {children}
     </div>
-  );
-}
-
-function Choice({
-  children, selected, onClick, small,
-}: { children: React.ReactNode; selected: boolean; onClick: () => void; small?: boolean }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`rounded-card border py-3 font-medium transition ${small ? "text-sm" : "text-lg"} ${
-        selected
-          ? "border-primary-green bg-primary-green text-white"
-          : "border-text-soft/30 bg-warm-surface text-text-main"
-      }`}
-    >
-      {children}
-    </button>
   );
 }
 
