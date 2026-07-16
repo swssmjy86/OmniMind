@@ -4,7 +4,9 @@ import { chatSystemPrompt } from "./chat-prompt";
 // OpenRouter Provider — OpenAI 호환 chat completions API 하나로 여러 모델(무료 :free 포함)에
 // 접근한다. REST 직접 호출(SDK 의존 없음). 서버 전용. 키 없음/오류 시 throw → 상위 폴백 체인이
 // 템플릿으로 대체(설계서 §8). 무료 모델 라인업은 OpenRouter 쪽에서 종종 바뀌므로 모델을
-// OPENROUTER_MODEL 환경변수로 오버라이드할 수 있게 해둔다.
+// OPENROUTER_MODEL 환경변수로 오버라이드할 수 있게 해둔다 — 다만 "월 고정비 0원" 원칙
+// (CLAUDE.md)을 지키려면 반드시 ":free" 접미사가 붙은 모델로만 바꿀 것. 유료 모델 전환은
+// 수익 발생 후 별도 어댑터로.
 const DEFAULT_MODEL = "deepseek/deepseek-chat-v3.1:free";
 const ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
 
