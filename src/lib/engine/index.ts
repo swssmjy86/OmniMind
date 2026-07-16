@@ -1,6 +1,6 @@
 import type { EngineInput, FourPillars } from "./types";
 import { HEAVENLY_STEMS, EARTHLY_BRANCHES, ELEMENTS, stemElement, stemYang } from "./constants";
-import { computePillars } from "./pillars";
+import { computePillars, resolveBirthInstant } from "./pillars";
 import { elementDistribution, type ElementDistribution } from "./elements";
 import { computeDaeun, type Daeun, type Gender } from "./daeun";
 import { tenGods, type TenGodChart } from "./ten-gods";
@@ -12,8 +12,16 @@ import { kstStringToInstant } from "./kst";
 
 export type { ProfileContext };
 
+/**
+ * 계산 '의미'가 바뀔 때 올린다. 저장된 프로필의 version이 이 값보다 낮으면 지금 엔진과
+ * 다른 값을 담고 있다는 뜻이다(재계산 대상). 입력만 있으면 언제든 다시 계산할 수 있으므로
+ * 저장값은 캐시일 뿐이다.
+ *   1 → 2 (2026-07-16): 표준시 UTC+8:30 보정, 절기 초 단위 경계, 대운이 4주와 같은 시각 사용.
+ */
+export const PROFILE_CONTEXT_VERSION = 2;
+
 interface ProfileContext {
-  version: 1;
+  version: number;
   pillars: { year: string; month: string; day: string; hour: string | null }; // "갑자" 등
   dayMaster: { stem: string; element: string; yang: boolean }; // 일간=아신
   elements: ElementDistribution;
@@ -41,7 +49,9 @@ function parseKstInstant(input: EngineInput): Date {
   let hhmm = "00:00";
   if (!input.timeUnknown) {
     if (!input.birthTime) throw new Error("birthTime 필요(timeUnknown=false)");
-    if (!/^(\d{2}):(\d{2})$/.test(input.birthTime))
+    // 형식만 보면 "99:99"도 통과해 Invalid Date가 되므로 값 범위까지 확인한다.
+    const t = /^(\d{2}):(\d{2})$/.exec(input.birthTime);
+    if (!t || Number(t[1]) > 23 || Number(t[2]) > 59)
       throw new Error(`birthTime 형식 오류: ${input.birthTime}`);
     hhmm = input.birthTime;
   }
@@ -52,13 +62,16 @@ export function computeProfile(input: EngineInput): ProfileContext {
   if (!isMbti(input.mbti)) throw new Error(`MBTI 오류: ${input.mbti}`);
   if (!isBloodType(input.bloodType)) throw new Error(`혈액형 오류: ${input.bloodType}`);
 
-  const instant = parseKstInstant(input);
-  const fp: FourPillars = computePillars(instant, { timeUnknown: input.timeUnknown });
+  const rawInstant = parseKstInstant(input);
+  const fp: FourPillars = computePillars(rawInstant, { timeUnknown: input.timeUnknown });
+  // 대운도 4주와 같은 시각을 봐야 한다 — 기록 벽시계(raw)를 그대로 넘기면 서머타임·표준시
+  // 보정이 빠져 절입까지의 거리가 최대 1시간 어긋난다(대운수가 뒤집힐 수 있다).
+  const birthInstant = resolveBirthInstant(rawInstant, input.timeUnknown);
   const [, mo, d] = input.birthDate.split("-").map(Number);
 
   const dm = fp.day.stem;
   return {
-    version: 1,
+    version: PROFILE_CONTEXT_VERSION,
     pillars: {
       year: gz(fp.year),
       month: gz(fp.month),
@@ -75,9 +88,9 @@ export function computeProfile(input: EngineInput): ProfileContext {
     zodiac: zodiacSign(mo, d),
     mbti: mbtiTrait(input.mbti),
     blood: bloodTrait(input.bloodType),
-    // 성별을 알면 대운까지 — 시 미상이어도 그날 기준 근사(대운수 오차 미미)
+    // 성별을 알면 대운까지 — 시 미상이어도 그날 정오 기준 근사(대운수 오차 미미)
     ...(input.gender
-      ? { gender: input.gender, daeun: computeDaeun(instant, fp, input.gender) }
+      ? { gender: input.gender, daeun: computeDaeun(birthInstant, fp, input.gender) }
       : {}),
     meta: { timeUnknown: input.timeUnknown },
   };

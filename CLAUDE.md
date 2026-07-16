@@ -100,7 +100,8 @@ npm run test:watch # 테스트 워치 모드
 
 - **입출력 단일 진입점:** `computeProfile(EngineInput): ProfileContext` (`index.ts`)
 - **TZ 안전성:** `kst.ts`가 KST 벽시계를 런타임 TZ(Vercel=UTC) 무관하게 다룬다. 로컬 `Date` 게터 금지 — 절대 instant만 신뢰하고 `toKstParts`로 KST 컴포넌트를 읽는다.
-- **절기 테이블:** `solar-terms.data.ts`는 `scripts/gen-solar-terms.ts`(Meeus 천문 알고리즘)로 빌드 타임 생성(1900~2100). 경계 정밀도는 `verify-solar-terms.ts`(KASI 대조·패치, 무료 API 키 필요)로 후속 보정.
-- **모듈:** `pillars`(년·월·일·시주, 절기·오호둔·오서둔·야자시 23시 경계), `elements`(오행 분포), `ten-gods`(십성), `zodiac`(별자리), `mbti`/`blood`(특성 키워드), `dst`(서머타임 보정)
+- **절기 테이블:** `solar-terms.data.ts`는 `scripts/gen-solar-terms.ts`(astronomy-engine의 태양 겉보기 황경)로 빌드 타임 생성(1900~2100), **초 단위** 저장. 정확도는 `solar-terms.usno.test.ts`(USNO 공표 분점·지점 대조, 오프라인)가 상시 검증한다. `verify-solar-terms.ts`는 KASI 공표값과 대조하는 **감시 도구**(패치 기능 없음 — KASI API 원본에 오류가 확인되어 덮어쓰지 않는다. 무료 API 키 필요, 제공 범위 2000~2028).
+- **모듈:** `pillars`(년·월·일·시주, 절기·오호둔·오서둔·야자시 23시 경계), `clock`(기록 벽시계 → 실제 절대 시각: 서머타임 −1h·표준시 UTC+8:30 시대 +30m), `elements`(오행 분포), `ten-gods`(십성), `daeun`(대운), `twelve-stages`(12운성), `zodiac`(별자리), `mbti`/`blood`(특성 키워드)
+- **저장된 프로필의 버전:** `PROFILE_CONTEXT_VERSION`(현재 2). 계산 의미가 바뀌면 올린다 — 저장된 `profile_context`의 version이 더 낮으면 지금 엔진과 다른 값이므로 재계산 대상이다.
 - **일주 앵커:** 2000-01-07=갑자일 기준 JDN 산술. 포스텔러 대조로 확정 예정(유일한 외부 가정).
 - **테스트:** 계산은 정답이 존재하므로 TDD 필수. 대조 코퍼스는 `fixtures/manseryeok-cases.ts`.

@@ -10,13 +10,10 @@ describe("절기 테이블", () => {
     expect(p.d).toBe(4);
   });
 
-  it("KASI 공인 시각과 분 단위 근접(Meeus 근사, ±10분 이내)", () => {
-    // 2024 입춘 KASI ≈ 17:27 KST. Meeus 테이블은 ±10분 이내.
-    const p = toKstParts(ipchunInstant(2024));
-    expect(p.mo).toBe(2);
-    expect(p.d).toBe(4);
-    const minutes = p.h * 60 + p.mi;
-    expect(Math.abs(minutes - (17 * 60 + 27))).toBeLessThanOrEqual(10);
+  it("KASI 공인 시각과 1분 이내 일치 (astronomy-engine 테이블)", () => {
+    // 2024 입춘 KASI 공표 = 17:27 KST. 테이블은 초 단위(17:26:50)라 1분 미만 차이가 정상.
+    const diffMs = Math.abs(ipchunInstant(2024).getTime() - kstStringToInstant("2024-02-04T17:27").getTime());
+    expect(diffMs).toBeLessThan(60_000);
   });
 
   it("입춘 직전은 축월(1), 직후는 인월(2)", () => {
@@ -51,8 +48,8 @@ describe("절기 테이블", () => {
     expect(() => assertYearInRange(2101)).toThrow(RangeError);
   });
 
-  // KASI 보정(verify-solar-terms.ts --write)이 오염된 값을 들여오는 사고 방지 —
-  // 실제로 KASI 원본에 "17:60" 같은 불법 시각, +1일 어긋난 날짜가 존재했다.
+  // 생성기·외부 대조가 오염된 값을 들여오는 사고 방지 —
+  // 실제로 KASI API 원본에 "17:60" 같은 불법 시각, +1일 어긋난 날짜가 존재했다.
   it("전 연도 무결성: 24개 항목, 유효한 시각, 연내 단조 증가", () => {
     for (const [year, terms] of Object.entries(SOLAR_TERMS)) {
       expect(terms, `${year}년 항목 수`).toHaveLength(24);
