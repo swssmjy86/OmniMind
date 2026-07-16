@@ -2,7 +2,8 @@
 // 또는 GET /api/card?mode=daily&dm=갑&el=목&headline=…&mind=…&color=…&keyword=…&lucky=… (오늘의 나, 전체 문구)
 // 또는 GET /api/card?mode=profile&dm=갑&el=목&nickname=…&sections=[…] (나의 조각, 프로필 전체 섹션)
 // 너비는 항상 1080, 높이는 모드별 콘텐츠 분량에 맞춘다(각 render* 함수가 함께 정한다).
-// ?ratio=1은 정방형(1080×1080)을 강제. 쿼리는 생년월일시를 절대 담지 않는다.
+// ?ratio=1은 정방형(1080×1080)을 강제 — 단 mode=profile은 섹션 전체를 담아야 해 항상
+// 세로 긴 카드로만 렌더링하고 ratio 파라미터를 무시한다. 쿼리는 생년월일시를 절대 담지 않는다.
 import { ImageResponse } from "next/og";
 import {
   parseCardParams, copyFromParams,
@@ -272,7 +273,10 @@ function estimateProfileHeight(nickname: string, sections: { title: string; body
     h += 32; // 다음 섹션과의 간격
   }
   h += 40 + 32 * 1.4 + 24 + 24 * 1.4; // 하단 CTA 버튼 + 슬로건
-  return Math.min(4200, Math.max(1400, Math.round(h)));
+  // 상한은 parseProfileCardParams가 허용하는 최댓값(PROFILE_MAX_SECTIONS=10 ×
+  // sectionBody 260자, nickname 20자)에서 이 공식이 계산하는 최대치(~4431px)보다
+  // 커야 한다 — 그보다 낮으면 유효하게 통과된 입력도 캔버스 아래쪽이 잘린다.
+  return Math.min(4700, Math.max(1400, Math.round(h)));
 }
 
 function renderProfile(searchParams: URLSearchParams) {

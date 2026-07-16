@@ -214,12 +214,25 @@ export interface ProfileCardCopy {
   slogan: string;
 }
 
+/**
+ * nickname·sections 길이를 카드 표시 상한에 맞춰 방어적으로 자른다. 호출부(온보딩 등)의
+ * 입력 검증이 느슨해지거나 향후 LLM 개인화 섹션이 더 길어져도, 쿼리가 항상
+ * parseProfileCardParams를 통과해 공유 카드가 조용히 깨지는 일이 없도록 한다.
+ */
 export function profileCardParams(
   ctx: ProfileContext,
   nickname: string,
   sections: InterpretationSection[],
 ): ProfileCardParams {
-  return { dm: ctx.dayMaster.stem, el: ctx.dayMaster.element, nickname, sections };
+  return {
+    dm: ctx.dayMaster.stem,
+    el: ctx.dayMaster.element,
+    nickname: nickname.slice(0, PROFILE_FIELD_MAX.nickname),
+    sections: sections.slice(0, PROFILE_MAX_SECTIONS).map((s) => ({
+      title: s.title.slice(0, PROFILE_FIELD_MAX.sectionTitle),
+      body: s.body.slice(0, PROFILE_FIELD_MAX.sectionBody),
+    })),
+  };
 }
 
 export function profileCopyFromParams(p: ProfileCardParams): ProfileCardCopy {
