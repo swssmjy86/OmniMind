@@ -148,7 +148,7 @@ function renderDaily(searchParams: URLSearchParams, square: boolean) {
   const d = dailyCopyFromParams(p);
   const fontText =
     d.headline + d.mind + (d.personal ?? "") + d.color + d.keyword + d.lucky +
-    d.cta + d.slogan + d.hanja + "OmniMind오늘의 나🍀 행운 포인트 — ";
+    d.cta + d.slogan + d.hanja + "OmniMind오늘의 나오늘의 색 · 🍀 행운 포인트 — ";
 
   const s = square
     ? { hanja: 420, headline: 40, mind: 26, personal: 24, chip: 20, lucky: 22, cta: 28, slogan: 20 }
