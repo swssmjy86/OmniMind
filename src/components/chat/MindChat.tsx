@@ -44,7 +44,7 @@ export default function MindChat({
   }
 
   return (
-    <div className="mx-auto flex h-dvh max-w-[480px] flex-col">
+    <div className="flex h-dvh flex-col">
       <header className="px-6 pt-6 pb-3">
         <h1 className="font-[family-name:var(--font-serif-kr)] text-2xl text-primary-green">마음</h1>
         <p className="mt-1 text-xs text-text-soft">

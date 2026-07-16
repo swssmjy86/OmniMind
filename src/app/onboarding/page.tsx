@@ -104,7 +104,7 @@ export default function OnboardingPage() {
     step === 4;
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-[480px] flex-col p-6">
+    <main className="flex min-h-dvh flex-col p-6">
       <Progress step={step} total={5} />
 
       <div className="mt-8 flex-1">
@@ -282,7 +282,7 @@ function ProfileView({
 
   if (revealing) {
     return (
-      <main className="mx-auto flex min-h-dvh max-w-[480px] flex-col items-center justify-center p-6">
+      <main className="flex min-h-dvh flex-col items-center justify-center p-6">
         <p className="animate-pulse font-[family-name:var(--font-serif-kr)] text-xl text-primary-green">
           당신의 조각들을 잇는 중이에요…
         </p>
@@ -291,7 +291,7 @@ function ProfileView({
   }
 
   return (
-    <main className="mx-auto max-w-[480px] p-6 pb-24">
+    <main className="p-6 pb-24">
       <p className="text-text-soft">온전한 나</p>
       <h1 className="mt-1 font-[family-name:var(--font-serif-kr)] text-3xl text-primary-green">
         {nickname}님의 이야기

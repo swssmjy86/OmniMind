@@ -32,10 +32,12 @@ export default function RootLayout({
           href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css"
         />
       </head>
-      <body className="mx-auto min-h-dvh max-w-[480px] antialiased">
-        <RefTracker />
-        {children}
-        <Analytics />
+      <body className="min-h-dvh antialiased">
+        <div className="app-shell mx-auto min-h-dvh max-w-[480px] bg-warm-base lg:max-w-[560px]">
+          <RefTracker />
+          {children}
+          <Analytics />
+        </div>
       </body>
     </html>
   );
