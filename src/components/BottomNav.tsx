@@ -13,7 +13,7 @@ const tabs = [
 export default function BottomNav() {
   const pathname = usePathname();
   return (
-    <nav className="fixed bottom-0 left-1/2 flex w-full max-w-[480px] -translate-x-1/2 justify-around border-t border-text-soft/20 bg-warm-surface py-2">
+    <nav className="fixed bottom-0 left-1/2 flex w-full max-w-[var(--shell-width)] -translate-x-1/2 justify-around border-t border-text-soft/20 bg-warm-surface py-2 lg:max-w-[var(--shell-width-lg)]">
       {tabs.map((tab) => {
         const active = pathname === tab.href;
         return (

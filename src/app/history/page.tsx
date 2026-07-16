@@ -19,7 +19,7 @@ export default async function HistoryPage() {
   }
 
   return (
-    <main className="mx-auto max-w-[480px] p-6 pb-24">
+    <main className="p-6 pb-24">
       <Link href="/" className="text-sm text-text-soft">← 홈으로</Link>
       <h1 className="mt-3 font-[family-name:var(--font-serif-kr)] text-2xl text-primary-green">
         지난 이야기
