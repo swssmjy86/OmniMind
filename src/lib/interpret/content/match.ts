@@ -51,6 +51,17 @@ function synergyText(synergy: number | null): string {
   return "성향의 결이 꽤 다른 편이에요. 서로의 방식을 번역하는 데 품이 들지만, 그만큼 세계가 두 배로 넓어지는 사이죠.";
 }
 
+/** 혈액형 어울림 0~2 → 문구. null이면 알려주면 더 읽어주겠다는 손짓. */
+export function bloodText(synergy: number | null): string {
+  if (synergy === null)
+    return "서로의 혈액형까지 알게 되면, 몸에 새겨진 결이 만나는 방식도 살짝 읽어드릴 수 있어요.";
+  if (synergy >= 2)
+    return "혈액형의 결로 보면 서로의 빈 곳을 자연스럽게 채워주는 짝이에요. 함께 있으면 마음의 온도가 알맞게 데워지죠.";
+  if (synergy === 1)
+    return "혈액형의 결이 익숙하고 편안한 조합이에요. 크게 부딪힐 일 없이, 서로의 리듬에 스며들기 쉬운 사이죠.";
+  return "혈액형의 결은 서로 꽤 다른 편이에요. 그 다름이 처음엔 낯설어도, 서로에게 없는 온도를 건네주는 사이가 될 수 있어요.";
+}
+
 const MODE_CLOSING: Record<MatchMode, string> = {
   연인:
     "사랑은 닮음보다 리듬이에요. 오늘 서로의 속도를 한 번씩 물어봐주는 것 — 그게 이 조합을 가장 아름답게 하는 습관이에요.",
@@ -112,6 +123,7 @@ export function assembleDeepMatch(input: {
     { title: "서로를 채우는 조각", body: complementText(match.complement) },
     { title: "별이 말하길", body: HARMONY_TEXT[match.zodiacHarmony] },
     { title: "마음이 만나는 자리", body: synergyText(match.mbtiSynergy) },
+    { title: "혈액형이 말하길", body: bloodText(match.bloodSynergy) },
     { title: `${match.mode}로서 함께할 때`, body: MODE_CLOSING[match.mode] },
   ];
 }
@@ -132,6 +144,7 @@ export function assembleMatch(input: MatchAssembleInput): InterpretationSection[
     },
     { title: "별이 말하길", body: HARMONY_TEXT[match.zodiacHarmony] },
     { title: "마음이 만나는 자리", body: synergyText(match.mbtiSynergy) },
+    { title: "혈액형이 말하길", body: bloodText(match.bloodSynergy) },
     { title: `${match.mode}로서 함께할 때`, body: MODE_CLOSING[match.mode] },
   ];
 }
