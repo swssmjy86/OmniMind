@@ -3,6 +3,9 @@
 import { createServerSupabase } from "@/lib/supabase/server";
 import { computeProfile } from "@/lib/engine";
 import { assembleProfile } from "@/lib/interpret/templates";
+import { profileSynthesisPrompt, parseReportSections } from "@/lib/interpret/content/synthesis";
+import { respond } from "@/lib/interpret/interpret";
+import { OpenRouterProvider } from "@/lib/interpret/openrouter-provider";
 import { assertTone } from "@/lib/interpret/tone-guard";
 import { recordEvent } from "@/lib/metrics/events";
 import type { BloodType, Mbti } from "@/lib/engine/types";
@@ -63,8 +66,30 @@ export async function saveProfile(
 
     const sections = assembleProfile(context, input.nickname);
     assertTone(sections.map((s) => s.body).join("\n"));
+
+    // P8 로그인 전용 — 성격·취향·색·현재/미래·네 가지 운(연애·사업·관계·금전)까지 엮은
+    // 심층 리포트(무료 LLM, report 모드로 응답 예산을 크게 잡아 1회 시도). respond()가
+    // 내부에서 이미 톤 검증까지 통과한 경우에만 source:"llm"을 돌려주므로, 실패·톤위반·
+    // 타임아웃이면 조용히 템플릿 7섹션만 저장된다(3단 해석 엔진 원칙).
+    const r = await respond(
+      {
+        profile: context,
+        nickname: input.nickname,
+        history: [],
+        message: profileSynthesisPrompt(context, input.nickname),
+      },
+      { llm: new OpenRouterProvider({ report: true }), template: { chat: async () => "" } },
+    );
+    const synthesized = r.source === "llm" && r.text;
+    const finalSections = synthesized
+      ? [...sections, ...parseReportSections(r.text, "당신의 이야기, 더 깊이")]
+      : sections;
+
     await supabase.from("interpretations").upsert(
-      { user_id: user.id, kind: "profile", target_date: null, body: sections, source: "template" },
+      {
+        user_id: user.id, kind: "profile", target_date: null, body: finalSections,
+        source: synthesized ? "llm" : "template",
+      },
       { onConflict: "user_id,kind,target_date" },
     );
 

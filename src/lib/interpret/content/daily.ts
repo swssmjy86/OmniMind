@@ -68,13 +68,27 @@ export function assembleDaily(daily: DailyContext, nickname?: string): DailyGuid
   };
 }
 
-/** interpretations 캐시용 섹션 형태(향후 저장 시). */
-export function dailyToSections(guide: DailyGuide): InterpretationSection[] {
+/** interpretations 캐시용 섹션 형태. llmParagraph가 있으면 P8 로그인 전용 개인화 문단을 더한다. */
+export function dailyToSections(guide: DailyGuide, llmParagraph?: string): InterpretationSection[] {
   return [
     { title: "오늘의 기운", body: guide.headline },
     { title: "마음가짐", body: guide.mind },
     { title: "오늘의 색과 키워드", body: `${guide.color} · ${guide.keyword}` },
     { title: "행운 포인트", body: guide.lucky },
     ...(guide.personal ? [{ title: "당신에게", body: guide.personal }] : []),
+    ...(llmParagraph ? [{ title: "오늘, 당신만을 위한 이야기", body: llmParagraph }] : []),
   ];
+}
+
+/**
+ * P8 로그인 전용 LLM 개인화 요청 — 데일리는 하루 1회만 생성(캐시)되므로 무료 모델을 그대로 쓴다.
+ * 프로필 시스템 프롬프트(§5.4)는 Provider가 붙인다.
+ */
+export function dailyPrompt(daily: DailyContext, guide: DailyGuide): string {
+  return [
+    "[오늘의 기운 · 개인화]",
+    `오늘은 ${daily.element}(${daily.dayGanzhi})의 기운이 흐르는 날이에요.`,
+    `템플릿 마음가짐: ${guide.mind}`,
+    "이 사람의 사주·MBTI·별자리 결을 살려, 오늘 하루를 보내는 다정한 조언을 2~3문장으로 더 구체적으로 들려줘요. 위 템플릿 문장을 그대로 반복하지 말고, 새로운 표현으로.",
+  ].join("\n");
 }

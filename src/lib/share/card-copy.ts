@@ -197,7 +197,9 @@ export function parseDailyCardParams(sp: URLSearchParams): DailyCardParams | nul
 // ── 나의 조각 카드 — "온전한 나" 프로필 전체 섹션(§P4-보강: 조각들을 전부 이미지로) ──
 
 const PROFILE_FIELD_MAX = { nickname: 20, sectionTitle: 20, sectionBody: 260 };
-const PROFILE_MAX_SECTIONS = 10; // assembleProfile은 7섹션 고정이지만 LLM 캐시본을 대비해 여유를 둔다.
+// assembleProfile은 7섹션 고정이지만, P8 로그인 전용 심층 리포트가 최대 7섹션(성격과 취향·
+// 당신의 색·지금과 앞으로·연애운·사업운·커리어·관계운·금전운)을 더할 수 있어 여유를 크게 둔다.
+const PROFILE_MAX_SECTIONS = 16;
 
 export interface ProfileCardParams {
   dm: string;

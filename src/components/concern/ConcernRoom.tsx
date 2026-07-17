@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { submitConcern } from "@/lib/concern/actions";
+import Link from "next/link";
+import { submitConcern, deleteConcernLog, deleteAllConcernLogs } from "@/lib/concern/actions";
 import { CONCERN_CATEGORIES, type ConcernCategory } from "@/lib/interpret/content/concern";
 import { CONCERN_MAX_LENGTH } from "@/lib/concern/constants";
 import type { InterpretationSection } from "@/lib/interpret/types";
@@ -23,7 +24,9 @@ export default function ConcernRoom({
   const [remaining, setRemaining] = useState(initialRemaining);
   const [history, setHistory] = useState<PastAdvice[]>(past);
 
-  const exhausted = remaining <= 0;
+  // remaining < 0 = 무제한(레거시 프리미엄, consult/quota.ts UNLIMITED 센티널)
+  const unlimited = remaining < 0;
+  const exhausted = !unlimited && remaining <= 0;
 
   async function submit() {
     const concern = text.trim();
@@ -36,11 +39,7 @@ export default function ConcernRoom({
       setResult(res.sections);
       setRemaining(res.remaining);
       setText("");
-      const today = new Date();
-      setHistory((h) => [
-        { id: `local-${today.getTime()}`, date: "오늘", sections: res.sections },
-        ...h,
-      ]);
+      setHistory((h) => [{ id: res.id, date: "오늘", sections: res.sections }, ...h]);
     } else if (res.reason === "limit") {
       setRemaining(0);
     } else {
@@ -48,13 +47,28 @@ export default function ConcernRoom({
     }
   }
 
+  async function removeOne(id: string) {
+    setHistory((h) => h.filter((p) => p.id !== id));
+    await deleteConcernLog(id);
+  }
+
+  async function removeAll() {
+    if (!window.confirm("고민 상담 기록을 모두 지울까요? 되돌릴 수 없어요.")) return;
+    const before = history;
+    setHistory([]);
+    const res = await deleteAllConcernLogs();
+    if (!res.ok) setHistory(before);
+  }
+
   return (
     <main className="p-6 pb-24">
       <h1 className="font-[family-name:var(--font-serif-kr)] text-2xl text-primary-green">고민</h1>
       <p className="mt-1 text-xs text-text-soft">
-        {exhausted
-          ? "오늘 나눌 수 있는 고민 이야기는 여기까지예요 🌙"
-          : `오늘 함께 생각할 수 있는 고민이 ${remaining}번 남았어요`}
+        {unlimited
+          ? "고민 이야기를 마음껏 나눌 수 있어요 ✨"
+          : exhausted
+            ? "오늘 나눌 수 있는 고민 이야기는 여기까지예요 🌙"
+            : `오늘 함께 생각할 수 있는 고민이 ${remaining}번 남았어요`}
       </p>
 
       {result ? (
@@ -66,9 +80,15 @@ export default function ConcernRoom({
       )}
 
       {exhausted ? (
-        <p className="mt-6 rounded-card bg-warm-surface p-5 text-center text-sm text-text-soft">
-          내일 새로운 기운과 함께, 다시 함께 생각해요.
-        </p>
+        <div className="mt-6 rounded-card bg-warm-surface p-5 text-center">
+          <p className="text-sm text-text-soft">내일 새로운 기운과 함께, 다시 함께 생각해요.</p>
+          <Link
+            href="/premium"
+            className="mt-2 inline-block text-sm text-accent-coral underline underline-offset-4"
+          >
+            고민 상담, 상담 크레딧으로 이어가기 🌙
+          </Link>
+        </div>
       ) : (
         <div className="mt-6 space-y-4">
           <div className="flex flex-wrap gap-2">
@@ -107,16 +127,33 @@ export default function ConcernRoom({
 
       {history.length > 0 && (
         <section className="mt-10">
-          <h2 className="font-[family-name:var(--font-serif-kr)] text-lg text-primary-green">
-            지난 고민들
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="font-[family-name:var(--font-serif-kr)] text-lg text-primary-green">
+              지난 고민들
+            </h2>
+            <button
+              onClick={() => void removeAll()}
+              className="text-xs text-text-soft underline underline-offset-4"
+            >
+              전체 삭제
+            </button>
+          </div>
           <div className="mt-3 space-y-3">
             {history.map((p) => (
-              <details key={p.id} className="rounded-card bg-warm-surface p-4">
-                <summary className="cursor-pointer text-sm text-text-main">
-                  <span className="text-text-soft">{p.date}</span>
-                  {"  "}
-                  {p.sections.find((s) => s.title === "고민")?.body.slice(0, 30) ?? "고민 이야기"}
+              <details key={p.id} className="group rounded-card bg-warm-surface p-4">
+                <summary className="flex cursor-pointer items-center justify-between gap-2 text-sm text-text-main">
+                  <span>
+                    <span className="text-text-soft">{p.date}</span>
+                    {"  "}
+                    {p.sections.find((s) => s.title === "고민")?.body.slice(0, 30) ?? "고민 이야기"}
+                  </span>
+                  <button
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); void removeOne(p.id); }}
+                    aria-label="이 고민 기록 삭제"
+                    className="shrink-0 rounded-full p-1 text-xs text-text-soft opacity-0 transition-opacity hover:text-accent-coral group-hover:opacity-100"
+                  >
+                    ✕
+                  </button>
                 </summary>
                 <AdviceCard sections={p.sections} compact />
               </details>

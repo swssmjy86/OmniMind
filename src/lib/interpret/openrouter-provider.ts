@@ -15,16 +15,34 @@ import { chatSystemPrompt } from "./chat-prompt";
 // 4/4 케이스 모두 톤 가드 통과 + 존댓말 일관 + 사주/MBTI/별자리 맥락을 자연스럽게 녹여
 // 가장 안정적이었다.
 const DEFAULT_MODEL = "google/gemma-4-26b-a4b-it:free";
+// P8 유료 상담 크레딧 전용 모델 — 무료 라인업보다 지시 순응도가 높은 유료 모델로,
+// 존댓말·톤 규칙을 더 안정적으로 지킨다는 전제로 골랐다. OPENROUTER_PREMIUM_MODEL로 교체
+// 가능(구독 매출로 사용량 비용을 충당하는 구조라 "월 고정비 0원" 원칙과는 별개— 변동비).
+const PREMIUM_DEFAULT_MODEL = "anthropic/claude-3.5-haiku";
 const ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
 
+export interface OpenRouterOptions {
+  /** true면 P8 상담 크레딧을 소비하는 자리 — 유료 모델·확장 프롬프트·더 긴 응답. */
+  premium?: boolean;
+  /** true면 P8 로그인 전용 심층 리포트(다중 섹션) — 무료 모델 그대로, 응답 예산만 크게. */
+  report?: boolean;
+}
+
 export class OpenRouterProvider implements InterpretProvider {
+  constructor(private opts: OpenRouterOptions = {}) {}
+
   async chat(input: ChatInput): Promise<string> {
     const key = process.env.OPENROUTER_API_KEY;
     if (!key) throw new Error("openrouter:no-key");
-    const model = process.env.OPENROUTER_MODEL || DEFAULT_MODEL;
+    const model = this.opts.premium
+      ? process.env.OPENROUTER_PREMIUM_MODEL || PREMIUM_DEFAULT_MODEL
+      : process.env.OPENROUTER_MODEL || DEFAULT_MODEL;
 
     const messages = [
-      { role: "system", content: chatSystemPrompt(input) },
+      {
+        role: "system",
+        content: chatSystemPrompt(input, { premium: this.opts.premium, report: this.opts.report }),
+      },
       ...input.history.map((m) => ({
         role: m.role === "assistant" ? "assistant" : "user",
         content: m.content,
@@ -41,8 +59,8 @@ export class OpenRouterProvider implements InterpretProvider {
       body: JSON.stringify({
         model,
         messages,
-        temperature: 0.9,
-        max_tokens: 300,
+        temperature: this.opts.report ? 0.85 : this.opts.premium ? 0.8 : 0.9,
+        max_tokens: this.opts.report ? 1200 : this.opts.premium ? 600 : 300,
       }),
     });
     if (!res.ok) throw new Error(`openrouter:http-${res.status}`);

@@ -90,4 +90,69 @@ describe("OpenRouterProvider", () => {
     );
     await expect(new OpenRouterProvider().chat(input)).rejects.toThrow("openrouter:empty");
   });
+
+  describe("premium 옵션 (P8 상담 크레딧)", () => {
+    it("유료 모델·더 긴 응답 길이·낮은 temperature로 요청한다", async () => {
+      vi.stubEnv("OPENROUTER_API_KEY", "test-key");
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ choices: [{ message: { content: "깊이 있는 상담 응답." } }] }),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      await new OpenRouterProvider({ premium: true }).chat(input);
+      const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+      expect(body.model).toBe("anthropic/claude-3.5-haiku");
+      expect(body.max_tokens).toBe(600);
+      expect(body.temperature).toBe(0.8);
+      expect(body.messages[0].content).toContain("전문 상담사처럼");
+    });
+
+    it("OPENROUTER_PREMIUM_MODEL 환경변수로 프리미엄 모델을 바꿀 수 있다", async () => {
+      vi.stubEnv("OPENROUTER_API_KEY", "test-key");
+      vi.stubEnv("OPENROUTER_PREMIUM_MODEL", "openai/gpt-4o-mini");
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ choices: [{ message: { content: "응답." } }] }),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      await new OpenRouterProvider({ premium: true }).chat(input);
+      const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+      expect(body.model).toBe("openai/gpt-4o-mini");
+    });
+
+    it("premium이 아니면 기존과 동일하게 무료 모델·짧은 프롬프트를 쓴다", async () => {
+      vi.stubEnv("OPENROUTER_API_KEY", "test-key");
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ choices: [{ message: { content: "응답." } }] }),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      await new OpenRouterProvider().chat(input);
+      const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+      expect(body.model).toBe("google/gemma-4-26b-a4b-it:free");
+      expect(body.max_tokens).toBe(300);
+      expect(body.messages[0].content).not.toContain("전문 상담사처럼");
+    });
+  });
+
+  describe("report 옵션 (P8 로그인 전용 심층 리포트)", () => {
+    it("무료 모델을 그대로 쓰되 응답 예산을 크게 잡고 리포트 형식을 지시한다", async () => {
+      vi.stubEnv("OPENROUTER_API_KEY", "test-key");
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ choices: [{ message: { content: "[성격과 취향]\n다정한 결이 있어요." } }] }),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      await new OpenRouterProvider({ report: true }).chat(input);
+      const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+      expect(body.model).toBe("google/gemma-4-26b-a4b-it:free");
+      expect(body.max_tokens).toBe(1200);
+      expect(body.messages[0].content).toContain("[성격과 취향]");
+      expect(body.messages[0].content).toContain("[금전운]");
+    });
+  });
 });

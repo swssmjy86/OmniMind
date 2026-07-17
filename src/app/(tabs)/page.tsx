@@ -9,7 +9,7 @@ import AdSlot from "@/components/ads/AdSlot";
 import DailyRecorder from "@/components/DailyRecorder";
 import ShareSheet from "@/components/share/ShareSheet";
 import { dailyCardQuery } from "@/lib/share/card-copy";
-import type { ProfileRow } from "@/lib/db/types";
+import type { ProfileRow, InterpretationRow } from "@/lib/db/types";
 
 export const dynamic = "force-dynamic"; // 날짜·세션에 따라 매번 렌더
 
@@ -39,6 +39,17 @@ export default async function HomePage() {
     profile?.profile_context.dayMaster.stem, // 십성(비견~정인)까지 세밀 개인화
   );
   const guide = assembleDaily(daily, profile?.nickname);
+
+  // P8 로그인 전용 — 오늘 캐시된 LLM 개인화 문단(있으면). recordTodayDaily()가 자정 이후
+  // 첫 방문 때 채워두므로, 그 방문 자체에는 없고 다음 방문부터 보인다(캐시 하루 1회 원칙).
+  let llmParagraph: string | null = null;
+  if (user && profile) {
+    const { data: cached } = await supabase
+      .from("interpretations").select("*")
+      .eq("user_id", user.id).eq("kind", "daily").eq("target_date", daily.date)
+      .maybeSingle<InterpretationRow>();
+    llmParagraph = cached?.body.find((s) => s.title === "오늘, 당신만을 위한 이야기")?.body ?? null;
+  }
 
   // 동행일: 프로필 생성일 ~ 오늘
   let companionDays = 0;
@@ -76,6 +87,11 @@ export default async function HomePage() {
         {guide.personal && (
           <p className="mt-3 rounded-card bg-warm-base p-3 text-sm leading-relaxed text-text-main">
             {guide.personal}
+          </p>
+        )}
+        {llmParagraph && (
+          <p className="mt-3 rounded-card border border-primary-green/20 bg-warm-base p-3 text-sm leading-relaxed text-text-main">
+            🌿 {llmParagraph}
           </p>
         )}
         <div className="mt-5 flex gap-2">

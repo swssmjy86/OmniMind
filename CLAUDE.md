@@ -72,14 +72,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - **Next.js** (TypeScript, App Router) — Vercel 무료 티어 배포
 - **Supabase** — PostgreSQL DB + 카카오/구글 소셜 로그인
-- **OpenRouter 무료 모델** — LLM 해석 (Provider 인터페이스 뒤에 배치, 수익 발생 시 유료 모델로 교체). Gemini 어댑터(`gemini-provider.ts`)도 같은 인터페이스로 남아있어 설정만 바꾸면 전환 가능
-- **운영 비용 원칙: 월 고정비 0원** — 무료 티어/무료 API만 사용
+- **OpenRouter** — LLM 해석 (Provider 인터페이스 뒤에 배치). 무료 티어 모델이 기본, P8부터 상담 크레딧(유료) 소비 시에는 `OpenRouterProvider({ premium: true })`로 유료 모델(`OPENROUTER_PREMIUM_MODEL`)을 쓴다. Gemini 어댑터(`gemini-provider.ts`)도 같은 인터페이스로 남아있어 설정만 바꾸면 전환 가능
+- **운영 비용 원칙: 월 고정비 0원** — 무료 티어/무료 API만 사용. P8 유료 LLM 호출은 상담 크레딧 판매 매출로 충당하는 사용량 기반 변동비라 이 원칙과 상충하지 않는다(고정비가 아님)
 
 ### 핵심 아키텍처 원칙
 
 1. **계산과 해석의 분리** — 만세력·별자리 등 계산은 100% 규칙 기반 코드 (LLM 금지 영역), LLM은 문장 생성만
 2. **3단 해석 엔진** — ①규칙 계산 → ②템플릿 문구 조합(항상 동작) → ③LLM 개인화(쿼터 있을 때만). LLM 없이도 서비스 완전 동작
-3. **해석 캐싱** — 프로필 1회 생성, 데일리 하루 1회, 챗 하루 10회 제한. 같은 해석을 두 번 생성하지 않음
+3. **해석 캐싱** — 프로필 1회 생성, 데일리 하루 1회. 같은 해석을 두 번 생성하지 않음
+4. **P8 3단계 요금제** — 비로그인(프로필·데일리만) → 로그인(+ 마음·고민 하루 1회 무료) → 구독(그 이상은 `consult_credits`로, 소비 시 유료 모델). 접근 규칙은 `src/lib/consult/quota.ts` 하나에 모은다. 레거시 30일 이용권(`premium_until`)은 무제한 유지
 
 ## 개발 명령
 

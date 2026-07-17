@@ -10,10 +10,12 @@ export interface ProfileRow {
   blood_type: "A" | "B" | "O" | "AB";
   mbti: string;
   profile_context: ProfileContext;
-  /** P7 프리미엄 — 구독 만료 시각(0004 마이그레이션 전이거나 무료면 null/undefined). */
+  /** P7 프리미엄(레거시 이용권) — 구독 만료 시각(0004 마이그레이션 전이거나 무료면 null/undefined). */
   premium_until?: string | null;
-  /** P8 대운 — 성별(선택). 0006 마이그레이션 전이거나 미입력이면 null/undefined. */
+  /** 대운 — 성별(선택). 0006 마이그레이션 전이거나 미입력이면 null/undefined. */
   gender?: string | null;
+  /** P8 상담 크레딧 잔액 — 하루 1회 무료 이후 마음/고민 상담에 쓰인다. 0008 이전이면 undefined. */
+  consult_credits?: number;
   created_at: string;
   updated_at: string;
 }
@@ -56,6 +58,12 @@ export interface PaymentRow {
   approved_at: string | null;
   /** 이 주문으로 연장된 premium_until. done인데 null이면 부여 누락 — 재확인 시 자가 복구. */
   granted_until: string | null;
+  /** P8 — 주문 종류. 0008 이전 행은 전부 'pass'(기본값). */
+  kind?: "pass" | "credits";
+  /** P8 — 구매한 크레딧 수량(kind='credits'일 때만). */
+  credits?: number | null;
+  /** P8 — 이 주문으로 부여된 크레딧. done인데 null이면 부여 누락 — 재확인 시 자가 복구. */
+  granted_credits?: number | null;
 }
 
 export interface ChatMessageRow {

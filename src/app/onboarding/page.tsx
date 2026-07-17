@@ -297,12 +297,12 @@ function ProfileView({
         {nickname}님의 이야기
       </h1>
 
-      {/* 사주 명식(전문 뷰) */}
+      {/* 사주 명식(전문 뷰) — 비로그인도 그대로 본다(요약하지 않는다) */}
       <div className="mt-6">
         <SajuChart ctx={ctx} />
       </div>
 
-      {/* 해석 섹션 */}
+      {/* 해석 섹션 전체 */}
       <div className="mt-6 space-y-4">
         {sections.map((s) => (
           <section key={s.title} className="rounded-card bg-warm-surface p-5">
@@ -327,7 +327,8 @@ function ProfileView({
       {(saveState === "guest" || saveState === "pending") && (
         <section className="mt-8 rounded-card bg-warm-surface p-5 text-center">
           <p className="text-sm text-text-soft">
-            지금은 미리보기예요. 로그인하면 이 이야기를 저장하고, 매일의 기운도 받아볼 수 있어요.
+            지금은 미리보기예요. 로그인하면 이 이야기를 저장하고, 사주·MBTI·혈액형·별자리를 더
+            깊이 엮은 이야기와 매일의 기운도 받아볼 수 있어요.
           </p>
           <Link
             href="/login"
