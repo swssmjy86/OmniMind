@@ -52,6 +52,14 @@ describe("로그인 페이지", () => {
     expect(notice.textContent).toContain("잠시 길이 어긋났어요");
   });
 
+  it("자동 로그아웃으로 돌아오면(?reason=idle) 따뜻한 안내를 보여주고 진단 표기는 하지 않는다", async () => {
+    window.history.replaceState({}, "", "/login?reason=idle");
+    render(<LoginPage />);
+    const notice = await screen.findByRole("status");
+    expect(notice.textContent).toContain("자리를 비운 사이");
+    expect(screen.queryByText("(idle)")).toBeNull();
+  });
+
   it("실패 사유(reason)가 있으면 진단용으로 함께 표기한다", async () => {
     window.history.replaceState(
       {}, "", "/login?error=auth&reason=invalid%20flow%20state",
