@@ -64,7 +64,7 @@ export default async function ConnectPage({
         </div>
         <Link
           href="/match"
-          className="mt-6 block w-full rounded-card border border-primary-green/30 py-3.5 text-center font-medium text-primary-green"
+          className="press mt-6 block w-full rounded-card border border-primary-green/30 py-3.5 text-center font-medium text-primary-green"
         >
           우리의 조합으로 돌아가기
         </Link>
@@ -106,7 +106,7 @@ export default async function ConnectPage({
         </p>
         <Link
           href="/onboarding"
-          className="mt-6 block w-full rounded-card bg-accent-coral py-3.5 text-center font-medium text-white"
+          className="press mt-6 block w-full rounded-card bg-accent-coral py-3.5 text-center font-medium text-white"
         >
           나를 알아보기 ✨
         </Link>
@@ -129,7 +129,7 @@ export default async function ConnectPage({
         볼 수 있어요.
       </p>
       <form action={accept} className="mt-6">
-        <button className="w-full rounded-card bg-accent-coral py-3.5 font-medium text-white">
+        <button className="press w-full rounded-card bg-accent-coral py-3.5 font-medium text-white">
           {mode}의 조합 잇기 ✨
         </button>
       </form>

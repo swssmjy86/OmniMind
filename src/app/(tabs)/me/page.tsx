@@ -52,13 +52,13 @@ export default async function MePage() {
           </p>
           <Link
             href="/onboarding"
-            className="mt-6 block w-full rounded-card bg-accent-coral py-3.5 text-center font-medium text-white"
+            className="press mt-6 block w-full rounded-card bg-accent-coral py-3.5 text-center font-medium text-white"
           >
             나를 알아보기 ✨
           </Link>
           {user && (
             <form action={signOut} className="mt-4">
-              <button className="text-sm text-text-soft underline">잠시 떠나기 (로그아웃)</button>
+              <button className="press text-sm text-text-soft underline">잠시 떠나기 (로그아웃)</button>
             </form>
           )}
         </div>
@@ -141,13 +141,13 @@ export default async function MePage() {
       {/* P7 궁합 — 우리의 조합 입구 */}
       <Link
         href="/match"
-        className="mt-4 block w-full rounded-card border border-primary-green/30 bg-warm-surface py-3.5 text-center font-medium text-primary-green"
+        className="press mt-4 block w-full rounded-card border border-primary-green/30 bg-warm-surface py-3.5 text-center font-medium text-primary-green"
       >
         우리의 조합 보기 — 연인·친구·동료 🍃
       </Link>
 
       <form action={signOut} className="mt-8">
-        <button className="text-sm text-text-soft underline">잠시 떠나기 (로그아웃)</button>
+        <button className="press text-sm text-text-soft underline">잠시 떠나기 (로그아웃)</button>
       </form>
     </main>
   );

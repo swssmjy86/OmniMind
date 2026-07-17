@@ -29,7 +29,7 @@ export default async function MatchPage() {
         </p>
         <Link
           href="/onboarding"
-          className="mt-6 block w-full rounded-card bg-accent-coral py-3.5 text-center font-medium text-white"
+          className="press mt-6 block w-full rounded-card bg-accent-coral py-3.5 text-center font-medium text-white"
         >
           나를 알아보기 ✨
         </Link>

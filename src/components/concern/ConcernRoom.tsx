@@ -96,7 +96,7 @@ export default function ConcernRoom({
               <button
                 key={c}
                 onClick={() => setCategory(c)}
-                className={`rounded-full px-4 py-2 text-sm transition-colors ${
+                className={`active:scale-[0.97] motion-reduce:active:scale-100 rounded-full px-4 py-2 text-sm transition ${
                   category === c
                     ? "bg-primary-green text-white"
                     : "bg-warm-surface text-text-soft"
@@ -118,7 +118,7 @@ export default function ConcernRoom({
           <button
             onClick={() => void submit()}
             disabled={pending || !text.trim()}
-            className="w-full rounded-card bg-accent-coral py-3.5 font-medium text-white disabled:opacity-40"
+            className="press w-full rounded-card bg-accent-coral py-3.5 font-medium text-white disabled:opacity-40"
           >
             {pending ? "당신의 결을 살피는 중이에요…" : "함께 생각해보기"}
           </button>
@@ -133,7 +133,7 @@ export default function ConcernRoom({
             </h2>
             <button
               onClick={() => void removeAll()}
-              className="text-xs text-text-soft underline underline-offset-4"
+              className="press text-xs text-text-soft underline underline-offset-4"
             >
               전체 삭제
             </button>
@@ -150,7 +150,7 @@ export default function ConcernRoom({
                   <button
                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); void removeOne(p.id); }}
                     aria-label="이 고민 기록 삭제"
-                    className="shrink-0 rounded-full p-1 text-xs text-text-soft opacity-0 transition-opacity hover:text-accent-coral group-hover:opacity-100"
+                    className="delete-btn shrink-0 rounded-full p-1 text-xs text-text-soft"
                   >
                     ✕
                   </button>

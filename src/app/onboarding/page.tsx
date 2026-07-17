@@ -107,7 +107,7 @@ export default function OnboardingPage() {
     <main className="flex min-h-dvh flex-col p-6">
       <Progress step={step} total={5} />
 
-      <div className="mt-8 flex-1">
+      <div key={step} className="mt-8 flex-1 fade-rise">
         {step === 0 && (
           <Field
             title="어떻게 불러드리면 좋을까요?"
@@ -218,7 +218,7 @@ export default function OnboardingPage() {
         {step > 0 && (
           <button
             onClick={() => setStep((s) => s - 1)}
-            className="rounded-card border border-text-soft/30 px-5 py-3.5 text-text-soft"
+            className="press rounded-card border border-text-soft/30 px-5 py-3.5 text-text-soft"
           >
             이전
           </button>
@@ -227,14 +227,14 @@ export default function OnboardingPage() {
           <button
             disabled={!canNext}
             onClick={() => setStep((s) => s + 1)}
-            className="flex-1 rounded-card bg-accent-coral py-3.5 font-medium text-white disabled:opacity-40"
+            className="press flex-1 rounded-card bg-accent-coral py-3.5 font-medium text-white disabled:opacity-40"
           >
             다음
           </button>
         ) : (
           <button
             onClick={finish}
-            className="flex-1 rounded-card bg-primary-green py-3.5 font-medium text-white"
+            className="press flex-1 rounded-card bg-primary-green py-3.5 font-medium text-white"
           >
             나를 알아보기 ✨
           </button>
@@ -291,7 +291,7 @@ function ProfileView({
   }
 
   return (
-    <main className="p-6 pb-24">
+    <main className="fade-rise-lg p-6 pb-24">
       <p className="text-text-soft">온전한 나</p>
       <h1 className="mt-1 font-[family-name:var(--font-serif-kr)] text-3xl text-primary-green">
         {nickname}님의 이야기
@@ -336,7 +336,7 @@ function ProfileView({
               // 로그인 후 이 자리로 돌아와 자동 저장을 이어가도록 목적지를 쿠키로
               document.cookie = `om_next=${encodeURIComponent("/onboarding?resume=1")}; path=/; max-age=600; samesite=lax`;
             }}
-            className="mt-4 block w-full rounded-card bg-accent-coral py-3.5 font-medium text-white"
+            className="press mt-4 block w-full rounded-card bg-accent-coral py-3.5 font-medium text-white"
           >
             로그인하고 저장하기
           </Link>
@@ -344,7 +344,7 @@ function ProfileView({
       )}
       <Link
         href="/"
-        className="mt-3 block w-full rounded-card border border-text-soft/30 py-3.5 text-center text-text-soft"
+        className="press mt-3 block w-full rounded-card border border-text-soft/30 py-3.5 text-center text-text-soft"
       >
         홈으로
       </Link>

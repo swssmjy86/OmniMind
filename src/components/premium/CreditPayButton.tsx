@@ -53,7 +53,7 @@ export default function CreditPayButton({ pkg }: { pkg: CreditPackage }) {
       <button
         onClick={pay}
         disabled={pending}
-        className="w-full rounded-card border border-primary-green/30 bg-warm-surface py-3 font-medium text-primary-green disabled:opacity-60"
+        className="press w-full rounded-card border border-primary-green/30 bg-warm-surface py-3 font-medium text-primary-green disabled:opacity-60"
       >
         {pending ? "결제로 잇는 중…" : `${pkg.label} · ${pkg.price.toLocaleString()}원`}
       </button>

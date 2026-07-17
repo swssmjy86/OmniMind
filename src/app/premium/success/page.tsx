@@ -33,7 +33,7 @@ export default async function PaymentSuccessPage({
         <p className="text-text-soft">{message}</p>
         <Link
           href="/premium"
-          className="block w-full rounded-card bg-accent-coral py-3.5 font-medium text-white"
+          className="press block w-full rounded-card bg-accent-coral py-3.5 font-medium text-white"
         >
           다시 시도하기
         </Link>
@@ -56,7 +56,7 @@ export default async function PaymentSuccessPage({
       </p>
       <Link
         href="/mind"
-        className="block w-full rounded-card bg-accent-coral py-3.5 font-medium text-white"
+        className="press block w-full rounded-card bg-accent-coral py-3.5 font-medium text-white"
       >
         마음 나누러 가기
       </Link>

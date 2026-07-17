@@ -15,7 +15,7 @@ export default async function CreditFailPage() {
       </p>
       <Link
         href="/premium"
-        className="block w-full rounded-card bg-accent-coral py-3.5 font-medium text-white"
+        className="press block w-full rounded-card bg-accent-coral py-3.5 font-medium text-white"
       >
         다시 시도하기
       </Link>

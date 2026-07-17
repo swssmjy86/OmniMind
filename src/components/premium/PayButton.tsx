@@ -60,7 +60,7 @@ export default function PayButton() {
       <button
         onClick={pay}
         disabled={pending}
-        className="w-full rounded-card bg-accent-coral py-3.5 font-medium text-white disabled:opacity-60"
+        className="press w-full rounded-card bg-accent-coral py-3.5 font-medium text-white disabled:opacity-60"
       >
         {pending ? "결제로 잇는 중…" : "30일 이용권 시작하기"}
       </button>

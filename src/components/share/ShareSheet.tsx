@@ -92,7 +92,7 @@ export default function ShareSheet({ query, via, label }: Props) {
     return (
       <button
         onClick={openSheet}
-        className="mt-4 block w-full rounded-card border border-accent-coral/40 bg-warm-surface py-3.5 text-center font-medium text-primary-green"
+        className="press mt-4 block w-full rounded-card border border-accent-coral/40 bg-warm-surface py-3.5 text-center font-medium text-primary-green"
       >
         {label} 만들기 ✨
       </button>
@@ -111,27 +111,27 @@ export default function ShareSheet({ query, via, label }: Props) {
       <div className="mt-4 grid grid-cols-2 gap-2">
         <button
           onClick={share}
-          className="rounded-card bg-accent-coral py-3 text-center font-medium text-white"
+          className="press rounded-card bg-accent-coral py-3 text-center font-medium text-white"
         >
           공유하기
         </button>
         <a
           href={cardSrc}
           download="omnimind-card.png"
-          className="rounded-card border border-primary-green/30 py-3 text-center font-medium text-primary-green"
+          className="press rounded-card border border-primary-green/30 py-3 text-center font-medium text-primary-green"
         >
           이미지 저장
         </a>
         <button
           onClick={() => void downloadPdf()}
           disabled={pdfPending}
-          className="rounded-card border border-primary-green/30 py-3 text-center font-medium text-primary-green disabled:opacity-40"
+          className="press rounded-card border border-primary-green/30 py-3 text-center font-medium text-primary-green disabled:opacity-40"
         >
           {pdfPending ? "PDF 만드는 중…" : "PDF로 저장"}
         </button>
         <button
           onClick={copyLink}
-          className="rounded-card border border-primary-green/30 py-3 text-center font-medium text-primary-green"
+          className="press rounded-card border border-primary-green/30 py-3 text-center font-medium text-primary-green"
         >
           {copied ? "복사했어요 ✓" : "링크 복사"}
         </button>

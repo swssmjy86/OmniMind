@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { computeDaily } from "@/lib/engine/daily";
 import { assembleDaily } from "@/lib/interpret/content/daily";
-import { currentMilestone } from "@/lib/interpret/milestone";
+import { currentMilestone, isMilestoneToday } from "@/lib/interpret/milestone";
 import { toKstParts } from "@/lib/engine/kst";
 import AdSlot from "@/components/ads/AdSlot";
 import DailyRecorder from "@/components/DailyRecorder";
@@ -59,6 +59,9 @@ export default async function HomePage() {
     companionDays = Math.max(1, Math.floor((now.getTime() - start.getTime()) / 86_400_000) + 1);
   }
   const badge = currentMilestone(companionDays);
+  // 배지 자체는 도달 이후 계속 보이는 상태 표시라, 팝인은 "바로 그날"에만 재생한다 —
+  // 방문할 때마다 매번 튀면 "드문 축하"가 아니라 잦은 소음이 된다(모션 재설계 제안 #5).
+  const justReached = Boolean(isMilestoneToday(companionDays));
 
   return (
     <main className="fade-rise p-6">
@@ -70,7 +73,9 @@ export default async function HomePage() {
           <span className="flex items-center gap-1 text-xs text-text-soft">
             함께한 지 {companionDays}일째
             {badge && (
-              <span className="rounded-full bg-warm-surface px-2 py-0.5 text-primary-green">
+              <span
+                className={`rounded-full bg-warm-surface px-2 py-0.5 text-primary-green ${justReached ? "badge-pop" : ""}`}
+              >
                 {badge.emoji} {badge.label}
               </span>
             )}
@@ -131,7 +136,7 @@ export default async function HomePage() {
           </p>
           <Link
             href="/onboarding"
-            className="mt-4 block w-full rounded-card bg-accent-coral py-3.5 text-center font-medium text-white transition-opacity hover:opacity-90"
+            className="active:scale-[0.97] motion-reduce:active:scale-100 mt-4 block w-full rounded-card bg-accent-coral py-3.5 text-center font-medium text-white transition hover:opacity-90"
           >
             나를 알아보기 ✨
           </Link>
@@ -152,7 +157,7 @@ export default async function HomePage() {
       {/* 로그인 상태에서만 — 조용한 로그아웃 (/me와 같은 결) */}
       {user && (
         <form action={signOut} className="mt-8 text-center">
-          <button className="text-sm text-text-soft underline">
+          <button className="press text-sm text-text-soft underline">
             잠시 떠나기 (로그아웃)
           </button>
         </form>

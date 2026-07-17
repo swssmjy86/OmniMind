@@ -72,7 +72,7 @@ export default function MatchForm({ me, nickname }: { me: MatchMe; nickname: str
           <button
             key={m}
             onClick={() => { setMode(m); setInviteUrl(null); }}
-            className={`rounded-full px-4 py-2 text-sm transition-colors ${
+            className={`active:scale-[0.97] motion-reduce:active:scale-100 rounded-full px-4 py-2 text-sm transition ${
               mode === m ? "bg-primary-green text-white" : "bg-warm-surface text-text-soft"
             }`}
           >
@@ -121,7 +121,7 @@ export default function MatchForm({ me, nickname }: { me: MatchMe; nickname: str
         <button
           onClick={compute}
           disabled={!birthDate}
-          className="w-full rounded-card bg-accent-coral py-3.5 font-medium text-white disabled:opacity-40"
+          className="press w-full rounded-card bg-accent-coral py-3.5 font-medium text-white disabled:opacity-40"
         >
           우리의 조합 잇기 ✨
         </button>
@@ -147,7 +147,7 @@ export default function MatchForm({ me, nickname }: { me: MatchMe; nickname: str
             </p>
             <button
               onClick={() => void copyInvite()}
-              className="mt-3 w-full rounded-card bg-primary-green py-3 font-medium text-white"
+              className="press mt-3 w-full rounded-card bg-primary-green py-3 font-medium text-white"
             >
               {copied ? "복사했어요 ✓" : "상대에게 건네주기 🍃"}
             </button>

@@ -85,7 +85,7 @@ export default function MindChat({
         {messages.length > 0 && (
           <button
             onClick={() => void removeAll()}
-            className="mt-1 shrink-0 text-xs text-text-soft underline underline-offset-4"
+            className="press mt-1 shrink-0 text-xs text-text-soft underline underline-offset-4"
           >
             전체 삭제
           </button>
@@ -131,7 +131,7 @@ export default function MindChat({
           <button
             onClick={() => void send()}
             disabled={pending || !input.trim()}
-            className="rounded-card bg-primary-green px-4 py-2.5 font-medium text-white disabled:opacity-40"
+            className="press rounded-card bg-primary-green px-4 py-2.5 font-medium text-white disabled:opacity-40"
           >
             보내기
           </button>
@@ -146,7 +146,7 @@ function Bubble({
 }: { role: "user" | "assistant"; children: React.ReactNode; onDelete?: () => void }) {
   const mine = role === "user";
   return (
-    <div className={`group flex items-center gap-1.5 ${mine ? "justify-end" : "justify-start"}`}>
+    <div className={`group bubble-in flex items-center gap-1.5 ${mine ? "justify-end" : "justify-start"}`}>
       {!mine && onDelete && <DeleteButton onClick={onDelete} />}
       <div
         className={`max-w-[80%] rounded-card px-4 py-2.5 leading-relaxed ${
@@ -165,7 +165,7 @@ function DeleteButton({ onClick }: { onClick: () => void }) {
     <button
       onClick={onClick}
       aria-label="이 메시지 삭제"
-      className="shrink-0 rounded-full p-1 text-xs text-text-soft opacity-0 transition-opacity hover:text-accent-coral group-hover:opacity-100"
+      className="delete-btn shrink-0 rounded-full p-1 text-xs text-text-soft"
     >
       ✕
     </button>
