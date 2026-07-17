@@ -9,6 +9,7 @@ import { assembleMatch } from "@/lib/interpret/content/match";
 import { createInvite } from "@/lib/match/actions";
 import { recordClientEvent } from "@/lib/metrics/actions";
 import Choice from "@/components/ui/Choice";
+import PickerInput from "@/components/ui/PickerInput";
 import type { InterpretationSection } from "@/lib/interpret/types";
 import type { BloodType, Mbti } from "@/lib/engine/types";
 
@@ -91,7 +92,7 @@ export default function MatchForm({ me, nickname }: { me: MatchMe; nickname: str
             key={m}
             onClick={() => { setMode(m); setInviteUrl(null); }}
             className={`active:scale-[0.97] motion-reduce:active:scale-100 rounded-full px-4 py-2 text-sm transition ${
-              mode === m ? "bg-primary-green text-on-primary" : "bg-warm-surface text-text-soft"
+              mode === m ? "bg-selected text-on-selected" : "bg-warm-surface text-text-soft"
             }`}
           >
             {m}
@@ -102,25 +103,31 @@ export default function MatchForm({ me, nickname }: { me: MatchMe; nickname: str
       <div className="mt-4 space-y-3 rounded-card bg-warm-surface p-5">
         <label className="block">
           <span className="text-sm text-text-soft">상대가 세상에 온 날</span>
-          <input
-            type="date"
-            min="1900-01-01"
-            max="2100-12-31"
-            value={birthDate}
-            onChange={(e) => setBirthDate(e.target.value)}
-            className="mt-1.5 w-full rounded-card border border-text-soft/30 bg-warm-base px-4 py-3.5 text-lg outline-none focus:border-primary-green"
-          />
+          <div className="mt-1.5">
+            <PickerInput
+              type="date"
+              min="1900-01-01"
+              max="2100-12-31"
+              value={birthDate}
+              onChange={setBirthDate}
+              placeholder="눌러서 날짜를 골라 주세요"
+              bg="bg-warm-base"
+            />
+          </div>
         </label>
         <div>
           <label className="block">
             <span className="text-sm text-text-soft">상대가 태어난 시간 (알고 있다면)</span>
-            <input
-              type="time"
-              value={birthTime}
-              disabled={timeUnknown}
-              onChange={(e) => setBirthTime(e.target.value)}
-              className="mt-1.5 w-full rounded-card border border-text-soft/30 bg-warm-base px-4 py-3.5 text-lg outline-none focus:border-primary-green disabled:opacity-40"
-            />
+            <div className="mt-1.5">
+              <PickerInput
+                type="time"
+                value={birthTime}
+                disabled={timeUnknown}
+                onChange={setBirthTime}
+                placeholder="눌러서 시간을 골라 주세요"
+                bg="bg-warm-base"
+              />
+            </div>
           </label>
           <label className="mt-2 flex items-center gap-2 text-sm text-text-soft">
             <input

@@ -32,13 +32,21 @@ describe("MatchForm", () => {
     expect(container.querySelector("select")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByText("ENFJ"));
-    expect(screen.getByText("ENFJ")).toHaveClass("bg-primary-green");
+    // 선택 상태는 전용 토큰(bg-selected) — 다크에서 primary-green이 베이지로 뒤집혀
+    // '흰 버튼에 안 보이는 글자'가 되는 문제를 피한다.
+    expect(screen.getByText("ENFJ")).toHaveClass("bg-selected");
 
     fireEvent.click(screen.getByText("ENFJ"));
     // MBTI '아직 몰라요'는 여전히 존재하며 재선택 가능
     const unknowns = screen.getAllByText("아직 몰라요");
     fireEvent.click(unknowns[0]);
-    expect(unknowns[0]).toHaveClass("bg-primary-green");
+    expect(unknowns[0]).toHaveClass("bg-selected");
+  });
+
+  it("빈 날짜·시간 입력에는 안내 문구가 보인다 — iOS WebKit은 빈 입력을 아무것도 없이 그린다", () => {
+    render(<MatchForm me={ME} nickname="달빛" />);
+    expect(screen.getByText("눌러서 날짜를 골라 주세요")).toBeInTheDocument();
+    expect(screen.getByText("눌러서 시간을 골라 주세요")).toBeInTheDocument();
   });
 
   it("상대 정보를 '나'처럼 입력한다 — 시간(+몰라요 체크)·혈액형 선택지가 있다", () => {
