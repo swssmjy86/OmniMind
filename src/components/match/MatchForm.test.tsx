@@ -10,6 +10,11 @@ vi.mock("@/lib/metrics/actions", () => ({
 vi.mock("@/lib/match/actions", () => ({
   createInvite: vi.fn().mockResolvedValue({ ok: false }),
 }));
+// 엔진 throw 시의 오류 안내를 검증하기 위한 통과형 래퍼 — 기본은 실제 구현 그대로.
+vi.mock("@/lib/engine/match", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/engine/match")>();
+  return { ...actual, computeMatch: vi.fn(actual.computeMatch) };
+});
 
 const ME: MatchMe = {
   element: "목", zodiac: "사자자리", mbti: "ENFJ", dayGanzhi: "갑자", bloodType: "A",
@@ -36,11 +41,11 @@ describe("MatchForm", () => {
     // '흰 버튼에 안 보이는 글자'가 되는 문제를 피한다.
     expect(screen.getByText("ENFJ")).toHaveClass("bg-selected");
 
-    fireEvent.click(screen.getByText("ENFJ"));
-    // MBTI '아직 몰라요'는 여전히 존재하며 재선택 가능
+    // MBTI '아직 몰라요'(DOM 순서상 [1] — [0]은 혈액형 섹션)를 누르면 선택이 풀린다
     const unknowns = screen.getAllByText("아직 몰라요");
-    fireEvent.click(unknowns[0]);
-    expect(unknowns[0]).toHaveClass("bg-selected");
+    fireEvent.click(unknowns[1]);
+    expect(unknowns[1]).toHaveClass("bg-selected");
+    expect(screen.getByText("ENFJ")).not.toHaveClass("bg-selected");
   });
 
   it("빈 날짜·시간 입력에는 안내 문구가 보인다 — iOS WebKit은 빈 입력을 아무것도 없이 그린다", () => {
@@ -69,6 +74,24 @@ describe("MatchForm", () => {
     fireEvent.click(screen.getByText("O형"));
     fireEvent.click(screen.getByText(/우리의 조합 잇기/));
     expect(await screen.findByText("혈액형이 말하길")).toBeInTheDocument();
+  });
+
+  it("엔진이 입력을 거부하면(예: 시간 형식 오류) 날짜만 지목하지 않고 날짜·시간을 함께 확인하도록 안내한다", async () => {
+    // 일부 브라우저에서 time 입력이 텍스트로 강등되면 '9:30' 같은 비정규 형식이 엔진까지
+    // 온다 — jsdom은 스펙대로 잘못된 값을 빈 문자열로 소독해 UI 경유로는 재현이 안 되므로
+    // 엔진 throw를 직접 강제한다.
+    const { computeMatch } = await import("@/lib/engine/match");
+    vi.mocked(computeMatch).mockImplementationOnce(() => {
+      throw new Error("birthTime 형식 오류: 9:30");
+    });
+    const { container } = render(<MatchForm me={ME} nickname="달빛" />);
+    fireEvent.change(container.querySelector('input[type="date"]')!, {
+      target: { value: "2000-01-06" },
+    });
+    fireEvent.click(screen.getByText(/우리의 조합 잇기/));
+    expect(
+      await screen.findByText("입력하신 날짜와 시간을 다시 한번 확인해주실래요?"),
+    ).toBeInTheDocument();
   });
 
   it("출생 시간을 알려주면 야자시 경계까지 반영된 일주로 계산한다", async () => {

@@ -24,6 +24,18 @@ describe("PickerInput", () => {
     expect(container.querySelector("input")).not.toHaveClass("text-transparent");
   });
 
+  it("포커스 중에는 안내 문구를 치우고 입력 글자를 드러낸다 — 키보드로 칸을 채우는 동안 value는 빈 문자열이라 투명 처리가 타이핑을 가린다", () => {
+    const { container } = render(
+      <PickerInput type="date" value="" onChange={() => {}} placeholder="눌러서 날짜를 골라 주세요" />,
+    );
+    const input = container.querySelector("input")!;
+    fireEvent.focus(input);
+    expect(screen.queryByText("눌러서 날짜를 골라 주세요")).not.toBeInTheDocument();
+    expect(input).not.toHaveClass("text-transparent");
+    fireEvent.blur(input);
+    expect(screen.getByText("눌러서 날짜를 골라 주세요")).toBeInTheDocument();
+  });
+
   it("변경 값을 onChange로 올려보낸다", () => {
     const onChange = vi.fn();
     const { container } = render(

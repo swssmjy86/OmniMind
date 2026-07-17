@@ -56,7 +56,8 @@ export default function MatchForm({ me, nickname }: { me: MatchMe; nickname: str
         hasTime: !timeUnknown && !!birthTime,
       });
     } catch {
-      setError("생년월일을 다시 한번 확인해주실래요?");
+      // 날짜뿐 아니라 시간 형식 오류도 이 경로로 온다 — 특정 필드를 지목하지 않는다.
+      setError("입력하신 날짜와 시간을 다시 한번 확인해주실래요?");
     }
   }
 

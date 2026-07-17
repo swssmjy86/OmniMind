@@ -70,13 +70,18 @@ body {
 }
 
 /* iOS WebKit의 date/time 입력 — 값이 가운데 정렬로 떠 보이거나 비어 보이는 문제를
-   다른 입력들과 같은 왼쪽 정렬·본문 글자색으로 맞춘다. */
-input[type="date"],
-input[type="time"] {
-  color: var(--text-main);
-}
-input::-webkit-date-and-time-value {
-  text-align: left;
+   다른 입력들과 같은 왼쪽 정렬·본문 글자색으로 맞춘다.
+   base 레이어에 둔다 — 레이어 없는 규칙은 Tailwind 유틸리티(@layer utilities)를 항상
+   이겨서, PickerInput이 빈 상태를 숨기는 text-transparent가 무효화된다(안드로이드에서
+   네이티브 '연도-월-일' 위에 안내 문구가 겹쳐 보이는 버그). */
+@layer base {
+  input[type="date"],
+  input[type="time"] {
+    color: var(--text-main);
+  }
+  input::-webkit-date-and-time-value {
+    text-align: left;
+  }
 }
 
 /* 페이지 콘텐츠가 부드럽게 스며드는 전환 (§5.3 무드 — 로그인 전후 화면 전환 등) */
