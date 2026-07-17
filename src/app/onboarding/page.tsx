@@ -239,7 +239,7 @@ export default function OnboardingPage() {
         ) : (
           <button
             onClick={finish}
-            className="press flex-1 rounded-card bg-primary-green py-3.5 font-medium text-white"
+            className="press flex-1 rounded-card bg-primary-green py-3.5 font-medium text-on-primary"
           >
             나를 알아보기 ✨
           </button>

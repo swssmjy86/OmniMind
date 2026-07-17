@@ -142,7 +142,7 @@ export default function MindChat({
           <button
             onClick={() => void send()}
             disabled={pending || !input.trim()}
-            className="press rounded-card bg-primary-green px-4 py-2.5 font-medium text-white disabled:opacity-40"
+            className="press rounded-card bg-primary-green px-4 py-2.5 font-medium text-on-primary disabled:opacity-40"
           >
             보내기
           </button>
