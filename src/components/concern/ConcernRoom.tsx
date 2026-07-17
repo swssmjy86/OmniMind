@@ -48,8 +48,18 @@ export default function ConcernRoom({
   }
 
   async function removeOne(id: string) {
+    const index = history.findIndex((p) => p.id === id);
+    if (index === -1) return;
+    const removed = history[index];
     setHistory((h) => h.filter((p) => p.id !== id));
-    await deleteConcernLog(id);
+    const res = await deleteConcernLog(id);
+    if (!res.ok) {
+      setHistory((h) => {
+        const next = [...h];
+        next.splice(index, 0, removed);
+        return next;
+      });
+    }
   }
 
   async function removeAll() {

@@ -122,8 +122,11 @@ export default async function MePage() {
       )}
 
       <div className="mt-6 space-y-4">
-        {sections.map((s) => (
-          <section key={s.title} className="rounded-card bg-warm-surface p-5">
+        {sections.map((s, i) => (
+          // 인덱스를 함께 쓰는 이유 — LLM 심층 리포트 섹션(P8)은 제목이 고정 상수가 아니라
+          // parseReportSections()가 응답에서 뽑아낸 값이라, 형식을 못 지키면 제목이 겹칠 수
+          // 있다. title만 key로 쓰면 그 경우 React가 섹션 하나를 조용히 지워버린다(코드리뷰 수정).
+          <section key={`${i}-${s.title}`} className="rounded-card bg-warm-surface p-5">
             <h2 className="font-[family-name:var(--font-serif-kr)] text-lg text-primary-green">
               {s.title}
             </h2>

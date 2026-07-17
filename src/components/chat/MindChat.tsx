@@ -56,9 +56,20 @@ export default function MindChat({
   }
 
   async function removeOne(id: string) {
+    // 실패 시 원래 자리에 되돌려야 하므로, 마운트 시점의 initialMessages가 아니라
+    // 지금 살아있는 messages에서 위치와 내용을 붙잡아둔다(세션 중 보낸 메시지도 복구되도록).
+    const index = messages.findIndex((msg) => msg.id === id);
+    if (index === -1) return;
+    const removed = messages[index];
     setMessages((m) => m.filter((msg) => msg.id !== id));
     const res = await deleteChatMessage(id);
-    if (!res.ok) setMessages((m) => [...m, ...initialMessages.filter((im) => im.id === id)]);
+    if (!res.ok) {
+      setMessages((m) => {
+        const next = [...m];
+        next.splice(index, 0, removed);
+        return next;
+      });
+    }
   }
 
   async function removeAll() {

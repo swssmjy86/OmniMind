@@ -24,15 +24,26 @@ export default async function HomePage() {
     redirect("/"); // 로그아웃 후에도 홈 — 비로그인 상태 화면으로 자연스럽게 전환
   }
 
-  // 저장된 프로필(로그인 + 마이그레이션 적용 시). 실패는 조용히 무시.
+  const todayKst = toKstParts(new Date()); // 서버 UTC → KST 오늘
+  // 날짜 문자열은 프로필과 무관해(engine/daily.ts computeDaily의 date 필드와 동일 포맷) 먼저
+  // 구할 수 있다 — 프로필 조회와 캐시된 데일리 조회를 순차가 아니라 병렬로 보낸다.
+  const todayDateStr = `${todayKst.y}-${String(todayKst.mo).padStart(2, "0")}-${String(todayKst.d).padStart(2, "0")}`;
+
+  // 저장된 프로필(로그인 + 마이그레이션 적용 시) + P8 오늘 캐시된 LLM 개인화 문단.
+  // 둘 다 실패는 조용히 무시.
   let profile: ProfileRow | null = null;
+  let cachedDaily: InterpretationRow | null = null;
   if (user) {
-    const { data } = await supabase
-      .from("profiles").select("*").eq("user_id", user.id).maybeSingle<ProfileRow>();
-    profile = data ?? null;
+    const [profileRes, cachedRes] = await Promise.all([
+      supabase.from("profiles").select("*").eq("user_id", user.id).maybeSingle<ProfileRow>(),
+      supabase.from("interpretations").select("*")
+        .eq("user_id", user.id).eq("kind", "daily").eq("target_date", todayDateStr)
+        .maybeSingle<InterpretationRow>(),
+    ]);
+    profile = profileRes.data ?? null;
+    cachedDaily = cachedRes.data ?? null;
   }
 
-  const todayKst = toKstParts(new Date()); // 서버 UTC → KST 오늘
   const daily = computeDaily(
     { y: todayKst.y, mo: todayKst.mo, d: todayKst.d },
     profile?.profile_context.dayMaster.element,
@@ -40,16 +51,11 @@ export default async function HomePage() {
   );
   const guide = assembleDaily(daily, profile?.nickname);
 
-  // P8 로그인 전용 — 오늘 캐시된 LLM 개인화 문단(있으면). recordTodayDaily()가 자정 이후
-  // 첫 방문 때 채워두므로, 그 방문 자체에는 없고 다음 방문부터 보인다(캐시 하루 1회 원칙).
-  let llmParagraph: string | null = null;
-  if (user && profile) {
-    const { data: cached } = await supabase
-      .from("interpretations").select("*")
-      .eq("user_id", user.id).eq("kind", "daily").eq("target_date", daily.date)
-      .maybeSingle<InterpretationRow>();
-    llmParagraph = cached?.body.find((s) => s.title === "오늘, 당신만을 위한 이야기")?.body ?? null;
-  }
+  // recordTodayDaily()가 자정 이후 첫 방문 때 캐시를 채우므로, 그 방문 자체에는 아직 없고
+  // 다음 방문부터 보인다(캐시 하루 1회 원칙). profile이 없으면(비로그인 등) 애초에 캐시 대상이 아니다.
+  const llmParagraph = profile
+    ? cachedDaily?.body.find((s) => s.title === "오늘, 당신만을 위한 이야기")?.body ?? null
+    : null;
 
   // 동행일: 프로필 생성일 ~ 오늘
   let companionDays = 0;

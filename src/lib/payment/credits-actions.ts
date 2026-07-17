@@ -74,7 +74,14 @@ export async function confirmCreditOrder(
 
     if (order.status === "done") {
       if (order.granted_credits != null) {
-        return { ok: true, creditBalance: order.granted_credits, creditsAdded: order.credits, already: true };
+        // order.granted_credits는 "이 주문으로 부여된 수량"(패키지 크기)일 뿐, 그 사이 소비했을 수
+        // 있는 실제 잔액이 아니다 — 재조회해서 지금 잔액을 돌려준다(코드리뷰 결함 수정).
+        const { data: prof } = await admin
+          .from("profiles").select("consult_credits").eq("user_id", user.id).maybeSingle<{ consult_credits: number }>();
+        return {
+          ok: true, creditBalance: prof?.consult_credits ?? order.granted_credits,
+          creditsAdded: order.credits, already: true,
+        };
       }
       const balance = await grant(order.credits); // 부여 누락 자가 복구
       if (balance == null) return { ok: false, reason: "error" };

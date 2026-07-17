@@ -69,6 +69,11 @@ export default function OnboardingPage() {
         } else {
           setSaveState(r.reason === "not-authenticated" ? "guest" : "error");
         }
+      }).catch(() => {
+        // 서버 액션 자체가 거부되는 경우(네트워크 끊김·플랫폼 타임아웃 등) — 프로필 행은 이미
+        // 저장됐을 수 있지만(리포트 생성은 저장 다음 단계) 화면은 계속 "저장 중" 상태로 멈춰
+        // 있으면 안 된다. 코드리뷰 결함 수정: .then()만 있고 .catch()가 없어 거부 시 무한 대기했다.
+        setSaveState("error");
       });
     } catch {
       setError("입력을 다시 확인해 주세요.");
