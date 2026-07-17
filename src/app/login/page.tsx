@@ -34,12 +34,15 @@ export default function LoginPage() {
   const params = new URLSearchParams(useUrlSearch());
   const urlHasError = params.has("error");
   const reason = params.get("reason"); // 콜백이 전달한 실패 사유(진단용)
+  const isIdle = !urlHasError && reason === "idle"; // 무활동 자동 로그아웃으로 돌아온 경우
 
   const notice = override
     ? override.notice
     : urlHasError
       ? "잠시 길이 어긋났어요. 한 번 더 이어볼까요?"
-      : null;
+      : isIdle
+        ? "자리를 비운 사이, 마음의 기록을 지키려 잠시 문을 닫아두었어요. 다시 이어볼까요?"
+        : null;
 
   const signIn = async (provider: Provider) => {
     if (pending) return; // 중복 클릭 방지
@@ -89,7 +92,7 @@ export default function LoginPage() {
             {notice}
           </p>
         )}
-        {!override && notice && reason && (
+        {!override && urlHasError && notice && reason && (
           <p className="break-all text-center text-xs text-text-soft">({reason})</p>
         )}
       </div>
