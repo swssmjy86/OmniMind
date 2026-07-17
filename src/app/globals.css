@@ -13,6 +13,9 @@
   /* 데스크톱 배경 비네트 세기·그림자 — 라이트/다크 각각 눈에 보이는 값으로 분리(§5.2). */
   --shell-tint-amount: 10%;
   --shell-shadow: 0 0 80px rgba(0, 0, 0, 0.08);
+  /* 모션 토큰 — 이 파일의 모든 애니메이션이 공유하는 이징(모션 재설계 제안, 2026-07-17). */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
 }
 
 /* 다크 모드: 딥 그린 바탕 + 베이지 텍스트 (설계서 §5.2) */
@@ -61,11 +64,119 @@ body {
   }
 }
 .fade-rise {
-  animation: fade-rise 0.45s ease-out both;
+  animation: fade-rise 0.45s var(--ease-out) both;
 }
 @media (prefers-reduced-motion: reduce) {
   .fade-rise {
     animation: none;
+  }
+}
+
+/* 온보딩 프로필 리빌 전용 — fade-rise의 확장판(더 길게·더 크게). 사용자당 평생 1회뿐인
+   순간이라 딜라이트 예산을 조금 더 쓴다(모션 재설계 제안 #2). */
+@keyframes fade-rise-lg {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.fade-rise-lg {
+  animation: fade-rise-lg 0.6s var(--ease-out) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fade-rise-lg {
+    animation: none;
+  }
+}
+
+/* 마음 챗 말풍선 등장 — 하루 수십 번 보이는 자리라 짧고 미세하게(모션 재설계 제안 #3). */
+@keyframes bubble-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.bubble-in {
+  animation: bubble-in 180ms var(--ease-out) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .bubble-in {
+    animation: none;
+  }
+}
+
+/* 마일스톤 배지 첫 등장 — 생애 4번뿐인 축하 순간. Apple/emil 기본 오버슈트(1.56)보다
+   절제해(1.26) "지적인 따뜻함" 톤에 맞춘다(모션 재설계 제안 #5). */
+@keyframes badge-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.badge-pop {
+  animation: badge-pop 380ms cubic-bezier(0.34, 1.26, 0.64, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .badge-pop {
+    animation: none;
+  }
+}
+
+/* 로그 삭제 버튼 — 기본은 은은하게 항상 보이되(터치 기기에서 발견 가능해야 한다),
+   호버가 가능한 포인터 기기에서만 "정돈된" 숨김 느낌을 준다(모션 재설계 제안 #4,
+   터치 기기에서 hover 전용 노출이던 접근성 결함 수정). */
+/* transform 전환을 .press와 별개로 여기 직접 포함한다 — 단축 속성 transition을 두 클래스가
+   각자 선언하면 뒤에 오는 규칙이 앞 규칙을 통째로 덮어써 opacity/color 전환이 사라진다. */
+.delete-btn {
+  opacity: 0.4;
+  transition: opacity 160ms var(--ease-out), color 160ms var(--ease-out), transform 140ms var(--ease-out);
+}
+.delete-btn:hover {
+  color: var(--accent-coral);
+}
+.delete-btn:active {
+  transform: scale(0.97);
+}
+@media (hover: hover) and (pointer: fine) {
+  .delete-btn {
+    opacity: 0;
+  }
+  .group:hover .delete-btn {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .delete-btn:active {
+    transform: none;
+  }
+}
+
+/* 버튼 프레스 피드백 — 누르는 순간 즉시 반응해야 직접 조작하는 느낌이 난다
+   (모션 재설계 제안 #6). transform만 다뤄 GPU 합성으로 처리된다. */
+.press {
+  transition: transform 140ms var(--ease-out);
+}
+.press:active {
+  transform: scale(0.97);
+}
+@media (prefers-reduced-motion: reduce) {
+  .press:active {
+    transform: none;
   }
 }
 

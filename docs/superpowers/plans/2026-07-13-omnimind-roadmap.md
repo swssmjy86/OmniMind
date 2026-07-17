@@ -143,9 +143,46 @@
 |---|--------|--------|
 | 1 | 궁합 "우리의 조합" (상대 정보 입력형) | `/match` ✅ |
 | 2 | 초대 연결 시 양방향 심층 궁합 해제 | `/connect/[token]` + `connections`(0005) ✅ |
-| 3 | 프리미엄 구독 (결제 연동, 챗 무제한, 유료 LLM Provider 어댑터) | 무제한 게이트 ✅(`chat/quota.ts`), 결제 ✅(토스 30일 이용권, `/premium`+0007), 유료 LLM 어댑터는 실 판매 시점 과제 |
+| 3 | 프리미엄 구독 (결제 연동, 챗 무제한, 유료 LLM Provider 어댑터) | 무제한 게이트 ✅(레거시, P8에서 `src/lib/consult/quota.ts`로 이관), 결제 ✅(토스 30일 이용권, `/premium`+0007), 유료 LLM 어댑터는 P8에서 구현 |
 
 **완료 기준:** 무료/프리미엄 이중 운영 — 구독자는 유료 모델, 무료 사용자는 기존 경로
+
+---
+
+## P8. 3단계 요금제 + 로그 관리 (v2.1) — ✅ 코드 완료 (2026-07-17)
+
+**목표:** P7의 "30일 이용권 무제한" 단일 구독 모델을, 무료(비로그인)→로그인(하루 1회 무료)→구독(횟수제 크레딧) 3단계로 재편하고, 마음/고민 대화 기록을 사용자가 직접 정리할 수 있게 한다. `feat/service-tiers-log-delete` 브랜치에서 작업, 마이그레이션 0008.
+
+**단계 정의(사용자 확정):**
+- **1단계(비로그인)** — 프로필+데일리까지만. 실제로는 이미 게이트가 없었다(`computeProfile`/`computeDaily`가 순수 함수라 온보딩 리빌·홈 데일리가 로그인 없이 동작 중). 마음·고민 상담은 로그인 필수(기존과 동일, 액션 레벨 `auth` 체크).
+- **2단계(로그인)** — 마음·고민 **각각 하루 1회 무료**(기존 챗 10회/고민 3회에서 축소). 데일리는 여전히 100% 템플릿(LLM 미사용 — `daily/actions.ts` 확인 결과 원래도 그랬다)이라 "더 전문적"인 차별점은 상담 크레딧·유료 모델 자체에 있다.
+- **3단계(구독)** — 무료 슬롯을 넘기면 `profiles.consult_credits`(공유 풀, 마음·고민 공통)를 소비. 패키지 5회 5,000원 / 10회 10,000원(1회당 1,000원), 토스페이먼츠 흐름 재사용(`payment/credits-actions.ts`). 크레딧 소비 상담은 유료 모델(`OpenRouterProvider({ premium: true })`, 기본 `anthropic/claude-3.5-haiku`)로 응답 — 더 길고(4~7문장) 구체적인 시스템 프롬프트.
+- **레거시 호환** — 기존 30일 이용권(`premium_until`) 구매자는 만료 전까지 마음·고민 모두 무제한 유지(`consultAccess()`가 최우선으로 체크). 신규 판매는 크레딧 방식만.
+
+**구현:**
+- `src/lib/consult/quota.ts` — 챗·고민이 공유하는 접근 판정(`consultAccess`) 한 곳. 기존 `chat/quota.ts`·`concern/constants.ts`의 `CONCERN_DAILY_LIMIT`을 대체.
+- `0008_p8_tiers.sql` — `profiles.consult_credits`, `chat_messages`/`interpretations(kind=advice)` 삭제 RLS, `consume_consult_credit()`(본인 크레딧 원자적 차감, authenticated 직접 실행 가능·auth.uid() 자체 스코프), `grant_credits_for_order()`(결제 승인 후 부여, service role 전용 — `grant_premium_for_order`와 동일 패턴), `payments.kind/credits/granted_credits`.
+- `chat/actions.ts`·`concern/actions.ts` — `deleteChatMessage`/`deleteAllChatMessages`, `deleteConcernLog`/`deleteAllConcernLogs` 추가. `submitConcern`이 실제 DB id를 반환하도록 수정(기존엔 로컬 히스토리에 가짜 id를 써서 방금 만든 항목을 삭제할 수 없었다).
+- `MindChat.tsx`/`ConcernRoom.tsx` — 메시지·기록 개별 삭제(hover 시 ✕ 버튼) + 헤더 "전체 삭제"(확인 다이얼로그).
+- `/premium` — 3단계 안내 + 레거시 이용권 잔여 기간 표시(있으면) + 크레딧 잔액 + 패키지 구매 버튼. 결제 성공/실패 라우트는 `/premium/credits/success`·`/fail`로 신설(기존 `/premium/success`·`/fail`·`PayButton.tsx`·`payment/actions.ts`는 레거시 이용권 구매자 대응용으로 코드는 남기되 UI에서는 더 이상 연결하지 않음).
+
+**완료 기준:** 비로그인은 프로필·데일리만, 로그인은 상담 하루 1회 무료, 그 이상은 크레딧 구매로 유료 모델 상담. 마음·고민 로그를 개별·전체 삭제 가능. `npm run verify`(lint·typecheck·test 350건·build) 통과.
+
+**추가 — 2단계(로그인) 전문성 실질 차별화 (사용자 피드백 반영, 2차 수정):** 1차 시도는 비로그인 온보딩 리빌을 요약 카드(`SajuTeaser`)+섹션 잠금으로 축소해 차별화했으나, "1단계 데일리는 템플릿이라 좋지만 프로필까지 요약하지는 말라"는 피드백을 받고 되돌렸다 — **비로그인도 사주 명식 전체(`SajuChart`)와 해석 7섹션 전체를 그대로 본다**(`SajuTeaser.tsx` 삭제, 온보딩 `ProfileView`를 잠금 이전 상태로 복원). 대신 2단계 차별화는 "접근 제한"이 아니라 "로그인 전용으로 실제로 더 깊은 콘텐츠를 새로 만든다" 방향으로:
+- **데일리 가이드 LLM 개인화** — 데일리는 원래 100% 템플릿(로그인 여부 무관 동일)이었다. `content/daily.ts`의 `dailyPrompt()` + `daily/actions.ts`의 `recordTodayDaily()`(로그인 전용, 하루 1회 캐시)가 무료 OpenRouter 모델로 "오늘, 당신만을 위한 이야기" 문단을 1회 시도 생성 — 실패해도 템플릿은 그대로 캐시. 홈 화면이 오늘자 캐시를 읽어 있으면 보여준다(당일 첫 방문엔 캐시가 없어 다음 방문부터 보임).
+- **프로필 심층 리포트(신규, 3차 확장)** — "혈액형·MBTI·별자리도 요약이 아니라 각 체계에 이미 정의된 전체 서술을 사주 데이터와 섞어달라", 이어서 "나열 말고 옴니마인드 가치 기반으로 현재·미래 이야기 예측, 성격·취향·좋아하는 색 등 퍼스널 분석, 연애운·사업운·관계운·금전운까지 전부 자세히"라는 두 차례 피드백에 따라 최종적으로:
+  - `content/synthesis.ts`의 `profileSynthesisPrompt()`가 유형 라벨("ENFJ", "O형")이 아니라 **각 체계가 이미 갖고 있는 완전한 결 서술**(`DAY_MASTER_TEXT`·`ELEMENT_BALANCE_TEXT`·`tenGodTheme`·`MBTI_AXIS_TEXT`·`BLOOD_TEXT`·`ZODIAC_TEXT`)을 프롬프트에 그대로 실어 LLM에 넘긴다.
+  - `chat-prompt.ts`의 `chatSystemPrompt(..., {report:true})`가 옴니마인드 가치("데이터를 딱딱한 분석이 아니라 따뜻한 발견과 공감으로", "운명을 단정짓는 점술이 아니에요")를 명시하고, **[성격과 취향] [당신의 색] [지금과 앞으로] [연애운] [사업운·커리어] [관계운] [금전운]** 7개 항목을 대괄호 제목 형식으로 순서까지 지시한다.
+  - `OpenRouterProvider`에 `report` 모드(무료 모델 그대로, 응답 예산만 300→1200 토큰, temperature 0.85)를 추가 — 7개 항목을 자세히 쓰기엔 챗용 300토큰이 턱없이 부족했다.
+  - `content/synthesis.ts`의 `parseReportSections()`가 "[제목]\n내용" 텍스트를 `InterpretationSection[]`으로 분리 — 대괄호 제목을 하나도 못 찾으면(LLM이 형식을 안 지켜도) 전체를 한 섹션으로 안전하게 폴백한다.
+  - `onboarding/actions.ts`의 `saveProfile()`(로그인 전용)이 report 모드로 1회 시도해, 성공하면 파싱된 최대 7개 섹션을 템플릿 7섹션에 이어 `interpretations(kind=profile)`에 함께 캐시한다. `/me`는 이미 이 캐시를 그대로 렌더링하므로 추가 배선이 필요 없다.
+  - `share/card-copy.ts`의 `PROFILE_MAX_SECTIONS`를 10→16으로 올려(최대 7+7=14섹션 수용) 카드 이미지 생성이 새 섹션들을 자르지 않게 했다.
+- 결과: 1단계(비로그인)=사주 명식 전체+해석 7섹션+템플릿 데일리(저장·기록 없음), 2단계(로그인)=1단계와 같은 콘텐츠 + LLM 심층 리포트(성격·취향·색·현재/미래·연애운·사업운·관계운·금전운, 최대 7섹션) + LLM 개인화 데일리 + 저장/기록, 3단계(구독)=그 이상 상담(마음·고민) 크레딧+유료 모델.
+
+**잔여(다음 기회):**
+- 마이그레이션 0008 Supabase 실행(수동, 🖐️ 사용자 액션) — 실행 전까지는 `consult_credits`가 항상 0이라 무료 슬롯 소진 후 즉시 차단됨(안전한 기본값, 서비스는 계속 동작).
+- 실 판매 확인 — 크레딧 패키지 결제도 P7처럼 프로덕션 테스트 결제로 실측 검증 필요.
+- `OPENROUTER_PREMIUM_MODEL` 미설정 시 `anthropic/claude-3.5-haiku` 기본값 사용 — 실제 비용·품질은 아직 실측 전(P7 무료 모델 선정 때처럼 실 키로 비교 검증 권장).
 
 ---
 

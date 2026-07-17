@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { computeDaily } from "@/lib/engine/daily";
-import { assembleDaily, dailyToSections } from "./daily";
+import { assembleDaily, dailyToSections, dailyPrompt } from "./daily";
 import { checkTone } from "../tone-guard";
 
 describe("assembleDaily", () => {
@@ -60,5 +60,23 @@ describe("assembleDaily", () => {
     const noP = assembleDaily(computeDaily({ y: 2000, mo: 1, d: 7 }));
     expect(dailyToSections(withP)).toHaveLength(5);
     expect(dailyToSections(noP)).toHaveLength(4);
+  });
+
+  it("P8 — llmParagraph를 주면 로그인 전용 개인화 섹션이 한 칸 더 붙는다", () => {
+    const g = assembleDaily(computeDaily({ y: 2000, mo: 1, d: 7 }, "수"));
+    const withLlm = dailyToSections(g, "오늘은 유난히 마음이 맑은 날이에요.");
+    expect(withLlm).toHaveLength(6);
+    expect(withLlm.at(-1)).toEqual({
+      title: "오늘, 당신만을 위한 이야기",
+      body: "오늘은 유난히 마음이 맑은 날이에요.",
+    });
+  });
+
+  it("dailyPrompt는 템플릿 마음가짐을 반복하지 말라고 명시한다", () => {
+    const daily = computeDaily({ y: 2000, mo: 1, d: 7 }, "수");
+    const g = assembleDaily(daily, "다인");
+    const prompt = dailyPrompt(daily, g);
+    expect(prompt).toContain(g.mind);
+    expect(prompt).toContain("그대로 반복하지 말고");
   });
 });

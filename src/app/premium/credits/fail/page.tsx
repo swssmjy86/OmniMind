@@ -2,9 +2,9 @@ import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
-// 토스 failUrl 랜딩 — 인증 단계에서 중단·실패한 경우라 돈은 나가지 않았다.
+// 토스 failUrl 랜딩(크레딧 패키지) — 인증 단계에서 중단·실패한 경우라 돈은 나가지 않았다.
 // 쿼리스트링(code/message)은 누구나 링크로 조작할 수 있는 외부 문자열이라 화면에 반영하지 않는다.
-export default async function PaymentFailPage() {
+export default async function CreditFailPage() {
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center gap-6 p-6 text-center">
       <h1 className="font-[family-name:var(--font-serif-kr)] text-2xl text-primary-green">

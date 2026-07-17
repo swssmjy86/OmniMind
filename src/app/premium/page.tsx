@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createServerSupabase } from "@/lib/supabase/server";
-import { isPremium } from "@/lib/chat/quota";
+import { isPremium } from "@/lib/consult/quota";
 import { toKstParts } from "@/lib/engine/kst";
-import { PASS_PRICE, PASS_DAYS } from "@/lib/payment/constants";
-import PayButton from "@/components/premium/PayButton";
+import { PASS_DAYS, CREDIT_PACKAGES } from "@/lib/payment/constants";
+import CreditPayButton from "@/components/premium/CreditPayButton";
 import type { ProfileRow } from "@/lib/db/types";
 
 export const dynamic = "force-dynamic";
@@ -24,7 +24,8 @@ export default async function PremiumPage() {
   if (!profile) redirect("/onboarding");
 
   const now = new Date();
-  const premium = isPremium(profile.premium_until, now);
+  const legacyPremium = isPremium(profile.premium_until, now);
+  const credits = profile.consult_credits ?? 0;
 
   return (
     <main className="flex min-h-dvh flex-col gap-8 p-6">
@@ -33,32 +34,41 @@ export default async function PremiumPage() {
           마음, 더 깊이
         </h1>
         <p className="mt-2 text-text-soft">
-          하루 열 번의 약속 너머, 언제든 마음을 꺼내놓을 수 있는 자리를 열어두었어요.
+          로그인하면 마음·고민 이야기를 하루 한 번씩 무료로 나눌 수 있어요. 그 이상은 상담
+          크레딧으로 이어가요 — 크레딧을 쓰는 상담은 더 깊고 전문적인 답을 드려요.
         </p>
       </header>
 
-      {premium && profile.premium_until ? (
+      {legacyPremium && profile.premium_until && (
         <section className="rounded-card border border-text-soft/15 bg-warm-surface p-5">
           <p className="text-sm text-text-soft">지금 함께하고 있어요</p>
           <p className="mt-1 font-medium">
-            {kstDateLabel(profile.premium_until)}까지 마음 이야기 무제한 ✨
+            {kstDateLabel(profile.premium_until)}까지 마음·고민 이야기 무제한 ✨
           </p>
           <p className="mt-3 text-sm text-text-soft">
-            지금 이용권을 더하면 남은 날 위에 {PASS_DAYS}일이 그대로 이어져요.
+            예전에 시작한 {PASS_DAYS}일 이용권이에요. 기간이 끝나면 이후로는 아래 상담
+            크레딧으로 이어갈 수 있어요.
           </p>
-        </section>
-      ) : (
-        <section className="rounded-card border border-text-soft/15 bg-warm-surface p-5">
-          <p className="font-medium">프리미엄 {PASS_DAYS}일 이용권</p>
-          <ul className="mt-3 space-y-1.5 text-sm text-text-soft">
-            <li>· 마음 이야기 하루 제한 없이, 마음껏</li>
-            <li>· 당신의 사주·성향을 기억한 채 이어지는 대화</li>
-          </ul>
-          <p className="mt-4 text-lg font-medium">{PASS_PRICE.toLocaleString()}원</p>
         </section>
       )}
 
-      <PayButton />
+      <section className="rounded-card border border-text-soft/15 bg-warm-surface p-5">
+        <p className="text-sm text-text-soft">지금 남은 상담 크레딧</p>
+        <p className="mt-1 text-lg font-medium">{credits}회</p>
+      </section>
+
+      <section className="flex flex-col gap-3">
+        <p className="font-medium">상담 크레딧 더하기</p>
+        <ul className="space-y-1.5 text-sm text-text-soft">
+          <li>· 마음·고민 상담 1회당 크레딧 1회 차감</li>
+          <li>· 크레딧을 쓰는 상담은 더 깊고 구체적인 전문 상담 수준으로 답해요</li>
+        </ul>
+        <div className="mt-2 flex flex-col gap-2">
+          {CREDIT_PACKAGES.map((pkg) => (
+            <CreditPayButton key={pkg.id} pkg={pkg} />
+          ))}
+        </div>
+      </section>
 
       <Link href="/mind" className="text-center text-sm text-text-soft underline underline-offset-4">
         마음으로 돌아가기

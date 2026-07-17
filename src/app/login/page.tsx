@@ -72,14 +72,14 @@ export default function LoginPage() {
         <button
           onClick={() => signIn("kakao")}
           disabled={pending !== null}
-          className="w-full rounded-card bg-[#FEE500] py-3.5 font-medium text-[#191919] disabled:opacity-60"
+          className="press w-full rounded-card bg-[#FEE500] py-3.5 font-medium text-[#191919] disabled:opacity-60"
         >
           {pending === "kakao" ? "카카오로 잇는 중…" : "카카오로 시작하기"}
         </button>
         <button
           onClick={() => signIn("google")}
           disabled={pending !== null}
-          className="flex w-full items-center justify-center gap-2.5 rounded-card border border-text-soft/30 bg-warm-surface py-3.5 font-medium disabled:opacity-60"
+          className="press flex w-full items-center justify-center gap-2.5 rounded-card border border-text-soft/30 bg-warm-surface py-3.5 font-medium disabled:opacity-60"
         >
           <GoogleLogo />
           {pending === "google" ? "Google로 잇는 중…" : "Google로 시작하기"}

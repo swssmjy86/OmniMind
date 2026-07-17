@@ -69,6 +69,11 @@ export default function OnboardingPage() {
         } else {
           setSaveState(r.reason === "not-authenticated" ? "guest" : "error");
         }
+      }).catch(() => {
+        // 서버 액션 자체가 거부되는 경우(네트워크 끊김·플랫폼 타임아웃 등) — 프로필 행은 이미
+        // 저장됐을 수 있지만(리포트 생성은 저장 다음 단계) 화면은 계속 "저장 중" 상태로 멈춰
+        // 있으면 안 된다. 코드리뷰 결함 수정: .then()만 있고 .catch()가 없어 거부 시 무한 대기했다.
+        setSaveState("error");
       });
     } catch {
       setError("입력을 다시 확인해 주세요.");
@@ -107,7 +112,7 @@ export default function OnboardingPage() {
     <main className="flex min-h-dvh flex-col p-6">
       <Progress step={step} total={5} />
 
-      <div className="mt-8 flex-1">
+      <div key={step} className="mt-8 flex-1 fade-rise">
         {step === 0 && (
           <Field
             title="어떻게 불러드리면 좋을까요?"
@@ -218,7 +223,7 @@ export default function OnboardingPage() {
         {step > 0 && (
           <button
             onClick={() => setStep((s) => s - 1)}
-            className="rounded-card border border-text-soft/30 px-5 py-3.5 text-text-soft"
+            className="press rounded-card border border-text-soft/30 px-5 py-3.5 text-text-soft"
           >
             이전
           </button>
@@ -227,14 +232,14 @@ export default function OnboardingPage() {
           <button
             disabled={!canNext}
             onClick={() => setStep((s) => s + 1)}
-            className="flex-1 rounded-card bg-accent-coral py-3.5 font-medium text-white disabled:opacity-40"
+            className="press flex-1 rounded-card bg-accent-coral py-3.5 font-medium text-white disabled:opacity-40"
           >
             다음
           </button>
         ) : (
           <button
             onClick={finish}
-            className="flex-1 rounded-card bg-primary-green py-3.5 font-medium text-white"
+            className="press flex-1 rounded-card bg-primary-green py-3.5 font-medium text-white"
           >
             나를 알아보기 ✨
           </button>
@@ -291,18 +296,18 @@ function ProfileView({
   }
 
   return (
-    <main className="p-6 pb-24">
+    <main className="fade-rise-lg p-6 pb-24">
       <p className="text-text-soft">온전한 나</p>
       <h1 className="mt-1 font-[family-name:var(--font-serif-kr)] text-3xl text-primary-green">
         {nickname}님의 이야기
       </h1>
 
-      {/* 사주 명식(전문 뷰) */}
+      {/* 사주 명식(전문 뷰) — 비로그인도 그대로 본다(요약하지 않는다) */}
       <div className="mt-6">
         <SajuChart ctx={ctx} />
       </div>
 
-      {/* 해석 섹션 */}
+      {/* 해석 섹션 전체 */}
       <div className="mt-6 space-y-4">
         {sections.map((s) => (
           <section key={s.title} className="rounded-card bg-warm-surface p-5">
@@ -327,7 +332,8 @@ function ProfileView({
       {(saveState === "guest" || saveState === "pending") && (
         <section className="mt-8 rounded-card bg-warm-surface p-5 text-center">
           <p className="text-sm text-text-soft">
-            지금은 미리보기예요. 로그인하면 이 이야기를 저장하고, 매일의 기운도 받아볼 수 있어요.
+            지금은 미리보기예요. 로그인하면 이 이야기를 저장하고, 사주·MBTI·혈액형·별자리를 더
+            깊이 엮은 이야기와 매일의 기운도 받아볼 수 있어요.
           </p>
           <Link
             href="/login"
@@ -335,7 +341,7 @@ function ProfileView({
               // 로그인 후 이 자리로 돌아와 자동 저장을 이어가도록 목적지를 쿠키로
               document.cookie = `om_next=${encodeURIComponent("/onboarding?resume=1")}; path=/; max-age=600; samesite=lax`;
             }}
-            className="mt-4 block w-full rounded-card bg-accent-coral py-3.5 font-medium text-white"
+            className="press mt-4 block w-full rounded-card bg-accent-coral py-3.5 font-medium text-white"
           >
             로그인하고 저장하기
           </Link>
@@ -343,7 +349,7 @@ function ProfileView({
       )}
       <Link
         href="/"
-        className="mt-3 block w-full rounded-card border border-text-soft/30 py-3.5 text-center text-text-soft"
+        className="press mt-3 block w-full rounded-card border border-text-soft/30 py-3.5 text-center text-text-soft"
       >
         홈으로
       </Link>

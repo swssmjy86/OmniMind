@@ -210,7 +210,7 @@ describe("나의 조각 카드 — profileCardQuery ↔ parseProfileCardParams",
   // profileCardQuery는 profileCardParams를 거쳐 상한을 넘는 입력을 스스로 잘라내므로(방어적
   // 트렁케이션), parseProfileCardParams 자체의 거부 경계는 쿼리를 직접 조립해 확인한다.
   it("섹션 개수가 상한을 넘으면 null", () => {
-    const many = Array.from({ length: 11 }, (_, i) => ({ title: `섹션${i}`, body: "본문" }));
+    const many = Array.from({ length: 17 }, (_, i) => ({ title: `섹션${i}`, body: "본문" }));
     const sp = new URLSearchParams({ mode: "profile", dm: ctx.dayMaster.stem, el: ctx.dayMaster.element, nickname: "달빛", sections: JSON.stringify(many) });
     expect(parseProfileCardParams(sp)).toBeNull();
   });
@@ -249,7 +249,7 @@ describe("나의 조각 카드 — profileCardQuery ↔ parseProfileCardParams",
 
   it("닉네임·섹션이 상한을 넘어도 profileCardParams가 잘라내 항상 파싱 가능한 쿼리를 만든다", () => {
     const longNickname = "가".repeat(30);
-    const manySections = Array.from({ length: 15 }, (_, i) => ({
+    const manySections = Array.from({ length: 20 }, (_, i) => ({
       title: `섹션제목${i}`.repeat(3),
       body: "본문".repeat(200),
     }));
@@ -257,7 +257,7 @@ describe("나의 조각 카드 — profileCardQuery ↔ parseProfileCardParams",
     const p = parseProfileCardParams(new URLSearchParams(q));
     expect(p).not.toBeNull();
     expect(p!.nickname.length).toBeLessThanOrEqual(20);
-    expect(p!.sections.length).toBeLessThanOrEqual(10);
+    expect(p!.sections.length).toBeLessThanOrEqual(16);
     for (const s of p!.sections) {
       expect(s.title.length).toBeLessThanOrEqual(20);
       expect(s.body.length).toBeLessThanOrEqual(260);

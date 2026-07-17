@@ -52,13 +52,13 @@ export default async function MePage() {
           </p>
           <Link
             href="/onboarding"
-            className="mt-6 block w-full rounded-card bg-accent-coral py-3.5 text-center font-medium text-white"
+            className="press mt-6 block w-full rounded-card bg-accent-coral py-3.5 text-center font-medium text-white"
           >
             나를 알아보기 ✨
           </Link>
           {user && (
             <form action={signOut} className="mt-4">
-              <button className="text-sm text-text-soft underline">잠시 떠나기 (로그아웃)</button>
+              <button className="press text-sm text-text-soft underline">잠시 떠나기 (로그아웃)</button>
             </form>
           )}
         </div>
@@ -122,8 +122,11 @@ export default async function MePage() {
       )}
 
       <div className="mt-6 space-y-4">
-        {sections.map((s) => (
-          <section key={s.title} className="rounded-card bg-warm-surface p-5">
+        {sections.map((s, i) => (
+          // 인덱스를 함께 쓰는 이유 — LLM 심층 리포트 섹션(P8)은 제목이 고정 상수가 아니라
+          // parseReportSections()가 응답에서 뽑아낸 값이라, 형식을 못 지키면 제목이 겹칠 수
+          // 있다. title만 key로 쓰면 그 경우 React가 섹션 하나를 조용히 지워버린다(코드리뷰 수정).
+          <section key={`${i}-${s.title}`} className="rounded-card bg-warm-surface p-5">
             <h2 className="font-[family-name:var(--font-serif-kr)] text-lg text-primary-green">
               {s.title}
             </h2>
@@ -141,13 +144,13 @@ export default async function MePage() {
       {/* P7 궁합 — 우리의 조합 입구 */}
       <Link
         href="/match"
-        className="mt-4 block w-full rounded-card border border-primary-green/30 bg-warm-surface py-3.5 text-center font-medium text-primary-green"
+        className="press mt-4 block w-full rounded-card border border-primary-green/30 bg-warm-surface py-3.5 text-center font-medium text-primary-green"
       >
         우리의 조합 보기 — 연인·친구·동료 🍃
       </Link>
 
       <form action={signOut} className="mt-8">
-        <button className="text-sm text-text-soft underline">잠시 떠나기 (로그아웃)</button>
+        <button className="press text-sm text-text-soft underline">잠시 떠나기 (로그아웃)</button>
       </form>
     </main>
   );

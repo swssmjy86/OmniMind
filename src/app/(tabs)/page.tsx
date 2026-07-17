@@ -3,13 +3,13 @@ import { redirect } from "next/navigation";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { computeDaily } from "@/lib/engine/daily";
 import { assembleDaily } from "@/lib/interpret/content/daily";
-import { currentMilestone } from "@/lib/interpret/milestone";
+import { currentMilestone, isMilestoneToday } from "@/lib/interpret/milestone";
 import { toKstParts } from "@/lib/engine/kst";
 import AdSlot from "@/components/ads/AdSlot";
 import DailyRecorder from "@/components/DailyRecorder";
 import ShareSheet from "@/components/share/ShareSheet";
 import { dailyCardQuery } from "@/lib/share/card-copy";
-import type { ProfileRow } from "@/lib/db/types";
+import type { ProfileRow, InterpretationRow } from "@/lib/db/types";
 
 export const dynamic = "force-dynamic"; // 날짜·세션에 따라 매번 렌더
 
@@ -24,21 +24,38 @@ export default async function HomePage() {
     redirect("/"); // 로그아웃 후에도 홈 — 비로그인 상태 화면으로 자연스럽게 전환
   }
 
-  // 저장된 프로필(로그인 + 마이그레이션 적용 시). 실패는 조용히 무시.
+  const todayKst = toKstParts(new Date()); // 서버 UTC → KST 오늘
+  // 날짜 문자열은 프로필과 무관해(engine/daily.ts computeDaily의 date 필드와 동일 포맷) 먼저
+  // 구할 수 있다 — 프로필 조회와 캐시된 데일리 조회를 순차가 아니라 병렬로 보낸다.
+  const todayDateStr = `${todayKst.y}-${String(todayKst.mo).padStart(2, "0")}-${String(todayKst.d).padStart(2, "0")}`;
+
+  // 저장된 프로필(로그인 + 마이그레이션 적용 시) + P8 오늘 캐시된 LLM 개인화 문단.
+  // 둘 다 실패는 조용히 무시.
   let profile: ProfileRow | null = null;
+  let cachedDaily: InterpretationRow | null = null;
   if (user) {
-    const { data } = await supabase
-      .from("profiles").select("*").eq("user_id", user.id).maybeSingle<ProfileRow>();
-    profile = data ?? null;
+    const [profileRes, cachedRes] = await Promise.all([
+      supabase.from("profiles").select("*").eq("user_id", user.id).maybeSingle<ProfileRow>(),
+      supabase.from("interpretations").select("*")
+        .eq("user_id", user.id).eq("kind", "daily").eq("target_date", todayDateStr)
+        .maybeSingle<InterpretationRow>(),
+    ]);
+    profile = profileRes.data ?? null;
+    cachedDaily = cachedRes.data ?? null;
   }
 
-  const todayKst = toKstParts(new Date()); // 서버 UTC → KST 오늘
   const daily = computeDaily(
     { y: todayKst.y, mo: todayKst.mo, d: todayKst.d },
     profile?.profile_context.dayMaster.element,
     profile?.profile_context.dayMaster.stem, // 십성(비견~정인)까지 세밀 개인화
   );
   const guide = assembleDaily(daily, profile?.nickname);
+
+  // recordTodayDaily()가 자정 이후 첫 방문 때 캐시를 채우므로, 그 방문 자체에는 아직 없고
+  // 다음 방문부터 보인다(캐시 하루 1회 원칙). profile이 없으면(비로그인 등) 애초에 캐시 대상이 아니다.
+  const llmParagraph = profile
+    ? cachedDaily?.body.find((s) => s.title === "오늘, 당신만을 위한 이야기")?.body ?? null
+    : null;
 
   // 동행일: 프로필 생성일 ~ 오늘
   let companionDays = 0;
@@ -48,6 +65,9 @@ export default async function HomePage() {
     companionDays = Math.max(1, Math.floor((now.getTime() - start.getTime()) / 86_400_000) + 1);
   }
   const badge = currentMilestone(companionDays);
+  // 배지 자체는 도달 이후 계속 보이는 상태 표시라, 팝인은 "바로 그날"에만 재생한다 —
+  // 방문할 때마다 매번 튀면 "드문 축하"가 아니라 잦은 소음이 된다(모션 재설계 제안 #5).
+  const justReached = Boolean(isMilestoneToday(companionDays));
 
   return (
     <main className="fade-rise p-6">
@@ -59,7 +79,9 @@ export default async function HomePage() {
           <span className="flex items-center gap-1 text-xs text-text-soft">
             함께한 지 {companionDays}일째
             {badge && (
-              <span className="rounded-full bg-warm-surface px-2 py-0.5 text-primary-green">
+              <span
+                className={`rounded-full bg-warm-surface px-2 py-0.5 text-primary-green ${justReached ? "badge-pop" : ""}`}
+              >
                 {badge.emoji} {badge.label}
               </span>
             )}
@@ -76,6 +98,11 @@ export default async function HomePage() {
         {guide.personal && (
           <p className="mt-3 rounded-card bg-warm-base p-3 text-sm leading-relaxed text-text-main">
             {guide.personal}
+          </p>
+        )}
+        {llmParagraph && (
+          <p className="mt-3 rounded-card border border-primary-green/20 bg-warm-base p-3 text-sm leading-relaxed text-text-main">
+            🌿 {llmParagraph}
           </p>
         )}
         <div className="mt-5 flex gap-2">
@@ -115,7 +142,7 @@ export default async function HomePage() {
           </p>
           <Link
             href="/onboarding"
-            className="mt-4 block w-full rounded-card bg-accent-coral py-3.5 text-center font-medium text-white transition-opacity hover:opacity-90"
+            className="active:scale-[0.97] motion-reduce:active:scale-100 mt-4 block w-full rounded-card bg-accent-coral py-3.5 text-center font-medium text-white transition hover:opacity-90"
           >
             나를 알아보기 ✨
           </Link>
@@ -136,7 +163,7 @@ export default async function HomePage() {
       {/* 로그인 상태에서만 — 조용한 로그아웃 (/me와 같은 결) */}
       {user && (
         <form action={signOut} className="mt-8 text-center">
-          <button className="text-sm text-text-soft underline">
+          <button className="press text-sm text-text-soft underline">
             잠시 떠나기 (로그아웃)
           </button>
         </form>
