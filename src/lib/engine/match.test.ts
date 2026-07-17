@@ -2,8 +2,9 @@ import { describe, expect, it } from "vitest";
 import { computeProfile } from "./index";
 import {
   computeMatch, computeDeepMatch, computeBond, partnerFromBirth, zodiacElement,
-  mbtiSynergy, fillingElements, SLUG_TO_MODE, MODE_TO_SLUG, isMatchModeSlug,
+  mbtiSynergy, bloodSynergy, fillingElements, SLUG_TO_MODE, MODE_TO_SLUG, isMatchModeSlug,
 } from "./match";
+import type { BloodType } from "./types";
 
 describe("partnerFromBirth — 상대 기운 산출", () => {
   it("일주 앵커일(2000-01-07)은 갑자·목·염소자리", () => {
@@ -15,6 +16,57 @@ describe("partnerFromBirth — 상대 기운 산출", () => {
 
   it("형식 오류는 throw", () => {
     expect(() => partnerFromBirth("2000/01/07")).toThrow();
+  });
+});
+
+describe("partnerFromBirth — 출생 시간 반영", () => {
+  it("낮 시간은 시간 없이 계산한 것과 같은 일주", () => {
+    expect(partnerFromBirth("2000-01-07", "08:00").dayGanzhi).toBe("갑자");
+  });
+
+  it("야자시(23시 이후)는 일주가 다음날로 넘어간다", () => {
+    expect(partnerFromBirth("2000-01-06").dayGanzhi).toBe("계해");
+    expect(partnerFromBirth("2000-01-06", "23:30").dayGanzhi).toBe("갑자");
+  });
+
+  it("서머타임 시대(1988)도 computeProfile과 같은 일주 — 기록 시계 보정 공유", () => {
+    const viaProfile = computeProfile({
+      birthDate: "1988-07-01", birthTime: "23:30", timeUnknown: false,
+      bloodType: "A", mbti: "INFP",
+    });
+    expect(partnerFromBirth("1988-07-01", "23:30").dayGanzhi).toBe(viaProfile.pillars.day);
+  });
+
+  it("시간 형식·범위 오류는 throw", () => {
+    expect(() => partnerFromBirth("2000-01-07", "25:00")).toThrow();
+    expect(() => partnerFromBirth("2000-01-07", "9:00")).toThrow();
+  });
+});
+
+describe("bloodSynergy — 혈액형 어울림 0~2", () => {
+  it("보완의 짝(A×O, B×AB)은 2", () => {
+    expect(bloodSynergy("A", "O")).toBe(2);
+    expect(bloodSynergy("B", "AB")).toBe(2);
+  });
+
+  it("같은 형끼리는 1(익숙한 결)", () => {
+    for (const t of ["A", "B", "O", "AB"] as const) {
+      expect(bloodSynergy(t, t)).toBe(1);
+    }
+  });
+
+  it("다른 결(A×B, O×AB)은 0", () => {
+    expect(bloodSynergy("A", "B")).toBe(0);
+    expect(bloodSynergy("O", "AB")).toBe(0);
+  });
+
+  it("대칭 — 모든 짝에서 방향 무관", () => {
+    const TYPES: BloodType[] = ["A", "B", "O", "AB"];
+    for (const a of TYPES) {
+      for (const b of TYPES) {
+        expect(bloodSynergy(a, b)).toBe(bloodSynergy(b, a));
+      }
+    }
   });
 });
 
@@ -91,18 +143,42 @@ describe("computeMatch — 우리의 조합", () => {
     expect(a.score).toBe(b.score);
   });
 
+  it("혈액형을 서로 알면 시너지·점수에 반영된다", () => {
+    const base = { ...me, bloodType: "A" } as const;
+    const good = computeMatch(base, { birthDate: "2000-01-07", bloodType: "O" }, "연인");
+    const far = computeMatch(base, { birthDate: "2000-01-07", bloodType: "B" }, "연인");
+    expect(good.bloodSynergy).toBe(2);
+    expect(good.partner.bloodType).toBe("O");
+    expect(far.bloodSynergy).toBe(0);
+    expect(good.score).toBeGreaterThan(far.score);
+  });
+
+  it("혈액형을 한쪽이라도 모르면 null·중립 반영", () => {
+    const m = computeMatch(me, { birthDate: "2000-01-07", bloodType: "O" }, "연인");
+    expect(m.bloodSynergy).toBeNull();
+    const m2 = computeMatch({ ...me, bloodType: "A" }, { birthDate: "2000-01-07" }, "연인");
+    expect(m2.bloodSynergy).toBeNull();
+  });
+
+  it("출생 시간까지 주면 그 시간의 일주로 계산한다", () => {
+    const m = computeMatch(
+      me, { birthDate: "2000-01-06", birthTime: "23:30" }, "연인",
+    );
+    expect(m.partner.dayGanzhi).toBe("갑자"); // 야자시 → 다음날
+  });
+
   it("대칭성 — 같은 커플은 누가 계산해도 같은 온도", () => {
     // A: 2000-01-07 갑자(목)·염소자리, B: 2000-01-09 병인(화)·염소자리
     const a = partnerFromBirth("2000-01-07");
     const b = partnerFromBirth("2000-01-09");
     for (const mode of ["연인", "친구", "동료"] as const) {
       const ab = computeMatch(
-        { element: a.element, zodiac: a.zodiac, mbti: "INFP", dayGanzhi: a.dayGanzhi },
-        { birthDate: "2000-01-09", mbti: "ENFJ" }, mode,
+        { element: a.element, zodiac: a.zodiac, mbti: "INFP", dayGanzhi: a.dayGanzhi, bloodType: "A" },
+        { birthDate: "2000-01-09", mbti: "ENFJ", bloodType: "O" }, mode,
       );
       const ba = computeMatch(
-        { element: b.element, zodiac: b.zodiac, mbti: "ENFJ", dayGanzhi: b.dayGanzhi },
-        { birthDate: "2000-01-07", mbti: "INFP" }, mode,
+        { element: b.element, zodiac: b.zodiac, mbti: "ENFJ", dayGanzhi: b.dayGanzhi, bloodType: "O" },
+        { birthDate: "2000-01-07", mbti: "INFP", bloodType: "A" }, mode,
       );
       expect(ab.score).toBe(ba.score);
     }
@@ -150,6 +226,8 @@ describe("computeDeepMatch — 양방향 심층 궁합 (P7-2)", () => {
     expect(m.myDayGanzhi).toBe(a.pillars.day);
     expect(m.partner.mbti).toBe("ESTJ");
     expect(m.mbtiSynergy).toBe(mbtiSynergy("INFP", "ESTJ"));
+    expect(m.partner.bloodType).toBe("O");
+    expect(m.bloodSynergy).toBe(bloodSynergy("A", "O"));
     expect(m.score).toBeGreaterThanOrEqual(0);
     expect(m.score).toBeLessThanOrEqual(100);
   });

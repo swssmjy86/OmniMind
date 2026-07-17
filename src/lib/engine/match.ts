@@ -1,8 +1,8 @@
-import type { ElementIndex, Mbti } from "./types";
+import type { BloodType, ElementIndex, Mbti } from "./types";
 import type { ProfileContext } from "./index";
 import type { ZodiacSign } from "./zodiac";
 import { zodiacSign } from "./zodiac";
-import { dayPillar } from "./pillars";
+import { dayPillar, resolveBirthInstant } from "./pillars";
 import { relateElement, type DailyRelation } from "./daily";
 import {
   HEAVENLY_STEMS, EARTHLY_BRANCHES, ELEMENTS, stemElement,
@@ -35,11 +35,16 @@ export interface MatchMe {
   mbti: Mbti;
   /** 내 일주 간지 "갑자" — 있으면 천간합·일지 합충(간지의 인연)까지 계산 */
   dayGanzhi?: string;
+  /** 내 혈액형 — 상대 혈액형과 함께 있을 때만 혈액형 어울림을 계산 */
+  bloodType?: BloodType;
 }
 
 export interface MatchPartnerInput {
   birthDate: string; // "YYYY-MM-DD"
+  /** "HH:MM" — 알면 야자시(23시 경계)까지 정확한 일주로 계산 */
+  birthTime?: string | null;
   mbti?: Mbti; // 모르면 생략
+  bloodType?: BloodType | null; // 모르면 생략
 }
 
 /** 두 사람의 일주(간지)가 맺는 인연 — 명리 궁합의 핵심 축. */
@@ -50,12 +55,20 @@ export interface MatchBond {
 
 export interface MatchContext {
   mode: MatchMode;
-  partner: { dayGanzhi: string; element: string; zodiac: ZodiacSign; mbti: Mbti | null };
+  partner: {
+    dayGanzhi: string;
+    element: string;
+    zodiac: ZodiacSign;
+    mbti: Mbti | null;
+    bloodType: BloodType | null;
+  };
   /** 내 오행 기준 상대 오행과의 관계 (daily와 같은 의미 체계) */
   elementRelation: DailyRelation;
   zodiacHarmony: ZodiacHarmony;
   /** 0~5. 상대 MBTI 미입력이면 null */
   mbtiSynergy: number | null;
+  /** 0~2. 어느 한쪽 혈액형이라도 모르면 null */
+  bloodSynergy: number | null;
   /** 간지의 인연. 내 일주 미제공이면 null */
   bond: MatchBond | null;
   /** 0~100 — 결정적 산출(같은 입력 → 같은 값) */
@@ -94,14 +107,24 @@ export function mbtiSynergy(a: Mbti, b: Mbti): number {
   return s;
 }
 
-/** 상대 생년월일(시 미상) → 일간 오행·일진·별자리. 정오 기준(자시 경계 회피). */
-export function partnerFromBirth(birthDate: string): {
+/**
+ * 상대 생년월일(+선택적 출생 시간) → 일간 오행·일진·별자리.
+ * 시간을 알면 역사적 시계 보정(서머타임·표준시)과 야자시 경계까지 그대로 반영하고,
+ * 모르면 정오 기준(자시 경계 회피)으로 읽는다 — computeProfile의 일주와 같은 규칙.
+ */
+export function partnerFromBirth(birthDate: string, birthTime?: string | null): {
   dayGanzhi: string; element: string; elementIndex: ElementIndex; zodiac: ZodiacSign;
 } {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(birthDate);
   if (!m) throw new Error(`birthDate 형식 오류: ${birthDate}`);
   const [, , mo, d] = m.map(Number);
-  const p = dayPillar(kstStringToInstant(`${birthDate}T12:00`));
+  if (birthTime != null) {
+    const t = /^(\d{2}):(\d{2})$/.exec(birthTime);
+    if (!t || Number(t[1]) > 23 || Number(t[2]) > 59)
+      throw new Error(`birthTime 형식 오류: ${birthTime}`);
+  }
+  const raw = kstStringToInstant(`${birthDate}T${birthTime ?? "12:00"}`);
+  const p = dayPillar(resolveBirthInstant(raw, birthTime == null));
   const elementIndex = stemElement(p.stem);
   return {
     dayGanzhi: HEAVENLY_STEMS[p.stem] + EARTHLY_BRANCHES[p.branch],
@@ -109,6 +132,20 @@ export function partnerFromBirth(birthDate: string): {
     elementIndex,
     zodiac: zodiacSign(mo, d),
   };
+}
+
+/**
+ * 혈액형 어울림 0~2 — 대중적 혈액형 궁합 관습의 재미 요소(통계적 근거 아님).
+ * 2: 서로를 채우는 보완의 짝(A×O, B×AB), 1: 익숙하고 무난한 결, 0: 결이 다른 짝(A×B, O×AB).
+ * 대칭 함수 — 커플 온도의 대칭성 불변식을 지킨다.
+ */
+export function bloodSynergy(a: BloodType, b: BloodType): number {
+  if (a === b) return 1;
+  const pair = new Set([a, b]);
+  const has = (x: BloodType, y: BloodType) => pair.has(x) && pair.has(y);
+  if (has("A", "O") || has("B", "AB")) return 2;
+  if (has("A", "B") || has("O", "AB")) return 0;
+  return 1; // A×AB, B×O — 익숙함과 새로움이 섞인 무난한 결
 }
 
 // 관계별 기본 점수 — 어느 관계든 배울 것이 있다는 전제(공포·서열화 금지).
@@ -133,6 +170,10 @@ export function computeBond(aGanzhi: string, bGanzhi: string): MatchBond | null 
   };
 }
 
+// 혈액형 어울림 점수 — 작은 재미 축이라 가중 없이 0~6, 미입력이면 중간(3).
+const bloodPoints = (synergy: number | null): number =>
+  synergy === null ? 3 : synergy * 3;
+
 // 간지 인연 점수 — 합은 끌어당김(+), 충은 벼려주는 자리(−, 공포 아닌 낙차만).
 const bondPoints = (bond: MatchBond | null): number =>
   bond
@@ -153,13 +194,17 @@ export function computeMatch(
   partnerInput: MatchPartnerInput,
   mode: MatchMode,
 ): MatchContext {
-  const partner = partnerFromBirth(partnerInput.birthDate);
+  const partner = partnerFromBirth(partnerInput.birthDate, partnerInput.birthTime);
   const mineIdx = ELEMENTS.indexOf(me.element as (typeof ELEMENTS)[number]);
   if (mineIdx < 0) throw new Error(`오행 오류: ${me.element}`);
 
   const elementRelation = relateElement(mineIdx as ElementIndex, partner.elementIndex);
   const harmony = zodiacHarmony(me.zodiac, partner.zodiac);
   const synergy = partnerInput.mbti ? mbtiSynergy(me.mbti, partnerInput.mbti) : null;
+  const blood =
+    me.bloodType && partnerInput.bloodType
+      ? bloodSynergy(me.bloodType, partnerInput.bloodType)
+      : null;
   const bond = me.dayGanzhi ? computeBond(me.dayGanzhi, partner.dayGanzhi) : null;
 
   const w = MODE_WEIGHTS[mode];
@@ -169,6 +214,7 @@ export function computeMatch(
     RELATION_POINTS[elementRelation] * w.element +
     HARMONY_POINTS[harmony] * w.zodiac +
     mbtiPoints * w.mbti +
+    bloodPoints(blood) +
     bondPoints(bond);
   const score = Math.max(0, Math.min(100, Math.round(raw)));
 
@@ -179,10 +225,12 @@ export function computeMatch(
       element: partner.element,
       zodiac: partner.zodiac,
       mbti: partnerInput.mbti ?? null,
+      bloodType: partnerInput.bloodType ?? null,
     },
     elementRelation,
     zodiacHarmony: harmony,
     mbtiSynergy: synergy,
+    bloodSynergy: blood,
     bond,
     score,
   };
@@ -224,6 +272,7 @@ export function computeDeepMatch(
   const elementRelation = relateElement(mineIdx as ElementIndex, partnerIdx as ElementIndex);
   const harmony = zodiacHarmony(me.zodiac, partner.zodiac);
   const synergy = mbtiSynergy(me.mbti.type, partner.mbti.type);
+  const blood = bloodSynergy(me.blood.type, partner.blood.type); // 프로필엔 혈액형이 항상 있다
   const bond = computeBond(me.pillars.day, partner.pillars.day);
 
   const iFillPartner = fillingElements(me.elements, partner.elements.lacking);
@@ -237,6 +286,7 @@ export function computeDeepMatch(
     RELATION_POINTS[elementRelation] * w.element +
     HARMONY_POINTS[harmony] * w.zodiac +
     synergy * 4 * w.mbti +
+    bloodPoints(blood) +
     bondPoints(bond) +
     complementBonus;
   const score = Math.max(0, Math.min(100, Math.round(raw)));
@@ -248,10 +298,12 @@ export function computeDeepMatch(
       element: partner.dayMaster.element,
       zodiac: partner.zodiac,
       mbti: partner.mbti.type,
+      bloodType: partner.blood.type,
     },
     elementRelation,
     zodiacHarmony: harmony,
     mbtiSynergy: synergy,
+    bloodSynergy: blood,
     bond,
     score,
     complement: { iFillPartner, partnerFillsMe },

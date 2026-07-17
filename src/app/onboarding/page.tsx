@@ -11,6 +11,7 @@ import { saveProfile } from "./actions";
 import { saveDraft, loadDraft, clearDraft, isCompleteDraft, type Draft } from "./draft";
 import SajuChart from "@/components/profile/SajuChart";
 import Choice from "@/components/ui/Choice";
+import PickerInput from "@/components/ui/PickerInput";
 
 const BLOODS: BloodType[] = ["A", "B", "O", "AB"];
 const MBTIS: Mbti[] = [
@@ -135,21 +136,21 @@ export default function OnboardingPage() {
             hint="그 순간의 하늘이 당신의 첫 이야기예요."
           >
             <label className="mb-2 block text-sm text-text-soft">생년월일</label>
-            <input
+            <PickerInput
               type="date"
               min="1900-01-01"
               max="2100-12-31"
               value={draft.birthDate}
-              onChange={(e) => set({ birthDate: e.target.value })}
-              className="w-full rounded-card border border-text-soft/30 bg-warm-surface px-4 py-3.5 text-lg outline-none focus:border-primary-green"
+              onChange={(v) => set({ birthDate: v })}
+              placeholder="눌러서 날짜를 골라 주세요"
             />
             <label className="mt-5 mb-2 block text-sm text-text-soft">태어난 시간</label>
-            <input
+            <PickerInput
               type="time"
               value={draft.birthTime}
               disabled={draft.timeUnknown}
-              onChange={(e) => set({ birthTime: e.target.value })}
-              className="w-full rounded-card border border-text-soft/30 bg-warm-surface px-4 py-3.5 text-lg outline-none focus:border-primary-green disabled:opacity-40"
+              onChange={(v) => set({ birthTime: v })}
+              placeholder="눌러서 시간을 골라 주세요"
             />
             <label className="mt-3 flex items-center gap-2 text-text-soft">
               <input
@@ -239,7 +240,7 @@ export default function OnboardingPage() {
         ) : (
           <button
             onClick={finish}
-            className="press flex-1 rounded-card bg-primary-green py-3.5 font-medium text-white"
+            className="press flex-1 rounded-card bg-primary-green py-3.5 font-medium text-on-primary"
           >
             나를 알아보기 ✨
           </button>

@@ -108,7 +108,7 @@ export default function ConcernRoom({
                 onClick={() => setCategory(c)}
                 className={`active:scale-[0.97] motion-reduce:active:scale-100 rounded-full px-4 py-2 text-sm transition ${
                   category === c
-                    ? "bg-primary-green text-white"
+                    ? "bg-selected text-on-selected"
                     : "bg-warm-surface text-text-soft"
                 }`}
               >

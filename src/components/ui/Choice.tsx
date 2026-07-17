@@ -19,7 +19,7 @@ export default function Choice({
       aria-pressed={selected}
       className={`active:scale-[0.97] motion-reduce:active:scale-100 rounded-card border py-3 font-medium transition ${small ? "text-sm" : "text-lg"} ${
         selected
-          ? "border-primary-green bg-primary-green text-white"
+          ? "border-selected bg-selected text-on-selected"
           : `border-text-soft/30 ${unselectedBg} text-text-main`
       }`}
     >

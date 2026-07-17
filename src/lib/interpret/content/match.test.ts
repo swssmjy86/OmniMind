@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { computeProfile } from "@/lib/engine";
 import { computeMatch, computeDeepMatch, MATCH_MODES, type MatchMe } from "@/lib/engine/match";
-import { assembleMatch, assembleDeepMatch, bondText, complementText, scoreLine } from "./match";
+import { assembleMatch, assembleDeepMatch, bloodText, bondText, complementText, scoreLine } from "./match";
 import { checkTone } from "../tone-guard";
 
 const me: MatchMe = { element: "목", zodiac: "사자자리", mbti: "INFP" };
@@ -17,13 +17,13 @@ const PARTNER_DATES = [
 ];
 
 describe("궁합 해석 조립 (P7)", () => {
-  it("모드 × 상대 조합 전부에서 5개 섹션 + 톤 통과", () => {
+  it("모드 × 상대 조합 전부에서 6개 섹션 + 톤 통과", () => {
     for (const mode of MATCH_MODES) {
       for (const birthDate of PARTNER_DATES) {
         for (const mbti of ["ENFJ", undefined] as const) {
           const m = computeMatch(me, { birthDate, mbti }, mode);
           const sections = assembleMatch({ match: m, myElement: me.element, nickname: "새벽" });
-          expect(sections).toHaveLength(5);
+          expect(sections).toHaveLength(6);
           for (const s of sections) {
             expect(s.body.length).toBeGreaterThan(0);
             expect(checkTone(s.body)).toHaveLength(0);
@@ -38,7 +38,26 @@ describe("궁합 해석 조립 (P7)", () => {
     const sections = assembleMatch({ match: m, myElement: me.element });
     expect(sections[0].body).toContain(`${m.score}°`);
     expect(sections[1].body).toContain("갑자");
-    expect(sections[4].title).toContain("연인");
+    expect(sections[5].title).toContain("연인");
+  });
+
+  it("bloodText — 0/1/2/null 전 갈래 문구 존재 + 톤 통과", () => {
+    for (const s of [0, 1, 2, null]) {
+      const t = bloodText(s);
+      expect(t.length).toBeGreaterThan(0);
+      expect(checkTone(t)).toHaveLength(0);
+    }
+  });
+
+  it("혈액형을 서로 알면 그 결이 섹션에 실린다", () => {
+    const m = computeMatch(
+      { ...me, bloodType: "A" },
+      { birthDate: "2000-01-07", bloodType: "O" },
+      "연인",
+    );
+    const sections = assembleMatch({ match: m, myElement: me.element });
+    expect(sections[4].title).toBe("혈액형이 말하길");
+    expect(sections[4].body).toBe(bloodText(2));
   });
 
   it("scoreLine — 전 구간에서 문구 존재 + 톤 통과", () => {
@@ -106,13 +125,13 @@ describe("심층 궁합 해석 (P7-2)", () => {
     bloodType: "O", mbti: "ESTJ",
   });
 
-  it("모드 3종 전부 6개 섹션 + 톤 통과, 이름·간지 반영", () => {
+  it("모드 3종 전부 7개 섹션 + 톤 통과, 이름·간지 반영", () => {
     for (const mode of MATCH_MODES) {
       const m = computeDeepMatch(a, b, mode);
       const sections = assembleDeepMatch({
         match: m, myElement: a.dayMaster.element, myName: "새벽", partnerName: "노을",
       });
-      expect(sections).toHaveLength(6);
+      expect(sections).toHaveLength(7);
       for (const s of sections) {
         expect(s.body.length).toBeGreaterThan(0);
         expect(checkTone(s.body)).toHaveLength(0);

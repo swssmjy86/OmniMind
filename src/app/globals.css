@@ -1,12 +1,22 @@
 @import "tailwindcss";
 
 :root {
+  /* 네이티브 컨트롤(date/time 픽커 등)이 현재 테마를 따르게 한다 — 다크에서 지정이 없으면
+     입력값이 어두운 글자로 렌더링돼 '빈 상자'처럼 보인다. */
+  color-scheme: light;
   --warm-base: #f5efe6;
   --warm-surface: #fdfbf7;
   --accent-coral: #e8927c;
   --primary-green: #2d5a4a;
   --text-main: #3e3a36;
   --text-soft: #8a8178;
+  /* primary-green 배경 위 글자색. 다크에서는 primary-green이 베이지로 뒤집히므로
+     흰 글자를 그대로 두면 안 보인다 — 배경과 항상 짝으로 움직이는 토큰. */
+  --on-primary: #ffffff;
+  /* 선택형 알약 버튼의 '선택됨' 상태. primary-green을 그대로 쓰면 다크에서 베이지(흰색에
+     가까운) 버튼이 되어 사용자 제보처럼 글자가 묻힌다 — 다크에서는 코랄로 확실히 구분. */
+  --selected: #2d5a4a;
+  --on-selected: #ffffff;
   /* PC 앱 셸 폭 — layout.tsx의 app-shell과 BottomNav가 함께 참조하는 단일 소스. */
   --shell-width: 480px;
   --shell-width-lg: 560px;
@@ -21,12 +31,16 @@
 /* 다크 모드: 딥 그린 바탕 + 베이지 텍스트 (설계서 §5.2) */
 @media (prefers-color-scheme: dark) {
   :root {
+    color-scheme: dark;
     --warm-base: #1f3a30;
     --warm-surface: #2d5a4a;
     --accent-coral: #e8927c;
     --primary-green: #f5efe6;
     --text-main: #f5efe6;
     --text-soft: #cfc6b8;
+    --on-primary: #1f3a30; /* 베이지가 된 primary-green 위에는 딥 그린 글자 */
+    --selected: #e8927c; /* 딥 그린 바탕에서 또렷하게 떠오르는 브랜드 코랄 */
+    --on-selected: #1f3a30;
     /* 어두운 바탕에서는 같은 10%/검정 그림자가 거의 안 보여 세기를 올리고, 그림자는
        검정 대신 옅은 빛 번짐으로 바꿔 딥 그린 배경 위에서도 카드가 떠 보이게 한다. */
     --shell-tint-amount: 22%;
@@ -41,6 +55,9 @@
   --color-primary-green: var(--primary-green);
   --color-text-main: var(--text-main);
   --color-text-soft: var(--text-soft);
+  --color-on-primary: var(--on-primary);
+  --color-selected: var(--selected);
+  --color-on-selected: var(--on-selected);
   --font-sans: "Pretendard Variable", Pretendard, -apple-system, sans-serif;
   --font-serif-kr: "Noto Serif KR", serif;
   --radius-card: 20px;
@@ -50,6 +67,21 @@ body {
   background: var(--warm-base);
   color: var(--text-main);
   font-family: var(--font-sans);
+}
+
+/* iOS WebKit의 date/time 입력 — 값이 가운데 정렬로 떠 보이거나 비어 보이는 문제를
+   다른 입력들과 같은 왼쪽 정렬·본문 글자색으로 맞춘다.
+   base 레이어에 둔다 — 레이어 없는 규칙은 Tailwind 유틸리티(@layer utilities)를 항상
+   이겨서, PickerInput이 빈 상태를 숨기는 text-transparent가 무효화된다(안드로이드에서
+   네이티브 '연도-월-일' 위에 안내 문구가 겹쳐 보이는 버그). */
+@layer base {
+  input[type="date"],
+  input[type="time"] {
+    color: var(--text-main);
+  }
+  input::-webkit-date-and-time-value {
+    text-align: left;
+  }
 }
 
 /* 페이지 콘텐츠가 부드럽게 스며드는 전환 (§5.3 무드 — 로그인 전후 화면 전환 등) */

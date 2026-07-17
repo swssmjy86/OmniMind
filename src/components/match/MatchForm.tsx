@@ -9,13 +9,15 @@ import { assembleMatch } from "@/lib/interpret/content/match";
 import { createInvite } from "@/lib/match/actions";
 import { recordClientEvent } from "@/lib/metrics/actions";
 import Choice from "@/components/ui/Choice";
+import PickerInput from "@/components/ui/PickerInput";
 import type { InterpretationSection } from "@/lib/interpret/types";
-import type { Mbti } from "@/lib/engine/types";
+import type { BloodType, Mbti } from "@/lib/engine/types";
 
 const MBTIS: Mbti[] = [
   "INTJ", "INTP", "ENTJ", "ENTP", "INFJ", "INFP", "ENFJ", "ENFP",
   "ISTJ", "ISFJ", "ESTJ", "ESFJ", "ISTP", "ISFP", "ESTP", "ESFP",
 ];
+const BLOODS: BloodType[] = ["A", "B", "O", "AB"];
 
 // 유입 파라미터는 ASCII 토큰만 허용(ref.ts TOKEN 규칙) — 모드를 슬러그로.
 const MODE_SLUG: Record<MatchMode, string> = { 연인: "lover", 친구: "friend", 동료: "coworker" };
@@ -23,7 +25,10 @@ const MODE_SLUG: Record<MatchMode, string> = { 연인: "lover", 친구: "friend"
 export default function MatchForm({ me, nickname }: { me: MatchMe; nickname: string }) {
   const [mode, setMode] = useState<MatchMode>("연인");
   const [birthDate, setBirthDate] = useState("");
+  const [birthTime, setBirthTime] = useState("");
+  const [timeUnknown, setTimeUnknown] = useState(false);
   const [mbti, setMbti] = useState<"" | Mbti>("");
+  const [blood, setBlood] = useState<"" | BloodType>("");
   const [result, setResult] = useState<{ match: MatchContext; sections: InterpretationSection[] } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -32,12 +37,27 @@ export default function MatchForm({ me, nickname }: { me: MatchMe; nickname: str
   function compute() {
     setError(null);
     try {
-      const match = computeMatch(me, { birthDate, mbti: mbti || undefined }, mode);
+      const match = computeMatch(
+        me,
+        {
+          birthDate,
+          birthTime: timeUnknown || !birthTime ? undefined : birthTime,
+          mbti: mbti || undefined,
+          bloodType: blood || undefined,
+        },
+        mode,
+      );
       const sections = assembleMatch({ match, myElement: me.element, nickname });
       setResult({ match, sections });
-      void recordClientEvent("match_compute", { mode: MODE_SLUG[mode], hasMbti: !!mbti });
+      void recordClientEvent("match_compute", {
+        mode: MODE_SLUG[mode],
+        hasMbti: !!mbti,
+        hasBlood: !!blood,
+        hasTime: !timeUnknown && !!birthTime,
+      });
     } catch {
-      setError("생년월일을 다시 한번 확인해주실래요?");
+      // 날짜뿐 아니라 시간 형식 오류도 이 경로로 온다 — 특정 필드를 지목하지 않는다.
+      setError("입력하신 날짜와 시간을 다시 한번 확인해주실래요?");
     }
   }
 
@@ -73,7 +93,7 @@ export default function MatchForm({ me, nickname }: { me: MatchMe; nickname: str
             key={m}
             onClick={() => { setMode(m); setInviteUrl(null); }}
             className={`active:scale-[0.97] motion-reduce:active:scale-100 rounded-full px-4 py-2 text-sm transition ${
-              mode === m ? "bg-primary-green text-white" : "bg-warm-surface text-text-soft"
+              mode === m ? "bg-selected text-on-selected" : "bg-warm-surface text-text-soft"
             }`}
           >
             {m}
@@ -84,18 +104,66 @@ export default function MatchForm({ me, nickname }: { me: MatchMe; nickname: str
       <div className="mt-4 space-y-3 rounded-card bg-warm-surface p-5">
         <label className="block">
           <span className="text-sm text-text-soft">상대가 세상에 온 날</span>
-          <input
-            type="date"
-            min="1900-01-01"
-            max="2100-12-31"
-            value={birthDate}
-            onChange={(e) => setBirthDate(e.target.value)}
-            className="mt-1.5 w-full rounded-card border border-text-soft/30 bg-warm-base px-4 py-2.5 outline-none focus:border-primary-green"
-          />
-          <span className="mt-1 block text-xs text-text-soft">
-            태어난 시간까지는 몰라도 괜찮아요 — 그날의 기운(일주)으로 읽어드려요.
-          </span>
+          <div className="mt-1.5">
+            <PickerInput
+              type="date"
+              min="1900-01-01"
+              max="2100-12-31"
+              value={birthDate}
+              onChange={setBirthDate}
+              placeholder="눌러서 날짜를 골라 주세요"
+              bg="bg-warm-base"
+            />
+          </div>
         </label>
+        <div>
+          <label className="block">
+            <span className="text-sm text-text-soft">상대가 태어난 시간 (알고 있다면)</span>
+            <div className="mt-1.5">
+              <PickerInput
+                type="time"
+                value={birthTime}
+                disabled={timeUnknown}
+                onChange={setBirthTime}
+                placeholder="눌러서 시간을 골라 주세요"
+                bg="bg-warm-base"
+              />
+            </div>
+          </label>
+          <label className="mt-2 flex items-center gap-2 text-sm text-text-soft">
+            <input
+              type="checkbox"
+              checked={timeUnknown}
+              onChange={(e) => setTimeUnknown(e.target.checked)}
+              className="h-4 w-4 accent-primary-green"
+            />
+            태어난 시간을 몰라요
+          </label>
+          <span className="mt-1 block text-xs text-text-soft">
+            시간까지는 몰라도 괜찮아요 — 그날의 기운(일주)으로 읽어드려요.
+          </span>
+        </div>
+        <div>
+          <span className="text-sm text-text-soft">상대의 혈액형 (알고 있다면)</span>
+          <div className="mt-1.5 space-y-2">
+            <Choice small unselectedBg="bg-warm-base" selected={blood === ""} onClick={() => setBlood("")}>
+              아직 몰라요
+            </Choice>
+            <div className="grid grid-cols-4 gap-2">
+              {BLOODS.map((b) => (
+                <Choice
+                  key={b}
+                  small
+                  unselectedBg="bg-warm-base"
+                  selected={blood === b}
+                  onClick={() => setBlood(b)}
+                >
+                  {b}형
+                </Choice>
+              ))}
+            </div>
+          </div>
+        </div>
         <div>
           <span className="text-sm text-text-soft">상대의 MBTI (알고 있다면)</span>
           <div className="mt-1.5 space-y-2">
@@ -147,7 +215,7 @@ export default function MatchForm({ me, nickname }: { me: MatchMe; nickname: str
             </p>
             <button
               onClick={() => void copyInvite()}
-              className="press mt-3 w-full rounded-card bg-primary-green py-3 font-medium text-white"
+              className="press mt-3 w-full rounded-card bg-primary-green py-3 font-medium text-on-primary"
             >
               {copied ? "복사했어요 ✓" : "상대에게 건네주기 🍃"}
             </button>
