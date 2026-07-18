@@ -1,17 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createServerSupabase } from "@/lib/supabase/server";
-import { computeDaily } from "@/lib/engine/daily";
-import { assembleDaily } from "@/lib/interpret/content/daily";
 import { currentMilestone, isMilestoneToday } from "@/lib/interpret/milestone";
-import { toKstParts } from "@/lib/engine/kst";
 import AdSlot from "@/components/ads/AdSlot";
-import DailyRecorder from "@/components/DailyRecorder";
-import ShareSheet from "@/components/share/ShareSheet";
-import { dailyCardQuery } from "@/lib/share/card-copy";
-import type { ProfileRow, InterpretationRow } from "@/lib/db/types";
+import type { ProfileRow } from "@/lib/db/types";
 import ProductShelf from "@/components/home/ProductShelf";
-import { PERSONAS } from "@/lib/persona/personas";
 
 export const dynamic = "force-dynamic"; // 날짜·세션에 따라 매번 렌더
 
@@ -26,38 +19,12 @@ export default async function HomePage() {
     redirect("/"); // 로그아웃 후에도 홈 — 비로그인 상태 화면으로 자연스럽게 전환
   }
 
-  const todayKst = toKstParts(new Date()); // 서버 UTC → KST 오늘
-  // 날짜 문자열은 프로필과 무관해(engine/daily.ts computeDaily의 date 필드와 동일 포맷) 먼저
-  // 구할 수 있다 — 프로필 조회와 캐시된 데일리 조회를 순차가 아니라 병렬로 보낸다.
-  const todayDateStr = `${todayKst.y}-${String(todayKst.mo).padStart(2, "0")}-${String(todayKst.d).padStart(2, "0")}`;
-
-  // 저장된 프로필(로그인 + 마이그레이션 적용 시) + P8 오늘 캐시된 LLM 개인화 문단.
-  // 둘 다 실패는 조용히 무시.
   let profile: ProfileRow | null = null;
-  let cachedDaily: InterpretationRow | null = null;
   if (user) {
-    const [profileRes, cachedRes] = await Promise.all([
-      supabase.from("profiles").select("*").eq("user_id", user.id).maybeSingle<ProfileRow>(),
-      supabase.from("interpretations").select("*")
-        .eq("user_id", user.id).eq("kind", "daily").eq("target_date", todayDateStr)
-        .maybeSingle<InterpretationRow>(),
-    ]);
-    profile = profileRes.data ?? null;
-    cachedDaily = cachedRes.data ?? null;
+    const { data } = await supabase
+      .from("profiles").select("*").eq("user_id", user.id).maybeSingle<ProfileRow>();
+    profile = data ?? null;
   }
-
-  const daily = computeDaily(
-    { y: todayKst.y, mo: todayKst.mo, d: todayKst.d },
-    profile?.profile_context.dayMaster.element,
-    profile?.profile_context.dayMaster.stem, // 십성(비견~정인)까지 세밀 개인화
-  );
-  const guide = assembleDaily(daily, profile?.nickname);
-
-  // recordTodayDaily()가 자정 이후 첫 방문 때 캐시를 채우므로, 그 방문 자체에는 아직 없고
-  // 다음 방문부터 보인다(캐시 하루 1회 원칙). profile이 없으면(비로그인 등) 애초에 캐시 대상이 아니다.
-  const llmParagraph = profile
-    ? cachedDaily?.body.find((s) => s.title === "오늘, 당신만을 위한 이야기")?.body ?? null
-    : null;
 
   // 동행일: 프로필 생성일 ~ 오늘
   let companionDays = 0;
@@ -93,66 +60,6 @@ export default async function HomePage() {
 
       {/* 오늘 밤 한 줄(§4.4) — 밤의 따뜻함 무드의 인사 */}
       <p className="mt-1 text-sm text-text-soft">오늘 밤도 당신의 이야기를 켜 두었어요.</p>
-
-      {/* 오늘의 일진 — 달지기 · 매일 갱신 · 무료 훅(§4.4) */}
-      <section className="persona-card mt-5 rounded-card bg-warm-surface p-6">
-        <span aria-hidden className="persona-star" style={{ top: "12%", right: "10%" }} />
-        <span aria-hidden className="persona-star" style={{ top: "26%", right: "24%" }} />
-        <span aria-hidden className="persona-star" style={{ top: "16%", right: "38%" }} />
-        <p className="text-xs text-text-soft">
-          <span aria-hidden>🏮</span> {PERSONAS.dalzigi.name} · 오늘의 일진 — 누구나 무료
-        </p>
-        <p className="mt-2 font-[family-name:var(--font-serif-kr)] text-lg leading-relaxed text-primary-green">
-          {guide.headline}
-        </p>
-        <p className="mt-3 leading-relaxed text-text-main">{guide.mind}</p>
-        {guide.personal && (
-          <p className="mt-3 rounded-card bg-warm-base p-3 text-sm leading-relaxed text-text-main">
-            {guide.personal}
-          </p>
-        )}
-        {llmParagraph && (
-          <p className="mt-3 rounded-card border border-primary-green/20 bg-warm-base p-3 text-sm leading-relaxed text-text-main">
-            🌿 {llmParagraph}
-          </p>
-        )}
-        <div className="mt-5 flex gap-2">
-          <span className="rounded-full bg-warm-base px-3 py-1.5 text-sm text-text-soft">
-            오늘의 색 · {guide.color}
-          </span>
-          <span className="rounded-full bg-warm-base px-3 py-1.5 text-sm text-text-soft">
-            {guide.keyword}
-          </span>
-        </div>
-        <p className="mt-4 text-sm text-text-soft">🍀 행운 포인트 — {guide.lucky}</p>
-
-        {/* 이 풀이의 근거(§7.3) — 핵심 3줄 + 전체 보기. 신뢰 장치는 사실의 공개다. */}
-        <details className="mt-4 text-xs text-text-soft">
-          <summary className="cursor-pointer">이 풀이의 근거</summary>
-          <ul className="mt-2 list-disc space-y-1 pl-4">
-            <li>일진은 천문 산술로 계산해 한국천문연구원 공표값 467건과 대조해 확인했어요.</li>
-            <li>절기는 태양의 실제 위치로 구해 미국 해군천문대 공표값과 대조해요.</li>
-            <li>계산에는 AI가 관여하지 않아요 — 문장을 다듬는 일만 맡아요.</li>
-          </ul>
-          <Link href="/sources" className="mt-2 inline-block underline">
-            전체 근거 보기
-          </Link>
-        </details>
-      </section>
-
-      {profile && (
-        <>
-          <DailyRecorder />
-          <ShareSheet
-            query={dailyCardQuery(profile.profile_context, guide)}
-            via="daily"
-            label="오늘의 나 카드"
-          />
-          <Link href="/history" className="mt-4 block text-center text-sm text-text-soft underline">
-            지난 이야기 보기
-          </Link>
-        </>
-      )}
 
       {/* 프로필 없으면 개인화 유도 — 로그인 여부에 따라 다음 걸음을 다르게 안내 */}
       {!profile && (

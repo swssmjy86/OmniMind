@@ -21,7 +21,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "daily", title: "오늘의 일진", personaId: "dalzigi",
     tagline: "매일 밤 새로 켜지는 오늘의 기운",
-    access: "free", href: "/", status: "live",
+    access: "free", href: "/daily", status: "live",
   },
   {
     id: "profile_deep", title: "내 사주 심층 풀이", personaId: "seoon",
