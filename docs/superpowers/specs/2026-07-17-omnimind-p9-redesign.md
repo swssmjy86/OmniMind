@@ -182,7 +182,11 @@ export interface Persona {
 | `--warm-surface` | `#1a2740` | `#fdfbf7` (유지) |
 | `--text-main` | `#f0ebe2` 웜 아이보리 | `#3e3a36` (유지) |
 | `--text-soft` | `#a8b0c0` | `#8a8178` (유지) |
-| `--moon-gold` | `#f0c96a` **(신규)** | `#c9a24a` |
+| `--moon-gold` | `#f0c96a` **(신규)** | `#8a6b28` |
+
+> 라이트 `--moon-gold`는 원안 `#c9a24a`에서 `#8a6b28`로 조정(2026-07-18 최종 코드리뷰).
+> 원안은 밝은 표면(`#fdfbf7`) 위 대비가 ~2.3:1로 소형 텍스트(11~14px) WCAG AA(4.5:1) 미달 —
+> 조정값은 ~4.8:1. 다크 값은 그대로.
 | `--accent-coral` | `#e8927c` (유지) | `#e8927c` (유지) |
 | `--selected` / `--on-selected` | `#f0c96a` / `#0e1626` | `#2d5a4a` / `#ffffff` |
 
