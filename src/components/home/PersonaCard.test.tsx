@@ -10,7 +10,7 @@ describe("PersonaCard (§4.3 CSS 모션 카드)", () => {
   it("live 상품 — 페르소나 멘트가 진짜 텍스트로, 카드 전체가 링크로 렌더된다", () => {
     render(<PersonaCard product={profileDeep} />);
     const link = screen.getByRole("link");
-    expect(link).toHaveAttribute("href", "/me");
+    expect(link).toHaveAttribute("href", "/saju/chongun");
     expect(screen.getByText("서온")).toBeInTheDocument();
     expect(screen.getByText("총운")).toBeInTheDocument();
     // 멘트는 이미지가 아닌 텍스트 — 스크린리더·SEO에 잡힌다(§4.3)
