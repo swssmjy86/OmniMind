@@ -1,0 +1,169 @@
+import Link from "next/link";
+import type { Metadata } from "next";
+import { createServerSupabase } from "@/lib/supabase/server";
+import { computeDaily } from "@/lib/engine/daily";
+import { assembleDaily } from "@/lib/interpret/content/daily";
+import { toKstParts } from "@/lib/engine/kst";
+import { EARTHLY_BRANCHES } from "@/lib/engine/constants";
+import { ZODIAC_ANIMALS, branchRelation } from "@/lib/engine/year-sign";
+import { relationLine } from "@/lib/interpret/content/year-sign";
+import { PERSONAS } from "@/lib/persona/personas";
+import DailyRecorder from "@/components/DailyRecorder";
+import ShareSheet from "@/components/share/ShareSheet";
+import TodayFreeFlow from "@/components/today/TodayFreeFlow";
+import { dailyCardQuery } from "@/lib/share/card-copy";
+import type { ProfileRow, InterpretationRow } from "@/lib/db/types";
+
+export const metadata: Metadata = {
+  title: "오늘의운세 — 옴니마인드",
+  description: "매일 새로 흐르는 오늘의 기운 — 기본은 누구나 무료.",
+};
+
+export const dynamic = "force-dynamic"; // 날짜·세션에 따라 매번 렌더
+
+/**
+ * 오늘의운세 탭(스펙 §3) — 로그인+프로필이면 전체(심화+띠 관계+마음 챗 진입),
+ * 아니면 무료 공통 일진 + 블러 티저(입력 팝업 포함). 잠긴 개인화 본문은
+ * 비로그인 응답에 아예 없다(P9 §5.1).
+ */
+export default async function TodayPage() {
+  const supabase = await createServerSupabase();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const todayKst = toKstParts(new Date());
+  const todayDateStr = `${todayKst.y}-${String(todayKst.mo).padStart(2, "0")}-${String(todayKst.d).padStart(2, "0")}`;
+
+  let profile: ProfileRow | null = null;
+  let cachedDaily: InterpretationRow | null = null;
+  if (user) {
+    const [profileRes, cachedRes] = await Promise.all([
+      supabase.from("profiles").select("*").eq("user_id", user.id).maybeSingle<ProfileRow>(),
+      supabase.from("interpretations").select("*")
+        .eq("user_id", user.id).eq("kind", "daily").eq("target_date", todayDateStr)
+        .maybeSingle<InterpretationRow>(),
+    ]);
+    profile = profileRes.data ?? null;
+    cachedDaily = cachedRes.data ?? null;
+  }
+
+  // ── 전체 뷰: 로그인+프로필 — 심화 일진 + 띠 관계 + 마음 챗 진입 ──
+  if (profile) {
+    const daily = computeDaily(
+      { y: todayKst.y, mo: todayKst.mo, d: todayKst.d },
+      profile.profile_context.dayMaster.element,
+      profile.profile_context.dayMaster.stem,
+    );
+    const guide = assembleDaily(daily, profile.nickname);
+    const llmParagraph =
+      cachedDaily?.body.find((s) => s.title === "오늘, 당신만을 위한 이야기")?.body ?? null;
+
+    // 띠 관계 — 프로필 년주(pillars.year = "경오" 등)의 지지 × 오늘 일진 지지
+    const yearBranch = EARTHLY_BRANCHES.indexOf(
+      profile.profile_context.pillars.year[1] as (typeof EARTHLY_BRANCHES)[number],
+    );
+    const todayBranch = EARTHLY_BRANCHES.indexOf(
+      daily.dayGanzhi[1] as (typeof EARTHLY_BRANCHES)[number],
+    );
+    const signLine =
+      yearBranch >= 0 ? relationLine(branchRelation(yearBranch, todayBranch)) : null;
+
+    return (
+      <main className="fade-rise p-6">
+        <h1 className="font-[family-name:var(--font-serif-kr)] text-2xl text-primary-green">
+          오늘의운세
+        </h1>
+        <section className="persona-card mt-5 rounded-card bg-warm-surface p-6">
+          <span aria-hidden className="persona-star" style={{ top: "12%", right: "10%" }} />
+          <span aria-hidden className="persona-star" style={{ top: "26%", right: "24%" }} />
+          <span aria-hidden className="persona-star" style={{ top: "16%", right: "38%" }} />
+          <p className="text-xs text-text-soft">
+            <span aria-hidden>🏮</span> {PERSONAS.dalzigi.name} · 오늘의운세
+          </p>
+          <p className="mt-2 font-[family-name:var(--font-serif-kr)] text-lg leading-relaxed text-primary-green">
+            {guide.headline}
+          </p>
+          <p className="mt-3 leading-relaxed text-text-main">{guide.mind}</p>
+          {guide.personal && (
+            <p className="mt-3 rounded-card bg-warm-base p-3 text-sm leading-relaxed text-text-main">
+              {guide.personal}
+            </p>
+          )}
+          {signLine && (
+            <p className="mt-3 rounded-card bg-warm-base p-3 text-sm leading-relaxed text-text-main">
+              <span className="text-text-soft">
+                {ZODIAC_ANIMALS[yearBranch]}띠인 당신에게 —{" "}
+              </span>
+              {signLine}
+            </p>
+          )}
+          {llmParagraph && (
+            <p className="mt-3 rounded-card border border-primary-green/20 bg-warm-base p-3 text-sm leading-relaxed text-text-main">
+              🌿 {llmParagraph}
+            </p>
+          )}
+          <div className="mt-5 flex gap-2">
+            <span className="rounded-full bg-warm-base px-3 py-1.5 text-sm text-text-soft">
+              오늘의 색 · {guide.color}
+            </span>
+            <span className="rounded-full bg-warm-base px-3 py-1.5 text-sm text-text-soft">
+              {guide.keyword}
+            </span>
+          </div>
+          <p className="mt-4 text-sm text-text-soft">🍀 행운 포인트 — {guide.lucky}</p>
+
+          <details className="mt-4 text-xs text-text-soft">
+            <summary className="cursor-pointer">이 풀이의 근거</summary>
+            <ul className="mt-2 list-disc space-y-1 pl-4">
+              <li>일진은 천문 산술로 계산해 한국천문연구원 공표값 467건과 대조해 확인했어요.</li>
+              <li>절기는 태양의 실제 위치로 구해 미국 해군천문대 공표값과 대조해요.</li>
+              <li>계산에는 AI가 관여하지 않아요 — 문장을 다듬는 일만 맡아요.</li>
+            </ul>
+            <Link href="/sources" className="mt-2 inline-block underline">
+              전체 근거 보기
+            </Link>
+          </details>
+        </section>
+
+        {/* 마음 챗 진입 — 잠금 해제된 화면에만 노출(확정 결정 7) */}
+        <Link
+          href="/mind"
+          className="press mt-4 block rounded-card bg-warm-surface p-4 text-center text-sm text-text-main"
+        >
+          💬 오늘 마음에 남는 게 있다면 — 마음 챗
+        </Link>
+
+        <DailyRecorder />
+        <ShareSheet
+          query={dailyCardQuery(profile.profile_context, guide)}
+          via="daily"
+          label="오늘의 나 카드"
+        />
+        <Link href="/archive" className="mt-4 block text-center text-sm text-text-soft underline">
+          지난 기록 보기 (보관함)
+        </Link>
+      </main>
+    );
+  }
+
+  // ── 무료 뷰: 공통 일진만 서버 계산 — 개인화 결과는 이 응답에 없다 ──
+  const daily = computeDaily({ y: todayKst.y, mo: todayKst.mo, d: todayKst.d });
+  const guide = assembleDaily(daily);
+
+  return (
+    <main className="fade-rise p-6">
+      <h1 className="font-[family-name:var(--font-serif-kr)] text-2xl text-primary-green">
+        오늘의운세
+      </h1>
+      <p className="mt-1 text-sm text-text-soft">
+        <span aria-hidden>🏮</span> {PERSONAS.dalzigi.homeLine}
+      </p>
+      <TodayFreeFlow
+        headline={guide.headline}
+        mind={guide.mind}
+        color={guide.color}
+        keyword={guide.keyword}
+        lucky={guide.lucky}
+      />
+    </main>
+  );
+}

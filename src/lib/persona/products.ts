@@ -1,10 +1,11 @@
-// P9 상품 카탈로그(설계서 §2.1) — 표현 계층 순수 상수. 접근 "규칙"(잠금·크레딧 차감 판정)은
-// 2단계에서 consult/quota.ts의 readingAccess로 들어간다(§6.3). 여기는 홈·카드가 보여줄
-// 라인업 메타데이터만 둔다. 1단계에서 href는 기존 화면이다 — 단계가 진행되며 갱신된다.
+// 상품 카탈로그 v2(4탭 IA 스펙 §4) — 표현 계층 순수 상수. 접근 "규칙"(잠금·크레딧 차감)은
+// 2단계에서 consult/quota.ts의 readingAccess로 들어간다. 여기는 홈 그리드·사주팔자 탭이
+// 함께 쓰는 라인업 메타데이터만 둔다.
 
 import type { PersonaId } from "./personas";
 
-export type ProductId = "daily" | "profile_deep" | "match_deep" | "fate" | "wealth";
+export type ProductId =
+  | "today" | "chongun" | "career" | "love" | "wealth" | "match" | "marriage";
 export type ProductAccess = "free" | "login" | "credit";
 
 export interface Product {
@@ -13,34 +14,44 @@ export interface Product {
   tagline: string;         // 카드 한 줄 소개 — 톤 가드 준수
   personaId: PersonaId;
   access: ProductAccess;
-  href: string;            // 연결 화면 — 전용 라우트가 생기면 갱신(daily=/daily, 나머지는 아직 기존 화면)
+  href: string;            // 연결 화면 — 전용 라우트가 생기면 갱신(2·3단계)
   status: "live" | "soon"; // soon = 카드 비활성(링크 없음)
 }
 
 export const PRODUCTS: Product[] = [
   {
-    id: "daily", title: "오늘의 일진", personaId: "dalzigi",
+    id: "today", title: "오늘의운세", personaId: "dalzigi",
     tagline: "매일 밤 새로 켜지는 오늘의 기운",
-    access: "free", href: "/daily", status: "live",
+    access: "free", href: "/today", status: "live",
   },
   {
-    id: "profile_deep", title: "내 사주 심층 풀이", personaId: "seoon",
-    tagline: "여덟 글자에 담긴 당신의 결을 깊이",
+    id: "chongun", title: "총운", personaId: "seoon",
+    tagline: "여덟 글자에 담긴 인생 전반의 흐름",
     access: "login", href: "/me", status: "live",
   },
   {
-    id: "match_deep", title: "궁합 심층", personaId: "hongyeon",
+    id: "career", title: "직업운", personaId: "seoon",
+    tagline: "일과 재능의 결이 흐르는 방향",
+    access: "credit", href: "", status: "soon",
+  },
+  {
+    id: "love", title: "연애운", personaId: "hongyeon",
+    tagline: "다가오는 인연과 마음의 흐름",
+    access: "credit", href: "", status: "soon",
+  },
+  {
+    id: "wealth", title: "재물운", personaId: "geumo",
+    tagline: "재물의 물길이 흐르는 방향",
+    access: "credit", href: "", status: "soon",
+  },
+  {
+    id: "match", title: "궁합", personaId: "hongyeon",
     tagline: "두 사람의 기운이 만나는 자리",
     access: "credit", href: "/match", status: "live",
   },
   {
-    id: "fate", title: "인연 풀이", personaId: "hongyeon",
-    tagline: "당신에게 다가오는 인연의 흐름",
-    access: "credit", href: "", status: "soon",
-  },
-  {
-    id: "wealth", title: "재물 풀이", personaId: "geumo",
-    tagline: "재물의 물길이 흐르는 방향",
+    id: "marriage", title: "결혼운", personaId: "hongyeon",
+    tagline: "함께 걷는 길의 때와 결",
     access: "credit", href: "", status: "soon",
   },
 ];
