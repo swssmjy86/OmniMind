@@ -5,9 +5,9 @@ import { usePathname } from "next/navigation";
 
 const tabs = [
   { href: "/", label: "홈", emoji: "🌿" },
-  { href: "/me", label: "나", emoji: "🌙" },
-  { href: "/concern", label: "고민", emoji: "🧭" },
-  { href: "/mind", label: "마음", emoji: "💬" },
+  { href: "/today", label: "오늘의운세", emoji: "🏮" },
+  { href: "/saju", label: "사주팔자", emoji: "🌙" },
+  { href: "/archive", label: "보관함", emoji: "📦" },
 ];
 
 export default function BottomNav() {

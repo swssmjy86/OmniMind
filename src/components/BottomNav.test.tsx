@@ -1,26 +1,23 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import BottomNav from "./BottomNav";
 
-const mockPathname = vi.hoisted(() => vi.fn(() => "/"));
-vi.mock("next/navigation", () => ({ usePathname: mockPathname }));
+vi.mock("next/navigation", () => ({ usePathname: () => "/today" }));
 
-describe("BottomNav", () => {
-  beforeEach(() => {
-    mockPathname.mockReturnValue("/");
-  });
-
-  it("4개 탭(홈/나/고민/마음)을 렌더한다", () => {
+describe("하단 탭바 (4탭 IA 스펙 §2)", () => {
+  it("4탭 — 홈·오늘의운세·사주팔자·보관함", () => {
     render(<BottomNav />);
-    for (const label of ["홈", "나", "고민", "마음"]) {
-      expect(screen.getByText(label)).toBeInTheDocument();
+    const pairs: [string, string][] = [
+      ["홈", "/"], ["오늘의운세", "/today"], ["사주팔자", "/saju"], ["보관함", "/archive"],
+    ];
+    for (const [label, href] of pairs) {
+      expect(screen.getByRole("link", { name: new RegExp(label) })).toHaveAttribute("href", href);
     }
   });
 
-  it("현재 경로의 탭을 딥 그린으로 강조한다", () => {
-    mockPathname.mockReturnValue("/me");
+  it("현재 경로의 탭이 활성 스타일을 갖는다", () => {
     render(<BottomNav />);
-    expect(screen.getByText("나").closest("a")).toHaveClass("text-primary-green");
-    expect(screen.getByText("홈").closest("a")).toHaveClass("text-text-soft");
+    expect(screen.getByRole("link", { name: /오늘의운세/ })).toHaveClass("font-semibold");
+    expect(screen.getByRole("link", { name: /^홈/ })).not.toHaveClass("font-semibold");
   });
 });
