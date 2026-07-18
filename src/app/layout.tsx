@@ -3,6 +3,7 @@ import { Noto_Serif_KR } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import RefTracker from "@/components/share/RefTracker";
 import IdleLogout from "@/components/auth/IdleLogout";
+import Footer from "@/components/Footer";
 import "./globals.css";
 
 const notoSerifKr = Noto_Serif_KR({
@@ -38,6 +39,7 @@ export default function RootLayout({
           <RefTracker />
           <IdleLogout />
           {children}
+          <Footer />
           <Analytics />
         </div>
       </body>
