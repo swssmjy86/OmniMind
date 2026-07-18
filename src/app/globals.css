@@ -17,6 +17,8 @@
      가까운) 버튼이 되어 사용자 제보처럼 글자가 묻힌다 — 다크에서는 코랄로 확실히 구분. */
   --selected: #2d5a4a;
   --on-selected: #ffffff;
+  /* P9 달빛 골드 — 밤 무드의 포인트 색. 라이트('새벽')에서는 채도를 낮춘 값(§4.2). */
+  --moon-gold: #c9a24a;
   /* PC 앱 셸 폭 — layout.tsx의 app-shell과 BottomNav가 함께 참조하는 단일 소스. */
   --shell-width: 480px;
   --shell-width-lg: 560px;
@@ -28,23 +30,25 @@
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
 }
 
-/* 다크 모드: 딥 그린 바탕 + 베이지 텍스트 (설계서 §5.2) */
 @media (prefers-color-scheme: dark) {
   :root {
     color-scheme: dark;
-    --warm-base: #1f3a30;
-    --warm-surface: #2d5a4a;
+    /* P9 "밤의 따뜻함"(설계서 §4) — 검정이 아닌 깊은 밤 네이비. 채도를 낮추고 따뜻한
+       쪽으로 기울인 값이라 브랜드 가이드의 '차가운 블루톤 지양'과 충돌하지 않는다. */
+    --warm-base: #0e1626;
+    --warm-surface: #1a2740;
     --accent-coral: #e8927c;
-    --primary-green: #f5efe6;
-    --text-main: #f5efe6;
-    --text-soft: #cfc6b8;
-    --on-primary: #1f3a30; /* 베이지가 된 primary-green 위에는 딥 그린 글자 */
-    --selected: #e8927c; /* 딥 그린 바탕에서 또렷하게 떠오르는 브랜드 코랄 */
-    --on-selected: #1f3a30;
-    /* 어두운 바탕에서는 같은 10%/검정 그림자가 거의 안 보여 세기를 올리고, 그림자는
-       검정 대신 옅은 빛 번짐으로 바꿔 딥 그린 배경 위에서도 카드가 떠 보이게 한다. */
+    /* 제목·강조가 쓰는 primary-green은 다크에서 달빛 골드로 — 밤 네이비 위의 온기. */
+    --primary-green: #f0c96a;
+    --text-main: #f0ebe2;
+    --text-soft: #a8b0c0;
+    --on-primary: #0e1626; /* 골드가 된 primary 위에는 밤 네이비 글자 */
+    --selected: #f0c96a; /* 선택됨 = 달빛 골드(§4.2). 컴포넌트 수정 0으로 전환된다. */
+    --on-selected: #0e1626;
+    --moon-gold: #f0c96a;
+    /* 밤 네이비 위 카드 부양감 — 검정 그림자 대신 달빛의 옅은 번짐. */
     --shell-tint-amount: 22%;
-    --shell-shadow: 0 0 80px rgba(245, 239, 230, 0.05);
+    --shell-shadow: 0 0 80px rgba(240, 201, 106, 0.06);
   }
 }
 
@@ -58,6 +62,7 @@
   --color-on-primary: var(--on-primary);
   --color-selected: var(--selected);
   --color-on-selected: var(--on-selected);
+  --color-moon-gold: var(--moon-gold);
   --font-sans: "Pretendard Variable", Pretendard, -apple-system, sans-serif;
   --font-serif-kr: "Noto Serif KR", serif;
   --radius-card: 20px;
