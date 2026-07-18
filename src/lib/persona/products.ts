@@ -13,7 +13,7 @@ export interface Product {
   tagline: string;         // 카드 한 줄 소개 — 톤 가드 준수
   personaId: PersonaId;
   access: ProductAccess;
-  href: string;            // 연결 화면. 1단계는 기존 화면(/me·/match)
+  href: string;            // 연결 화면 — 전용 라우트가 생기면 갱신(daily=/daily, 나머지는 아직 기존 화면)
   status: "live" | "soon"; // soon = 카드 비활성(링크 없음)
 }
 

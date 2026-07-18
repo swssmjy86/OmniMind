@@ -16,6 +16,10 @@ export default function YearForm({
   currentYear: number;
   invalid?: boolean;
 }) {
+  // 서버 렌더는 ""(window 없음), 클라이언트는 저장값으로 초기화된다. 이 값 차이는 안전하다 —
+  // React는 컨트롤드 input의 value에 한해 하이드레이션 불일치를 예외 처리하고 클라이언트 값으로
+  // 맞춘다. 단 이 면제는 input value 전용이라, 이 값을 일반 텍스트 노드로 렌더하면 진짜
+  // 하이드레이션 경고가 된다 — 그 경우 useEffect로 옮길 것.
   const [year, setYear] = useState(() => {
     if (typeof window !== "undefined") {
       return window.localStorage.getItem(STORAGE_KEY) || "";
