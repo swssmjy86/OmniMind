@@ -24,7 +24,7 @@ export const FAQ_ITEMS: { q: string; a: string; link?: { href: string; label: st
   },
   {
     q: "크레딧은 어떻게 쓰나요?",
-    a: "크레딧 1개로 깊은 풀이 1회를 열어요. 한 번 연 풀이를 다시 볼 때는 크레딧이 들지 않아요.",
+    a: "크레딧은 하루 1회 무료를 넘어 마음·고민 이야기를 더 이어갈 때 쓰여요. 앞으로 열릴 심층 풀이도 크레딧으로 만나게 되는데, 한 번 연 풀이는 다시 볼 때 크레딧이 들지 않게 준비하고 있어요.",
   },
   {
     q: "AI가 보는 건가요?",
@@ -56,7 +56,7 @@ export default function FaqPage() {
     <main className="fade-rise p-6">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
       />
       <h1 className="font-[family-name:var(--font-serif-kr)] text-2xl text-primary-green">
         자주 묻는 질문
