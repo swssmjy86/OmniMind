@@ -84,3 +84,14 @@ export interface InquiryRow {
   body: string;
   created_at: string;
 }
+
+/** IA 2단계 풀이 캐시(readings) 한 행 — P9 §6.1. */
+export interface ReadingRow {
+  id: string;
+  user_id: string;
+  product: string;
+  input_hash: string;
+  context_version: number;
+  sections: InterpretationSection[];
+  created_at: string;
+}
