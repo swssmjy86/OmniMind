@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isPremium, consultAccess, UNLIMITED, FREE_DAILY_CONSULT } from "./quota";
+import { isPremium, consultAccess, UNLIMITED, FREE_DAILY_CONSULT, readingAccess, type ReadingProduct } from "./quota";
 
 const NOW = new Date("2026-07-14T12:00:00+09:00");
 
@@ -39,5 +39,49 @@ describe("상담 접근 규칙 (P8)", () => {
   it("사용량이 무료 한도를 넘겨도(음수 방지) 크레딧 로직은 정상 동작", () => {
     expect(consultAccess(null, 5, FREE_DAILY_CONSULT + 10, NOW))
       .toEqual({ allowed: true, usesCredit: true, remaining: 5 });
+  });
+});
+
+describe("readingAccess — 상품별 접근 규칙 전수 (P9 §6.3, 2단계 스펙 §2)", () => {
+  const now = new Date("2026-07-19T12:00:00+09:00");
+  const CREDIT_PRODUCTS: ReadingProduct[] = ["career", "love", "wealth", "match", "marriage"];
+  const ALL: ReadingProduct[] = ["chongun", ...CREDIT_PRODUCTS];
+
+  it("비로그인 — 전 상품 login 잠금", () => {
+    for (const p of ALL) {
+      expect(readingAccess(p, { loggedIn: false, credits: 5, premiumUntil: null, now })).toEqual({
+        allowed: false, lockReason: "login", consumesCredit: false,
+      });
+    }
+  });
+
+  it("로그인 — 총운은 크레딧 0이어도 무료 허용", () => {
+    expect(readingAccess("chongun", { loggedIn: true, credits: 0, premiumUntil: null, now })).toEqual({
+      allowed: true, lockReason: null, consumesCredit: false,
+    });
+  });
+
+  it("로그인 — 크레딧 상품: 크레딧 있으면 허용·소비, 없으면 credit 잠금", () => {
+    for (const p of CREDIT_PRODUCTS) {
+      expect(readingAccess(p, { loggedIn: true, credits: 2, premiumUntil: null, now })).toEqual({
+        allowed: true, lockReason: null, consumesCredit: true,
+      });
+      expect(readingAccess(p, { loggedIn: true, credits: 0, premiumUntil: null, now })).toEqual({
+        allowed: false, lockReason: "credit", consumesCredit: false,
+      });
+    }
+  });
+
+  it("레거시 프리미엄 — 크레딧 상품도 차감 없이 무제한(P8 약속 유지)", () => {
+    const future = "2027-01-01T00:00:00+09:00";
+    for (const p of CREDIT_PRODUCTS) {
+      expect(readingAccess(p, { loggedIn: true, credits: 0, premiumUntil: future, now })).toEqual({
+        allowed: true, lockReason: null, consumesCredit: false,
+      });
+    }
+    // 만료된 프리미엄은 무시된다
+    expect(
+      readingAccess("career", { loggedIn: true, credits: 0, premiumUntil: "2026-01-01T00:00:00+09:00", now }),
+    ).toEqual({ allowed: false, lockReason: "credit", consumesCredit: false });
   });
 });

@@ -44,3 +44,33 @@ export function consultAccess(
   if (credits > 0) return { allowed: true, usesCredit: true, remaining: credits };
   return { allowed: false, usesCredit: false, remaining: 0 };
 }
+
+// ── P9 §6.3 / IA 2단계: 풀이 상품 접근 규칙 ───────────────────────────────
+// 이 함수 하나가 모든 풀이 잠금의 단일 진실 공급원이다. 크레딧 "차감 실행"은 3단계 —
+// 여기서는 consumesCredit 판정만 한다. 상품 메타(제목·페르소나)는 persona/products.ts.
+
+export type ReadingProduct =
+  | "chongun" | "career" | "love" | "wealth" | "match" | "marriage";
+
+export interface ReadingUserState {
+  loggedIn: boolean;
+  credits: number;
+  premiumUntil?: string | null;
+  now: Date;
+}
+
+export interface ReadingAccess {
+  allowed: boolean;
+  /** 잠금 사유 — CTA가 갈린다(P9 §5.1): login="로그인하고 무료로", credit="크레딧으로 열기" */
+  lockReason: "login" | "credit" | null;
+  consumesCredit: boolean;
+}
+
+/** 풀이 상품 접근 판정: 비로그인→login / 총운→로그인 무료 / 레거시 무제한 / 크레딧 / credit 잠금. */
+export function readingAccess(product: ReadingProduct, s: ReadingUserState): ReadingAccess {
+  if (!s.loggedIn) return { allowed: false, lockReason: "login", consumesCredit: false };
+  if (product === "chongun") return { allowed: true, lockReason: null, consumesCredit: false };
+  if (isPremium(s.premiumUntil, s.now)) return { allowed: true, lockReason: null, consumesCredit: false };
+  if (s.credits > 0) return { allowed: true, lockReason: null, consumesCredit: true };
+  return { allowed: false, lockReason: "credit", consumesCredit: false };
+}

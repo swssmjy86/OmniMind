@@ -27,7 +27,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "chongun", title: "총운", personaId: "seoon",
     tagline: "여덟 글자에 담긴 인생 전반의 흐름",
-    access: "login", href: "/me", status: "live",
+    access: "login", href: "/saju/chongun", status: "live",
   },
   {
     id: "career", title: "직업운", personaId: "seoon",

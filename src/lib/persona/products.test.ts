@@ -27,10 +27,10 @@ describe("상품 카탈로그 v2 (4탭 IA 스펙 §4)", () => {
     for (const p of PRODUCTS) expect(PERSONAS[p.personaId]).toBeDefined();
   });
 
-  it("1단계 연결 — today=/today, chongun=/me, match=/match live; 나머지 soon", () => {
+  it("1단계 연결 — today=/today, chongun=/saju/chongun, match=/match live; 나머지 soon", () => {
     const href = Object.fromEntries(PRODUCTS.map((p) => [p.id, `${p.status}:${p.href}`]));
     expect(href).toEqual({
-      today: "live:/today", chongun: "live:/me", match: "live:/match",
+      today: "live:/today", chongun: "live:/saju/chongun", match: "live:/match",
       career: "soon:", love: "soon:", wealth: "soon:", marriage: "soon:",
     });
   });

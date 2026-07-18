@@ -1,0 +1,26 @@
+// 풀이 캐시 키(2단계 스펙 §3) — 같은 입력은 반드시 같은 해시가 되어야 "같은 해석을 두 번
+// 생성하지 않는다"(P9 §6.2)가 성립한다. DB jsonb 왕복은 키 순서를 바꿀 수 있으므로
+// 재귀 키 정렬로 정규화한 뒤 해시한다. 서버 전용(node:crypto).
+import { createHash } from "node:crypto";
+import { PROFILE_CONTEXT_VERSION } from "@/lib/engine/index";
+
+/** 재귀 키 정렬 JSON 직렬화 — 객체 키 순서와 무관하게 같은 값이면 같은 문자열. */
+export function stableStringify(value: unknown): string {
+  if (value === null || typeof value !== "object") return JSON.stringify(value);
+  if (Array.isArray(value)) return `[${value.map(stableStringify).join(",")}]`;
+  const entries = Object.entries(value as Record<string, unknown>)
+    .filter(([, v]) => v !== undefined)
+    .sort(([a], [b]) => (a < b ? -1 : 1))
+    .map(([k, v]) => `${JSON.stringify(k)}:${stableStringify(v)}`);
+  return `{${entries.join(",")}}`;
+}
+
+/**
+ * 풀이 입력 해시 — 프로필 컨텍스트 + 엔진 버전 + 현재 대운 간지(대운이 바뀌면 '운의
+ * 계절' 섹션이 바뀌므로 캐시도 자연 무효화). season은 대운 미상이면 "none".
+ */
+export function readingInputHash(ctx: unknown, season: string): string {
+  return createHash("sha256")
+    .update(stableStringify({ v: PROFILE_CONTEXT_VERSION, season, ctx }))
+    .digest("hex");
+}
