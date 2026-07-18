@@ -234,3 +234,83 @@ body {
     box-shadow: var(--shell-shadow);
   }
 }
+
+/* ── P9 §4.3 홈 CSS 모션 카드 — 5초 루프 ─────────────────────────────
+   실제 영상 대신 CSS 모션(대역폭 0 추가·고정비 0원·reduced-motion 완전 대응).
+   구간: 0~5s 달빛 스윕·별 반짝임·글리프 부유 / 0.3~1.2s 멘트 페이드인 / 2.5s~ CTA 펄스. */
+.persona-card {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate; /* 스윕 레이어가 카드 밖 요소 위로 새지 않게 */
+}
+/* 달빛 스윕 — moon-gold 그라데이션 띠가 5초에 한 번 카드를 훑고 지나간다 */
+.persona-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(
+    115deg,
+    transparent 30%,
+    color-mix(in srgb, var(--moon-gold) 14%, transparent) 50%,
+    transparent 70%
+  );
+  background-size: 250% 100%;
+  animation: persona-moonsweep 5s var(--ease-in-out) infinite;
+}
+@keyframes persona-moonsweep {
+  0% { background-position: 120% 0; }
+  60% { background-position: -30% 0; }
+  100% { background-position: -30% 0; }
+}
+/* 별 — 작은 점 3개가 서로 다른 딜레이로 깜빡인다 */
+.persona-star {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 9999px;
+  background: var(--moon-gold);
+  opacity: 0.25;
+  animation: persona-star 5s ease-in-out infinite;
+}
+.persona-star:nth-child(2) { animation-delay: 1.4s; }
+.persona-star:nth-child(3) { animation-delay: 3.1s; }
+@keyframes persona-star {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 0.9; }
+}
+/* 캐릭터(글리프) 부유 — ±3px */
+.persona-glyph {
+  animation: persona-float 5s ease-in-out infinite;
+}
+@keyframes persona-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+/* 페르소나 멘트 — 루프마다 0.3s(6%)~1.2s(24%) 페이드인 */
+.persona-line {
+  animation: persona-line-in 5s var(--ease-out) infinite;
+}
+@keyframes persona-line-in {
+  0%, 6% { opacity: 0; transform: translateY(4px); }
+  24%, 100% { opacity: 1; transform: translateY(0); }
+}
+/* CTA 은은한 펄스 — 2.5s(50%) 이후 한 번 부드럽게 밝아졌다 돌아온다 */
+.persona-cta {
+  animation: persona-cta-pulse 5s ease-in-out infinite;
+}
+@keyframes persona-cta-pulse {
+  0%, 50% { opacity: 0.85; }
+  62% { opacity: 1; }
+  74%, 100% { opacity: 0.85; }
+}
+/* reduced-motion: 모션 전부 정지 — 정적 카드로 완전 동작(§4.3). 멘트·CTA는 항상 보인다. */
+@media (prefers-reduced-motion: reduce) {
+  .persona-card::before,
+  .persona-star,
+  .persona-glyph,
+  .persona-line,
+  .persona-cta {
+    animation: none;
+  }
+}
