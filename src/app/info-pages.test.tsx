@@ -2,6 +2,8 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import SourcesPage from "./sources/page";
 import FaqPage, { FAQ_ITEMS } from "./faq/page";
+import TermsPage from "./terms/page";
+import PrivacyPage from "./privacy/page";
 
 // /sources /faq /terms /privacy 는 세션을 읽지 않는 동기 서버 컴포넌트라 직접 렌더한다
 // (pages.test.tsx의 async 페이지 제외 원칙과 일관).
@@ -49,5 +51,30 @@ describe("/faq (§8 Q&A)", () => {
       expect(item.a).not.toMatch(/[가-힣]니다/);
       expect(item.a).not.toMatch(/하세요/);
     }
+  });
+});
+
+describe("/terms · /privacy (§9.3 개발 단계 초안)", () => {
+  it("두 문서 모두 상단에 개발 단계 초안 표기가 있다", () => {
+    const { unmount } = render(<TermsPage />);
+    expect(screen.getByText(/개발 단계 초안 — 정식 오픈 전 법률 검토 예정/)).toBeInTheDocument();
+    unmount();
+    render(<PrivacyPage />);
+    expect(screen.getByText(/개발 단계 초안 — 정식 오픈 전 법률 검토 예정/)).toBeInTheDocument();
+  });
+
+  it("이용약관 — 환불 규정과 면책이 있다", () => {
+    render(<TermsPage />);
+    expect(screen.getByText(/청약철회·환불/)).toBeInTheDocument();
+    // "참고용"은 §1·§4 두 곳에 나온다 — 단일 매치 쿼리(getByText)는 던지므로 개수로 확인
+    expect(screen.getAllByText(/참고용/).length).toBeGreaterThan(0);
+  });
+
+  it("개인정보처리방침 — 국외이전(OpenRouter·Gemini·Vercel)을 실제대로 고지한다", () => {
+    render(<PrivacyPage />);
+    expect(screen.getByText(/OpenRouter/)).toBeInTheDocument();
+    expect(screen.getByText(/Google Gemini/)).toBeInTheDocument();
+    expect(screen.getByText(/Vercel/)).toBeInTheDocument();
+    expect(screen.getByText(/토스페이먼츠/)).toBeInTheDocument();
   });
 });
