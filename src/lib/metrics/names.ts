@@ -6,6 +6,7 @@ export const SERVER_EVENTS = [
   "concern_advice", // P6 고민 조언 생성
   "match_invite_create", "connect_accept", // P7-2 초대 루프
   "premium_purchase", // P7-3 이용권 결제 승인
+  "inquiry_submit", // P9 문의 접수
 ] as const;
 
 /** 클라이언트(서버 액션 경유)가 기록할 수 있는 이벤트 화이트리스트. */

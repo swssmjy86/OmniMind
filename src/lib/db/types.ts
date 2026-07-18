@@ -74,3 +74,13 @@ export interface ChatMessageRow {
   source: "llm" | "template" | null;
   created_at: string;
 }
+
+/** P9 문의(inquiries) 한 행 — §9.2. */
+export interface InquiryRow {
+  id: string;
+  user_id: string | null;
+  email: string;
+  subject: string;
+  body: string;
+  created_at: string;
+}
