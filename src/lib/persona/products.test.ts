@@ -31,6 +31,7 @@ describe("상품 카탈로그 (§2.1)", () => {
   });
 
   it("live 상품은 실제 경로로 연결되고, soon 상품만 빈 경로가 허용된다", () => {
+    expect(PRODUCTS.find((p) => p.id === "daily")?.href).toBe("/daily");
     for (const p of PRODUCTS) {
       if (p.status === "live") expect(p.href).toMatch(/^\//);
     }

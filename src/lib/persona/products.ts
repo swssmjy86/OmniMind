@@ -13,7 +13,7 @@ export interface Product {
   tagline: string;         // 카드 한 줄 소개 — 톤 가드 준수
   personaId: PersonaId;
   access: ProductAccess;
-  href: string;            // 연결 화면. 1단계는 기존 화면(/me·/match)
+  href: string;            // 연결 화면 — 전용 라우트가 생기면 갱신(daily=/daily, 나머지는 아직 기존 화면)
   status: "live" | "soon"; // soon = 카드 비활성(링크 없음)
 }
 
@@ -21,7 +21,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "daily", title: "오늘의 일진", personaId: "dalzigi",
     tagline: "매일 밤 새로 켜지는 오늘의 기운",
-    access: "free", href: "/", status: "live",
+    access: "free", href: "/daily", status: "live",
   },
   {
     id: "profile_deep", title: "내 사주 심층 풀이", personaId: "seoon",
