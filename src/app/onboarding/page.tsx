@@ -322,7 +322,7 @@ function ProfileView({
 
       {saveState === "saved" && (
         <p className="mt-8 text-center text-sm text-primary-green">
-          이 이야기를 저장했어요. &lsquo;나&rsquo; 탭에서 언제든 다시 볼 수 있어요 🌿
+          이 이야기를 저장했어요. 사주팔자 탭의 총운에서 언제든 다시 볼 수 있어요 🌿
         </p>
       )}
       {saveState === "error" && (
