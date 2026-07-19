@@ -15,6 +15,9 @@ import { PRODUCTS } from "@/lib/persona/products";
 import { PERSONAS } from "@/lib/persona/personas";
 import ReadingPeek from "@/components/saju/ReadingPeek";
 import UnlockReading from "@/components/saju/UnlockReading";
+import ReviewPrompt from "@/components/reviews/ReviewPrompt";
+import ReviewHighlights from "@/components/reviews/ReviewHighlights";
+import { productReviewSummary } from "@/lib/reviews/summary";
 import type { ProfileRow, ReadingRow } from "@/lib/db/types";
 
 export const metadata: Metadata = { title: "사주 풀이 — 옴니마인드" };
@@ -100,6 +103,13 @@ export default async function CreditReadingPage({
     .maybeSingle<ReadingRow>();
 
   if (cached) {
+    // 내 후기(있으면 표시 전용) + 상품 후기 요약 — 둘 다 실패해도 화면은 그대로(P9 §12)
+    const [{ data: myReview }, productSummary] = await Promise.all([
+      supabase.from("reading_reviews").select("rating, comment")
+        .eq("reading_id", cached.id).maybeSingle<{ rating: number; comment: string | null }>(),
+      productReviewSummary(product),
+    ]);
+
     return (
       <main className="fade-rise p-6">
         {header}
@@ -113,6 +123,8 @@ export default async function CreditReadingPage({
             </section>
           ))}
         </div>
+        <ReviewPrompt readingId={cached.id} initial={myReview ?? null} />
+        <ReviewHighlights summary={productSummary} heading="이 풀이의 후기" />
         <Link href="/saju" className="mt-6 block text-center text-sm text-text-soft underline">
           다른 풀이 보러 가기
         </Link>
