@@ -30,34 +30,33 @@ export function summarize(rows: ReviewLite[], maxComments: number): ReviewSummar
  * 상품별 요약 — 해당 product 후기 ≥1일 때만 값.
  *
  * PostgREST FK 임베드(`readings!inner(product)`)는 이 리포지토리에서 실사용 전례가
- * 없어 런타임 검증이 어렵다(테스트 환경에 라이브 Supabase가 없음) — 대신
- * reading_reviews(최근 200건) → reading_id 목록 → readings에서 해당 product인
- * id만 골라 교집합을 취하는 2단 조회로 안전하게 구현한다. 전체 후기가 200건을
- * 넘어가면 오래된 저빈도 상품의 후기가 누락될 수 있으나(초기 단계엔 무시 가능한
- * 리스크), FK 임베드 오조회로 페이지가 깨지는 것보다 안전하다.
+ * 없어 런타임 검증이 어렵다 — 대신 2단 조회. 순서가 중요하다(리뷰 반영):
+ * **해당 product의 readings id를 먼저** 좁힌 뒤 그 id들의 후기를 최신순으로 읽는다.
+ * 전역 최신 N건에서 걸러내는 역순서는 전체 후기가 N을 넘는 순간 저빈도 상품의
+ * 실제 후기가 창 밖으로 밀려 "후기 ≥1이면 노출" 원칙이 조용히 깨진다.
+ * (readings 상한 1000은 상품별 창 — 초과 시에도 최신 풀이의 후기부터 반영된다.)
  */
 export async function productReviewSummary(product: string): Promise<ReviewSummary | null> {
   try {
     const admin = createAdminSupabase();
-    const { data: reviews } = await admin
-      .from("reading_reviews")
-      .select("rating, comment, created_at, reading_id")
-      .order("created_at", { ascending: false })
-      .limit(200)
-      .returns<(ReviewLite & { reading_id: string })[]>();
-    const rows = reviews ?? [];
-    if (rows.length === 0) return null;
-
-    const ids = [...new Set(rows.map((r) => r.reading_id))];
     const { data: readings } = await admin
       .from("readings")
       .select("id")
       .eq("product", product)
-      .in("id", ids)
+      .order("created_at", { ascending: false })
+      .limit(1000)
       .returns<{ id: string }[]>();
-    const matchIds = new Set((readings ?? []).map((r) => r.id));
-    const filtered = rows.filter((r) => matchIds.has(r.reading_id));
-    return summarize(filtered, 2);
+    const ids = (readings ?? []).map((r) => r.id);
+    if (ids.length === 0) return null;
+
+    const { data: reviews } = await admin
+      .from("reading_reviews")
+      .select("rating, comment, created_at")
+      .in("reading_id", ids)
+      .order("created_at", { ascending: false })
+      .limit(50)
+      .returns<ReviewLite[]>();
+    return summarize(reviews ?? [], 2);
   } catch {
     return null;
   }
