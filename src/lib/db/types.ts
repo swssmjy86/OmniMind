@@ -95,3 +95,13 @@ export interface ReadingRow {
   sections: InterpretationSection[];
   created_at: string;
 }
+
+/** IA 4단계 풀이 후기(reading_reviews) 한 행 — P9 §6.1. */
+export interface ReadingReviewRow {
+  id: string;
+  reading_id: string;
+  user_id: string;
+  rating: number;
+  comment: string | null;
+  created_at: string;
+}
