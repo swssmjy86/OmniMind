@@ -22,7 +22,9 @@ export default function ReviewPrompt({
 
   const saved = initial ?? null;
   if (saved || state === "done" || state === "exists") {
-    const shown = saved ?? { rating, comment: comment.trim() || null };
+    // exists인데 저장본(initial)이 없으면 — 방금 입력한 값은 저장되지 않았으므로 "내 후기"처럼
+    // 보여주지 않는다(다른 기기/세션의 실제 후기와 다를 수 있다 — 최종 리뷰 반영). 안내만.
+    const shown = saved ?? (state === "done" ? { rating, comment: comment.trim() || null } : null);
     return (
       <section className="mt-4 rounded-card bg-warm-surface p-4">
         <p className="text-xs text-text-soft">
@@ -32,11 +34,13 @@ export default function ReviewPrompt({
               ? "이미 이 풀이의 후기를 받았어요 🌿"
               : "내가 남긴 후기"}
         </p>
-        <p className="mt-1 text-sm text-text-main">
-          <span aria-hidden>{"★".repeat(shown.rating)}</span>
-          <span className="sr-only">{shown.rating}점</span>
-          {shown.comment && <span className="ml-2">{shown.comment}</span>}
-        </p>
+        {shown && (
+          <p className="mt-1 text-sm text-text-main">
+            <span aria-hidden>{"★".repeat(shown.rating)}</span>
+            <span className="sr-only">{shown.rating}점</span>
+            {shown.comment && <span className="ml-2">{shown.comment}</span>}
+          </p>
+        )}
       </section>
     );
   }
