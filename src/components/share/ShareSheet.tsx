@@ -6,8 +6,8 @@ import { pngDimensions } from "@/lib/share/pdf";
 
 interface Props {
   query: string; // /api/card 쿼리 문자열 (유형 조합만, 개인정보 없음)
-  via: "profile" | "daily"; // 유입 추적용 진입점
-  label: string; // "나의 조각 카드" | "오늘의 나 카드"
+  via: "profile" | "daily" | "reading"; // 유입 추적용 진입점
+  label: string; // "나의 조각 카드" | "오늘의 나 카드" | "풀이 카드"
 }
 
 /** 공유 시트 — 카드 미리보기 + 이미지 저장 / 공유(모바일 시트) / 링크 복사. */

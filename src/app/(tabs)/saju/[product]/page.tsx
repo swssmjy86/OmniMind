@@ -15,9 +15,11 @@ import { PRODUCTS } from "@/lib/persona/products";
 import { PERSONAS } from "@/lib/persona/personas";
 import ReadingPeek from "@/components/saju/ReadingPeek";
 import UnlockReading from "@/components/saju/UnlockReading";
+import ShareSheet from "@/components/share/ShareSheet";
 import ReviewPrompt from "@/components/reviews/ReviewPrompt";
 import ReviewHighlights from "@/components/reviews/ReviewHighlights";
 import { productReviewSummary } from "@/lib/reviews/summary";
+import { profileCardQuery } from "@/lib/share/card-copy";
 import type { ProfileRow, ReadingRow } from "@/lib/db/types";
 
 export const metadata: Metadata = { title: "사주 풀이 — 옴니마인드" };
@@ -123,6 +125,11 @@ export default async function CreditReadingPage({
             </section>
           ))}
         </div>
+        <ShareSheet
+          query={profileCardQuery(ctx, `${profile.nickname}님의 ${meta.title}`.slice(0, 20), cached.sections)}
+          via="reading"
+          label="풀이 카드"
+        />
         <ReviewPrompt readingId={cached.id} initial={myReview ?? null} />
         <ReviewHighlights summary={productSummary} heading="이 풀이의 후기" />
         <Link href="/saju" className="mt-6 block text-center text-sm text-text-soft underline">
