@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { deleteAllDailyLogs, deleteDailyLog } from "@/lib/archive/actions";
 import type { ArchiveEntry } from "./ArchiveView";
 
@@ -10,6 +10,9 @@ import type { ArchiveEntry } from "./ArchiveView";
  */
 export default function ArchiveLogList({ entries: initial }: { entries: ArchiveEntry[] }) {
   const [entries, setEntries] = useState(initial);
+  // 전체 삭제가 성공한 뒤에는 그 전에 떠 있던 개별 삭제의 실패 롤백을 무시한다 —
+  // 서버는 이미 전부 지웠으므로 되살리면 유령 항목이 된다(최종 리뷰 반영).
+  const bulkCleared = useRef(false);
 
   async function removeOne(id: string) {
     // 실패 시 그 항목만 제자리에 되살린다 — 전체 스냅샷 복원은 응답을 기다리는 동안
@@ -19,7 +22,7 @@ export default function ArchiveLogList({ entries: initial }: { entries: ArchiveE
     if (!removed) return;
     setEntries((cur) => cur.filter((e) => e.id !== id));
     const res = await deleteDailyLog(id);
-    if (!res.ok) {
+    if (!res.ok && !bulkCleared.current) {
       setEntries((cur) => {
         const next = [...cur];
         next.splice(Math.min(index, next.length), 0, removed);
@@ -33,7 +36,8 @@ export default function ArchiveLogList({ entries: initial }: { entries: ArchiveE
     const before = entries;
     setEntries([]);
     const res = await deleteAllDailyLogs();
-    if (!res.ok) setEntries(before);
+    if (res.ok) bulkCleared.current = true;
+    else setEntries(before);
   }
 
   return (
