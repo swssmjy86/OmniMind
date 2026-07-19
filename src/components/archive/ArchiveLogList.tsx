@@ -12,10 +12,20 @@ export default function ArchiveLogList({ entries: initial }: { entries: ArchiveE
   const [entries, setEntries] = useState(initial);
 
   async function removeOne(id: string) {
-    const before = entries;
-    setEntries(entries.filter((e) => e.id !== id));
+    // 실패 시 그 항목만 제자리에 되살린다 — 전체 스냅샷 복원은 응답을 기다리는 동안
+    // 지워진 다른 항목까지 되살릴 수 있다(MindChat·ConcernRoom과 같은 규칙, 리뷰 반영).
+    const index = entries.findIndex((e) => e.id === id);
+    const removed = entries[index];
+    if (!removed) return;
+    setEntries((cur) => cur.filter((e) => e.id !== id));
     const res = await deleteDailyLog(id);
-    if (!res.ok) setEntries(before);
+    if (!res.ok) {
+      setEntries((cur) => {
+        const next = [...cur];
+        next.splice(Math.min(index, next.length), 0, removed);
+        return next;
+      });
+    }
   }
 
   async function removeAll() {
