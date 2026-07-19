@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { readingAccess } from "@/lib/consult/quota";
 import { readingInputHash } from "@/lib/readings/hash";
+import { ensureCurrentProfile } from "@/lib/readings/ensure-profile";
 import { assembleChongun } from "@/lib/interpret/content/chongun";
 import { PROFILE_CONTEXT_VERSION } from "@/lib/engine/index";
 import { currentDaeun } from "@/lib/engine/daeun";
@@ -80,7 +81,7 @@ export default async function ChongunPage() {
     );
   }
 
-  const ctx = profile.profile_context;
+  const ctx = await ensureCurrentProfile(supabase, profile);
 
   // 현재 대운 간지 — 캐시 키에 포함(대운이 바뀌면 자연 재생성, 스펙 §3)
   const t = toKstParts(new Date());
