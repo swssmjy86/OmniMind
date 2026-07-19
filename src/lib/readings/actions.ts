@@ -89,6 +89,7 @@ export async function unlockReading(productRaw: string): Promise<UnlockResult> {
           .eq("user_id", user.id).eq("product", product).eq("input_hash", hash)
           .maybeSingle<ReadingRow>();
         if (existing) {
+          await recordEvent("reading_unlock", { product, source: "llm", charged: false, dedup: true });
           return { ok: true, sections: existing.sections, usedCredit: false, remaining: remainingNow };
         }
         // 캐시 저장 실패(마이그레이션 미적용 등) — 저장 안 된 풀이에 과금하지 않는다.
