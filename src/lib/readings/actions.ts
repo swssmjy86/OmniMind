@@ -25,6 +25,7 @@ export type UnlockResult =
   | { ok: false; reason: "auth" | "no-profile" | "locked" | "error" | "invalid" };
 
 /**
+ * 서버 전용 — unlock 액션들(unlockReading/unlockMatchDeep)의 공용 머니 패스. export는 테스트를 위해서다.
  * 생성 성공본을 캐시하고 성공 시에만 차감한다 — 3a 리뷰로 굳힌 머니 패스(이중 차감 봉쇄).
  * insert 실패(동시 중복) → 먼저 캐시된 행 재사용(무차감, outcome="dedup"). insert 실패(그 외,
  * 예: 마이그레이션 미적용) → 저장 안 된 풀이는 무료로 전달(손실을 회사 쪽으로 고정,
@@ -33,7 +34,7 @@ export type UnlockResult =
  * recordEvent는 액션별 product 라벨이 필요해 호출부(unlockReading/unlockMatchDeep)에 남긴다 —
  * `outcome`으로 3가지 분기를 구분해 호출부가 기존과 똑같은 이벤트를 낸다(신호는 액션 쪽에 모은다).
  */
-async function cacheAndCharge(args: {
+export async function cacheAndCharge(args: {
   supabase: Awaited<ReturnType<typeof createServerSupabase>>;
   userId: string;
   product: string;

@@ -21,6 +21,7 @@ describe("궁합 심층 제목·프롬프트 (3단계 스펙 §5)", () => {
         myElement: me.dayMaster.element, myName: "새벽", partnerName: "상대",
       });
       const titles = matchDeepSectionTitles(mode);
+      expect(titles).toHaveLength(sections.length + 1);
       expect(titles.slice(0, sections.length)).toEqual(sections.map((s) => s.title));
       expect(titles.at(-1)).toBe("당신만을 위한 이야기");
     }

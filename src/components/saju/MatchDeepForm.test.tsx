@@ -5,8 +5,8 @@ import { unlockMatchDeep } from "@/lib/readings/actions";
 
 vi.mock("@/lib/readings/actions", () => ({ unlockMatchDeep: vi.fn() }));
 
-function fill(container: HTMLElement) {
-  fireEvent.change(container.querySelector('input[type="date"]')!, {
+function fill() {
+  fireEvent.change(screen.getByLabelText(/상대의 생년월일/), {
     target: { value: "1992-03-10" },
   });
   fireEvent.click(screen.getByRole("button", { name: "시간을 몰라요" }));
@@ -36,8 +36,8 @@ describe("MatchDeepForm (3단계 스펙 §5)", () => {
       ok: true, usedCredit: true, remaining: 1,
       sections: [{ title: "우리의 온도", body: "두 분의 온도는 78°예요." }],
     });
-    const { container } = render(<MatchDeepForm remaining={2} unlimited={false} />);
-    fill(container);
+    render(<MatchDeepForm remaining={2} unlimited={false} />);
+    fill();
     const btn = screen.getByRole("button", { name: /크레딧 1개로 열기/ });
     expect(btn).not.toBeDisabled();
     fireEvent.click(btn);
@@ -57,8 +57,8 @@ describe("MatchDeepForm (3단계 스펙 §5)", () => {
 
   it("실패 — 부드러운 안내", async () => {
     vi.mocked(unlockMatchDeep).mockResolvedValue({ ok: false, reason: "error" });
-    const { container } = render(<MatchDeepForm remaining={2} unlimited={false} />);
-    fill(container);
+    render(<MatchDeepForm remaining={2} unlimited={false} />);
+    fill();
     fireEvent.click(screen.getByRole("button", { name: /크레딧 1개로 열기/ }));
     expect(await screen.findByText(/지금은 풀이가 어려워요/)).toBeInTheDocument();
   });

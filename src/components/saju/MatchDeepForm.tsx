@@ -83,22 +83,26 @@ export default function MatchDeepForm({
 
   return (
     <div className="mt-5 rounded-card bg-warm-surface p-5">
-      <label className="block text-sm text-text-soft">상대의 생년월일</label>
-      <div className="mt-1">
-        <PickerInput type="date" value={birthDate} onChange={setBirthDate} placeholder="생년월일을 선택해 주세요" bg="bg-warm-base" />
-      </div>
+      <label className="block">
+        <span className="block text-sm text-text-soft">상대의 생년월일</span>
+        <div className="mt-1">
+          <PickerInput type="date" value={birthDate} onChange={setBirthDate} placeholder="생년월일을 선택해 주세요" bg="bg-warm-base" />
+        </div>
+      </label>
 
-      <label className="mt-4 block text-sm text-text-soft">상대의 태어난 시간</label>
-      <div className="mt-1">
-        <PickerInput type="time" value={birthTime} onChange={setBirthTime} placeholder="태어난 시각을 선택해 주세요" disabled={timeUnknown} bg="bg-warm-base" />
-      </div>
+      <label className="mt-4 block">
+        <span className="block text-sm text-text-soft">상대의 태어난 시간</span>
+        <div className="mt-1">
+          <PickerInput type="time" value={birthTime} onChange={setBirthTime} placeholder="태어난 시각을 선택해 주세요" disabled={timeUnknown} bg="bg-warm-base" />
+        </div>
+      </label>
       <div className="mt-2 grid grid-cols-1">
         <Choice small selected={timeUnknown} onClick={() => setTimeUnknown(!timeUnknown)} unselectedBg="bg-warm-base">
           시간을 몰라요
         </Choice>
       </div>
 
-      <label className="mt-4 block text-sm text-text-soft">상대의 MBTI</label>
+      <span className="mt-4 block text-sm text-text-soft">상대의 MBTI</span>
       <div className="mt-1 grid grid-cols-4 gap-2">
         {AXES.map(([a, b], i) => (
           <div key={a} className="grid gap-2">
@@ -112,7 +116,7 @@ export default function MatchDeepForm({
         ))}
       </div>
 
-      <label className="mt-4 block text-sm text-text-soft">상대의 혈액형</label>
+      <span className="mt-4 block text-sm text-text-soft">상대의 혈액형</span>
       <div className="mt-1 grid grid-cols-4 gap-2">
         {BLOODS.map((b) => (
           <Choice key={b} small selected={blood === b} onClick={() => setBlood(b)} unselectedBg="bg-warm-base">
@@ -121,7 +125,7 @@ export default function MatchDeepForm({
         ))}
       </div>
 
-      <label className="mt-4 block text-sm text-text-soft">우리는 어떤 사이인가요?</label>
+      <span className="mt-4 block text-sm text-text-soft">우리는 어떤 사이인가요?</span>
       <div className="mt-1 grid grid-cols-3 gap-2">
         {MODES.map((m) => (
           <Choice key={m.slug} small selected={mode === m.slug} onClick={() => setMode(m.slug)} unselectedBg="bg-warm-base">
