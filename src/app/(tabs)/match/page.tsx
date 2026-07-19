@@ -67,6 +67,12 @@ export default async function MatchPage() {
         읽어드릴게요.
       </p>
       <MatchForm me={me} nickname={profile.nickname} />
+      <Link
+        href="/saju/match-deep"
+        className="mt-6 block text-center text-sm text-text-soft underline"
+      >
+        두 사람의 사주 전체로 더 깊이 — 궁합 심층 보기
+      </Link>
 
       {connections.length > 0 && (
         <section className="mt-10">

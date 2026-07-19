@@ -47,7 +47,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "match", title: "궁합", personaId: "hongyeon",
     tagline: "두 사람의 기운이 만나는 자리",
-    access: "credit", href: "/match", status: "live",
+    access: "credit", href: "/saju/match-deep", status: "live",
   },
   {
     id: "marriage", title: "결혼운", personaId: "hongyeon",
