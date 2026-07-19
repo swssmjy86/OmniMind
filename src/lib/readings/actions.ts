@@ -78,17 +78,39 @@ export async function unlockReading(productRaw: string): Promise<UnlockResult> {
 
     if (r.source === "llm" && r.text) {
       const full = [...sections, { title: LLM_SECTION_TITLE, body: r.text }];
-      await supabase.from("readings").insert({
+      const { error: insertError } = await supabase.from("readings").insert({
         user_id: user.id, product, input_hash: hash,
         context_version: PROFILE_CONTEXT_VERSION, sections: full,
       });
-      let remaining = remainingNow;
-      if (access.consumesCredit) {
-        const { data: after } = await supabase.rpc("consume_consult_credit");
-        if (typeof after === "number") remaining = after;
+      if (insertError) {
+        // 동시 요청이 먼저 캐시를 만들었으면 그 행을 재사용 — 재열람 무료 원칙(P9 §6.2), 차감 없음
+        const { data: existing } = await supabase
+          .from("readings").select("*")
+          .eq("user_id", user.id).eq("product", product).eq("input_hash", hash)
+          .maybeSingle<ReadingRow>();
+        if (existing) {
+          return { ok: true, sections: existing.sections, usedCredit: false, remaining: remainingNow };
+        }
+        // 캐시 저장 실패(마이그레이션 미적용 등) — 저장 안 된 풀이에 과금하지 않는다.
+        // 이번 결과는 무료로 전달(손실 방향을 회사 쪽으로 고정 — 사용자 이중 차감 금지)
+        await recordEvent("reading_unlock", { product, source: "llm", cached: false });
+        return { ok: true, sections: full, usedCredit: false, remaining: remainingNow };
       }
-      await recordEvent("reading_unlock", { product, source: "llm" });
-      return { ok: true, sections: full, usedCredit: access.consumesCredit, remaining };
+
+      // insert 성공 후에만 차감 — 실패해도(네트워크 등) 콘텐츠는 이미 캐시됐으니 에러로 떨어뜨리지 않는다
+      let remaining = remainingNow;
+      let charged = false;
+      if (access.consumesCredit) {
+        try {
+          const { data: after } = await supabase.rpc("consume_consult_credit");
+          if (typeof after === "number") { remaining = after; charged = true; }
+          else remaining = 0; // null = 잔액 경합으로 차감 불발(그 사이 0이 됨) — 실제 잔여는 0
+        } catch {
+          // 차감 실패 — 콘텐츠는 이미 캐시됨. 재차감 시도는 하지 않고(이중 차감 위험) 기록만 남긴다
+        }
+      }
+      await recordEvent("reading_unlock", { product, source: "llm", charged });
+      return { ok: true, sections: full, usedCredit: charged, remaining };
     }
 
     // 유료 LLM 실패 — 차감·캐시 없이 템플릿본(P9 §12). 다음 시도에서 재생성된다.
