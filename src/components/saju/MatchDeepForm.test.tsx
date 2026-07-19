@@ -33,7 +33,7 @@ describe("MatchDeepForm (3단계 스펙 §5)", () => {
 
   it("전부 채우면 버튼 활성 → 성공 시 섹션 렌더·액션에 슬러그 모드 전달", async () => {
     vi.mocked(unlockMatchDeep).mockResolvedValue({
-      ok: true, usedCredit: true, remaining: 1,
+      ok: true, usedCredit: true, remaining: 1, readingId: "r-1",
       sections: [{ title: "우리의 온도", body: "두 분의 온도는 78°예요." }],
     });
     render(<MatchDeepForm remaining={2} unlimited={false} />);

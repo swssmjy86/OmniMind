@@ -29,7 +29,7 @@ describe("UnlockReading (3단계 스펙 §4)", () => {
 
   it("열기 성공 → 반환된 섹션을 렌더한다", async () => {
     vi.mocked(unlockReading).mockResolvedValue({
-      ok: true, usedCredit: true, remaining: 2,
+      ok: true, usedCredit: true, remaining: 2, readingId: "r-1",
       sections: [{ title: "일의 결", body: "새벽님, 일에서 당신은..." }],
     });
     render(<UnlockReading product="career" remaining={3} unlimited={false} />);

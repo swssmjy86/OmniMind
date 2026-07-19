@@ -27,13 +27,18 @@ export async function cacheAndCharge(args: {
   usedCredit: boolean;
   remaining: number;
   outcome: "dedup" | "uncached" | "charged";
+  readingId: string | null;
 }> {
   const { supabase, userId, product, hash, sections, consumesCredit, remainingNow } = args;
 
-  const { error: insertError } = await supabase.from("readings").insert({
-    user_id: userId, product, input_hash: hash,
-    context_version: PROFILE_CONTEXT_VERSION, sections,
-  });
+  const { data: inserted, error: insertError } = await supabase
+    .from("readings")
+    .insert({
+      user_id: userId, product, input_hash: hash,
+      context_version: PROFILE_CONTEXT_VERSION, sections,
+    })
+    .select("id")
+    .single<{ id: string }>();
   if (insertError) {
     // 동시 요청이 먼저 캐시를 만들었으면 그 행을 재사용 — 재열람 무료 원칙(P9 §6.2), 차감 없음
     const { data: existing } = await supabase
@@ -41,11 +46,16 @@ export async function cacheAndCharge(args: {
       .eq("user_id", userId).eq("product", product).eq("input_hash", hash)
       .maybeSingle<ReadingRow>();
     if (existing) {
-      return { sections: existing.sections, usedCredit: false, remaining: remainingNow, outcome: "dedup" };
+      return {
+        sections: existing.sections, usedCredit: false, remaining: remainingNow,
+        outcome: "dedup", readingId: existing.id,
+      };
     }
     // 캐시 저장 실패(마이그레이션 미적용 등) — 저장 안 된 풀이에 과금하지 않는다.
     // 이번 결과는 무료로 전달(손실 방향을 회사 쪽으로 고정 — 사용자 이중 차감 금지)
-    return { sections, usedCredit: false, remaining: remainingNow, outcome: "uncached" };
+    return {
+      sections, usedCredit: false, remaining: remainingNow, outcome: "uncached", readingId: null,
+    };
   }
 
   // insert 성공 후에만 차감 — 실패해도(네트워크 등) 콘텐츠는 이미 캐시됐으니 에러로 떨어뜨리지 않는다
@@ -60,5 +70,7 @@ export async function cacheAndCharge(args: {
       // 차감 실패 — 콘텐츠는 이미 캐시됨. 재차감 시도는 하지 않고(이중 차감 위험) 기록만 남긴다
     }
   }
-  return { sections, usedCredit: charged, remaining, outcome: "charged" };
+  return {
+    sections, usedCredit: charged, remaining, outcome: "charged", readingId: inserted?.id ?? null,
+  };
 }

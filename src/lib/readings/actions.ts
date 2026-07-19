@@ -24,7 +24,10 @@ import type { ProfileRow, ReadingRow } from "@/lib/db/types";
 import type { InterpretationSection } from "@/lib/interpret/types";
 
 export type UnlockResult =
-  | { ok: true; sections: InterpretationSection[]; usedCredit: boolean; remaining: number }
+  | {
+      ok: true; sections: InterpretationSection[]; usedCredit: boolean; remaining: number;
+      readingId: string | null;
+    }
   | { ok: false; reason: "auth" | "no-profile" | "locked" | "error" | "invalid" };
 
 
@@ -70,7 +73,10 @@ export async function unlockReading(productRaw: string): Promise<UnlockResult> {
       .gte("context_version", PROFILE_CONTEXT_VERSION)
       .maybeSingle<ReadingRow>();
     if (cached) {
-      return { ok: true, sections: cached.sections, usedCredit: false, remaining: remainingNow };
+      return {
+        ok: true, sections: cached.sections, usedCredit: false, remaining: remainingNow,
+        readingId: cached.id,
+      };
     }
 
     const sections = assembleCreditReading(product, ctx, profile.nickname, age);
@@ -97,12 +103,15 @@ export async function unlockReading(productRaw: string): Promise<UnlockResult> {
       } else {
         await recordEvent("reading_unlock", { product, source: "llm", charged: out.usedCredit });
       }
-      return { ok: true, sections: out.sections, usedCredit: out.usedCredit, remaining: out.remaining };
+      return {
+        ok: true, sections: out.sections, usedCredit: out.usedCredit, remaining: out.remaining,
+        readingId: out.readingId,
+      };
     }
 
     // 유료 LLM 실패 — 차감·캐시 없이 템플릿본(P9 §12). 다음 시도에서 재생성된다.
     await recordEvent("reading_unlock", { product, source: "template" });
-    return { ok: true, sections, usedCredit: false, remaining: remainingNow };
+    return { ok: true, sections, usedCredit: false, remaining: remainingNow, readingId: null };
   } catch {
     return { ok: false, reason: "error" };
   }
@@ -154,7 +163,10 @@ export async function unlockMatchDeep(raw: unknown): Promise<UnlockResult> {
       .gte("context_version", PROFILE_CONTEXT_VERSION)
       .maybeSingle<ReadingRow>();
     if (cached) {
-      return { ok: true, sections: cached.sections, usedCredit: false, remaining: remainingNow };
+      return {
+        ok: true, sections: cached.sections, usedCredit: false, remaining: remainingNow,
+        readingId: cached.id,
+      };
     }
 
     const match = computeDeepMatch(ctx, partnerCtx, input.mode);
@@ -182,12 +194,15 @@ export async function unlockMatchDeep(raw: unknown): Promise<UnlockResult> {
       } else {
         await recordEvent("reading_unlock", { product: "match", source: "llm", charged: out.usedCredit });
       }
-      return { ok: true, sections: out.sections, usedCredit: out.usedCredit, remaining: out.remaining };
+      return {
+        ok: true, sections: out.sections, usedCredit: out.usedCredit, remaining: out.remaining,
+        readingId: out.readingId,
+      };
     }
 
     // 유료 LLM 실패 — 차감·캐시 없이 템플릿본(P9 §12). 다음 시도에서 재생성된다.
     await recordEvent("reading_unlock", { product: "match", source: "template" });
-    return { ok: true, sections, usedCredit: false, remaining: remainingNow };
+    return { ok: true, sections, usedCredit: false, remaining: remainingNow, readingId: null };
   } catch {
     return { ok: false, reason: "error" };
   }
