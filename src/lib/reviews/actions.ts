@@ -35,7 +35,11 @@ export async function submitReview(
     const { error } = await supabase.from("reading_reviews").insert({
       reading_id: readingId, user_id: user.id, rating: v.rating, comment: v.comment,
     });
-    if (error) return { ok: false, reason: "exists" }; // unique(reading_id) 등 — 재요청하지 않는다
+    if (error) {
+      // 23505(unique 위반)만 "이미 남김" — 그 외(일시 오류 등)를 exists로 뭉뚱그리면
+      // 사용자의 후기가 오해의 소지 있는 안내와 함께 조용히 유실된다(리뷰 반영)
+      return { ok: false, reason: error.code === "23505" ? "exists" : "error" };
+    }
 
     await recordEvent("review_submit", { rating: v.rating, hasComment: v.comment !== null });
     return { ok: true };
