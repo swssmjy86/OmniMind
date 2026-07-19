@@ -92,9 +92,14 @@ const BLOOD_CLOSE: Record<"A" | "B" | "O" | "AB", string> = {
   AB: "AB형의 균형 감각이 그 결을 차분히 다듬어줘요.",
 };
 
+// 공통 섹션 제목 — 조립과 엿보기 제목 목록이 같은 상수를 참조해 구조적으로 어긋날 수 없다.
+const ELEMENTS_TITLE = "오행이 건네는 조언";
+const SEASON_TITLE = "운의 계절";
+const AUX_TITLE = "당신에게 드러나는 방식";
+
 /** 엿보기·화면이 쓰는 섹션 제목 목록(잠김 상태에서도 제목은 공개 — P9 §5.1). */
 export function readingSectionTitles(product: CreditReadingProduct): string[] {
-  return [KEY_TITLE[product], "오행이 건네는 조언", "운의 계절", "당신에게 드러나는 방식", LLM_SECTION_TITLE];
+  return [KEY_TITLE[product], ELEMENTS_TITLE, SEASON_TITLE, AUX_TITLE, LLM_SECTION_TITLE];
 }
 
 /** 4종 공통 조립 — ①~④. LLM 문단(⑤)은 액션이 성공 시에만 덧붙인다. */
@@ -107,10 +112,10 @@ export function assembleCreditReading(
   const cat = dominantCategory(ctx.tenGods);
   return [
     { title: KEY_TITLE[product], body: `${nickname}님, ${KEY_TEXT[product][cat]}` },
-    { title: "오행이 건네는 조언", body: ELEMENT_BALANCE_TEXT(ctx.elements) },
-    { title: "운의 계절", body: `${FLOW_INTRO[product]} ${daeunSeasonBody(ctx, age)}` },
+    { title: ELEMENTS_TITLE, body: ELEMENT_BALANCE_TEXT(ctx.elements) },
+    { title: SEASON_TITLE, body: `${FLOW_INTRO[product]} ${daeunSeasonBody(ctx, age)}` },
     {
-      title: "당신에게 드러나는 방식",
+      title: AUX_TITLE,
       body: `${AUX_TEXT[product][ctx.mbti.axes.EI]} ${BLOOD_CLOSE[ctx.blood.type]}`,
     },
   ];
