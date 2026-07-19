@@ -5,13 +5,15 @@ import { currentMilestone, isMilestoneToday } from "@/lib/interpret/milestone";
 import { PRODUCTS, ACCESS_LABEL } from "@/lib/persona/products";
 import { FAQ_ITEMS } from "@/app/faq/page";
 import AdSlot from "@/components/ads/AdSlot";
+import ReviewHighlights from "@/components/reviews/ReviewHighlights";
+import { homeReviewHighlights } from "@/lib/reviews/summary";
 import type { ProfileRow } from "@/lib/db/types";
 
 export const dynamic = "force-dynamic"; // 세션에 따라 매번 렌더
 
 /**
- * 홈(4탭 IA 스펙 §2) — 6종 풀이 그리드(→ 사주팔자 탭) + 고객리뷰(실후기 생기는
- * 4단계까지 숨김 — P9 §5.2 "빈 상태를 꾸미지 않는다") + FAQ 발췌.
+ * 홈(4탭 IA 스펙 §2) — 6종 풀이 그리드(→ 사주팔자 탭) + 고객리뷰(실제 코멘트 후기
+ * 3개 이상 쌓였을 때만 노출 — P9 §5.2 "빈 상태를 꾸미지 않는다") + FAQ 발췌.
  * 마음·고민 진입은 홈에 없다(확정 결정 7 — 잠금 해제 화면에만).
  */
 export default async function HomePage() {
@@ -42,6 +44,7 @@ export default async function HomePage() {
   const justReached = Boolean(isMilestoneToday(companionDays));
 
   const grid = PRODUCTS.filter((p) => p.id !== "today");
+  const homeSummary = await homeReviewHighlights();
 
   return (
     <main className="fade-rise p-6">
@@ -107,7 +110,12 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* 고객리뷰 — 실제 후기가 쌓이는 4단계까지 섹션 자체를 렌더하지 않는다(P9 §5.2) */}
+      {/* 고객리뷰 — 실제 코멘트 후기 3개 이상일 때만(P9 §5.2) */}
+      <ReviewHighlights
+        summary={homeSummary}
+        heading="고객리뷰"
+        sub="실제로 풀이를 열어본 분들의 이야기예요."
+      />
 
       {/* 자주묻는질문 발췌 3문항 */}
       <section className="mt-8" aria-label="자주 묻는 질문">

@@ -11,6 +11,11 @@ import { toKstParts } from "@/lib/engine/kst";
 import { PERSONAS } from "@/lib/persona/personas";
 import SajuChart from "@/components/profile/SajuChart";
 import ChongunPeek from "@/components/saju/ChongunPeek";
+import ShareSheet from "@/components/share/ShareSheet";
+import ReviewPrompt from "@/components/reviews/ReviewPrompt";
+import ReviewHighlights from "@/components/reviews/ReviewHighlights";
+import { productReviewSummary } from "@/lib/reviews/summary";
+import { profileCardQuery } from "@/lib/share/card-copy";
 import type { ProfileRow, ReadingRow } from "@/lib/db/types";
 import type { InterpretationSection } from "@/lib/interpret/types";
 
@@ -91,20 +96,34 @@ export default async function ChongunPage() {
 
   // 캐시 조회 → 없으면 조립해 insert(P9 §6.2). 조회·저장 실패는 조용히 새 조립으로 폴백.
   let sections: InterpretationSection[] | null = null;
+  let readingId: string | null = null;
   const { data: cached } = await supabase
     .from("readings").select("*")
     .eq("user_id", user!.id).eq("product", "chongun").eq("input_hash", hash)
     .gte("context_version", PROFILE_CONTEXT_VERSION)
     .maybeSingle<ReadingRow>();
-  if (cached) sections = cached.sections;
+  if (cached) {
+    sections = cached.sections;
+    readingId = cached.id;
+  }
 
   if (!sections) {
     sections = assembleChongun(ctx, profile.nickname, age);
-    await supabase.from("readings").insert({
+    const { data: inserted } = await supabase.from("readings").insert({
       user_id: user!.id, product: "chongun", input_hash: hash,
       context_version: PROFILE_CONTEXT_VERSION, sections,
-    });
+    }).select("id").single<{ id: string }>();
+    readingId = inserted?.id ?? null;
   }
+
+  // 내 후기(readingId 있을 때만) + 총운 후기 요약 — 둘 다 실패해도 화면은 그대로(P9 §12)
+  const [{ data: myReview }, chongunSummary] = await Promise.all([
+    readingId
+      ? supabase.from("reading_reviews").select("rating, comment")
+          .eq("reading_id", readingId).maybeSingle<{ rating: number; comment: string | null }>()
+      : Promise.resolve({ data: null }),
+    productReviewSummary("chongun"),
+  ]);
 
   return (
     <main className="fade-rise p-6">
@@ -122,6 +141,13 @@ export default async function ChongunPage() {
           </section>
         ))}
       </div>
+      <ShareSheet
+        query={profileCardQuery(ctx, `${profile.nickname}님의 총운`.slice(0, 20), sections)}
+        via="reading"
+        label="풀이 카드"
+      />
+      {readingId && <ReviewPrompt readingId={readingId} initial={myReview ?? null} />}
+      <ReviewHighlights summary={chongunSummary} heading="이 풀이의 후기" />
       <Link href="/me" className="mt-6 block text-center text-sm text-text-soft underline">
         내 프로필·공유 카드 보기
       </Link>

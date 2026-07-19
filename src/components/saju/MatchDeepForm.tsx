@@ -6,6 +6,7 @@ import PickerInput from "@/components/ui/PickerInput";
 import Choice from "@/components/ui/Choice";
 import { unlockMatchDeep } from "@/lib/readings/actions";
 import type { InterpretationSection } from "@/lib/interpret/types";
+import ReviewPrompt from "@/components/reviews/ReviewPrompt";
 
 // 엔진 import 금지(번들 보호) — 축·혈액형·모드는 로컬 상수. 슬러그는 서버에서 검증·변환된다.
 const AXES: [string, string][] = [["E", "I"], ["S", "N"], ["T", "F"], ["J", "P"]];
@@ -28,14 +29,16 @@ export default function MatchDeepForm({
   const [axes, setAxes] = useState<(string | null)[]>([null, null, null, null]);
   const [blood, setBlood] = useState<string | null>(null);
   const [mode, setMode] = useState<string | null>(null);
-  const [sections, setSections] = useState<InterpretationSection[] | null>(null);
+  const [result, setResult] = useState<
+    { sections: InterpretationSection[]; readingId: string | null } | null
+  >(null);
   const [error, setError] = useState(false);
   const [pending, startTransition] = useTransition();
 
-  if (sections) {
+  if (result) {
     return (
       <div className="mt-6 space-y-4">
-        {sections.map((s, i) => (
+        {result.sections.map((s, i) => (
           <section key={`${i}-${s.title}`} className="rounded-card bg-warm-surface p-5">
             <h2 className="font-[family-name:var(--font-serif-kr)] text-lg text-primary-green">
               {s.title}
@@ -43,6 +46,7 @@ export default function MatchDeepForm({
             <p className="mt-2 leading-relaxed text-text-main">{s.body}</p>
           </section>
         ))}
+        {result.readingId && <ReviewPrompt readingId={result.readingId} />}
       </div>
     );
   }
@@ -76,7 +80,7 @@ export default function MatchDeepForm({
         birthDate, birthTime: timeUnknown ? "" : birthTime, timeUnknown,
         mbti, bloodType: blood, mode,
       });
-      if (r.ok) setSections(r.sections);
+      if (r.ok) setResult({ sections: r.sections, readingId: r.readingId });
       else setError(true);
     });
   };
