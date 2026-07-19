@@ -1,4 +1,5 @@
 import Link from "next/link";
+import ArchiveLogList from "./ArchiveLogList";
 
 export interface ArchiveEntry {
   id: string;
@@ -39,25 +40,7 @@ export default function ArchiveView({
 
   return (
     <>
-      <section className="mt-6">
-        <h2 className="font-[family-name:var(--font-serif-kr)] text-lg text-primary-green">
-          오늘의운세 기록
-        </h2>
-        {entries.length === 0 ? (
-          <p className="mt-3 text-sm text-text-soft">
-            아직 쌓인 기록이 없어요. 오늘의운세에 매일 들르면 하나씩 모여요 🌱
-          </p>
-        ) : (
-          <ul className="mt-3 space-y-3">
-            {entries.map((e) => (
-              <li key={e.id} className="rounded-card bg-warm-surface p-4">
-                <p className="text-xs text-text-soft">{e.date}</p>
-                <p className="mt-1 text-sm leading-relaxed text-text-main">{e.headline}</p>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      <ArchiveLogList entries={entries} />
 
       <section className="mt-6">
         <h2 className="font-[family-name:var(--font-serif-kr)] text-lg text-primary-green">
