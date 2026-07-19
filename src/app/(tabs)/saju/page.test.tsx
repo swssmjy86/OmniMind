@@ -15,7 +15,7 @@ describe("사주팔자 탭 (스펙 §4)", () => {
     render(<SajuPage />);
     const hrefs = screen.getAllByRole("link").map((a) => a.getAttribute("href"));
     expect(hrefs).toEqual([
-      "/saju/chongun", "/saju/career", "/saju/love", "/saju/wealth", "/match", "/saju/marriage",
+      "/saju/chongun", "/saju/career", "/saju/love", "/saju/wealth", "/saju/match-deep", "/saju/marriage",
     ]);
     expect(screen.queryByText("곧 만나요")).not.toBeInTheDocument();
   });
