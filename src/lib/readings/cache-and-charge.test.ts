@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { cacheAndCharge } from "./actions";
+import { cacheAndCharge } from "./cache-and-charge";
 import type { InterpretationSection } from "@/lib/interpret/types";
 
 const sections: InterpretationSection[] = [{ title: "우리의 온도", body: "두 분의 온도는 78°예요." }];
