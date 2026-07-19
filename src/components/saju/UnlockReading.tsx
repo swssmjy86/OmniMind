@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { unlockReading } from "@/lib/readings/actions";
 import type { InterpretationSection } from "@/lib/interpret/types";
+import ReviewPrompt from "@/components/reviews/ReviewPrompt";
 
 /**
  * 크레딧 풀이 열기(3단계 스펙 §4) — 성공 시 결과 섹션을 이 자리에서 렌더한다.
@@ -19,14 +20,16 @@ export default function UnlockReading({
   remaining: number;
   unlimited: boolean;
 }) {
-  const [sections, setSections] = useState<InterpretationSection[] | null>(null);
+  const [result, setResult] = useState<
+    { sections: InterpretationSection[]; readingId: string | null } | null
+  >(null);
   const [error, setError] = useState(false);
   const [pending, startTransition] = useTransition();
 
-  if (sections) {
+  if (result) {
     return (
       <div className="mt-6 space-y-4">
-        {sections.map((s, i) => (
+        {result.sections.map((s, i) => (
           <section key={`${i}-${s.title}`} className="rounded-card bg-warm-surface p-5">
             <h2 className="font-[family-name:var(--font-serif-kr)] text-lg text-primary-green">
               {s.title}
@@ -34,6 +37,7 @@ export default function UnlockReading({
             <p className="mt-2 leading-relaxed text-text-main">{s.body}</p>
           </section>
         ))}
+        {result.readingId && <ReviewPrompt readingId={result.readingId} />}
       </div>
     );
   }
@@ -58,7 +62,7 @@ export default function UnlockReading({
     setError(false);
     startTransition(async () => {
       const r = await unlockReading(product);
-      if (r.ok) setSections(r.sections);
+      if (r.ok) setResult({ sections: r.sections, readingId: r.readingId });
       else setError(true);
     });
   };
