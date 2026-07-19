@@ -11,10 +11,12 @@ describe("사주팔자 탭 (스펙 §4)", () => {
     expect(screen.queryByText("오늘의운세")).not.toBeInTheDocument();
   });
 
-  it("live 링크는 총운=/saju/chongun, 궁합=/match 뿐 — 나머지는 준비 중", () => {
+  it("전 풀이 live — 총운·직업·연애·재물·궁합·결혼 링크", () => {
     render(<SajuPage />);
     const hrefs = screen.getAllByRole("link").map((a) => a.getAttribute("href"));
-    expect(hrefs).toEqual(["/saju/chongun", "/match"]);
-    expect(screen.getAllByText("곧 만나요")).toHaveLength(4);
+    expect(hrefs).toEqual([
+      "/saju/chongun", "/saju/career", "/saju/love", "/saju/wealth", "/match", "/saju/marriage",
+    ]);
+    expect(screen.queryByText("곧 만나요")).not.toBeInTheDocument();
   });
 });

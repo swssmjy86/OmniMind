@@ -1,10 +1,13 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import PersonaCard from "./PersonaCard";
-import { PRODUCTS } from "@/lib/persona/products";
+import { PRODUCTS, type Product } from "@/lib/persona/products";
 
 const profileDeep = PRODUCTS.find((p) => p.id === "chongun")!;
-const fate = PRODUCTS.find((p) => p.id === "career")!;
+const soonProduct: Product = {
+  id: "career", title: "직업운", tagline: "일과 재능의 결이 흐르는 방향",
+  personaId: "seoon", access: "credit", href: "", status: "soon",
+};
 
 describe("PersonaCard (§4.3 CSS 모션 카드)", () => {
   it("live 상품 — 페르소나 멘트가 진짜 텍스트로, 카드 전체가 링크로 렌더된다", () => {
@@ -19,7 +22,7 @@ describe("PersonaCard (§4.3 CSS 모션 카드)", () => {
   });
 
   it("soon 상품 — 링크가 없고 '곧 만나요'로 비활성 표시된다", () => {
-    render(<PersonaCard product={fate} />);
+    render(<PersonaCard product={soonProduct} />);
     expect(screen.queryByRole("link")).not.toBeInTheDocument();
     expect(screen.getByText("직업운")).toBeInTheDocument();
     expect(screen.getByText("곧 만나요")).toBeInTheDocument();

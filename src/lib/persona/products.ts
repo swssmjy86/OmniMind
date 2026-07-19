@@ -32,17 +32,17 @@ export const PRODUCTS: Product[] = [
   {
     id: "career", title: "직업운", personaId: "seoon",
     tagline: "일과 재능의 결이 흐르는 방향",
-    access: "credit", href: "", status: "soon",
+    access: "credit", href: "/saju/career", status: "live",
   },
   {
     id: "love", title: "연애운", personaId: "hongyeon",
     tagline: "다가오는 인연과 마음의 흐름",
-    access: "credit", href: "", status: "soon",
+    access: "credit", href: "/saju/love", status: "live",
   },
   {
     id: "wealth", title: "재물운", personaId: "geumo",
     tagline: "재물의 물길이 흐르는 방향",
-    access: "credit", href: "", status: "soon",
+    access: "credit", href: "/saju/wealth", status: "live",
   },
   {
     id: "match", title: "궁합", personaId: "hongyeon",
@@ -52,7 +52,7 @@ export const PRODUCTS: Product[] = [
   {
     id: "marriage", title: "결혼운", personaId: "hongyeon",
     tagline: "함께 걷는 길의 때와 결",
-    access: "credit", href: "", status: "soon",
+    access: "credit", href: "/saju/marriage", status: "live",
   },
 ];
 

@@ -31,7 +31,8 @@ describe("상품 카탈로그 v2 (4탭 IA 스펙 §4)", () => {
     const href = Object.fromEntries(PRODUCTS.map((p) => [p.id, `${p.status}:${p.href}`]));
     expect(href).toEqual({
       today: "live:/today", chongun: "live:/saju/chongun", match: "live:/match",
-      career: "soon:", love: "soon:", wealth: "soon:", marriage: "soon:",
+      career: "live:/saju/career", love: "live:/saju/love",
+      wealth: "live:/saju/wealth", marriage: "live:/saju/marriage",
     });
   });
 
