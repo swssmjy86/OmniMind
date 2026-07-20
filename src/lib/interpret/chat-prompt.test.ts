@@ -5,7 +5,7 @@ import type { ChatInput } from "./provider";
 
 const profile = computeProfile({
   birthDate: "1990-06-15", birthTime: "07:30", timeUnknown: false,
-  bloodType: "A", mbti: "ENFJ", gender: "male",
+  gender: "male",
 });
 
 const baseInput: ChatInput = {

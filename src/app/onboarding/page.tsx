@@ -6,18 +6,11 @@ import { computeProfile, type ProfileContext } from "@/lib/engine";
 import { zodiacSign } from "@/lib/engine/zodiac";
 import { assembleProfile } from "@/lib/interpret/templates";
 import type { InterpretationSection } from "@/lib/interpret/types";
-import type { BloodType, Mbti } from "@/lib/engine/types";
 import { saveProfile } from "./actions";
 import { saveDraft, loadDraft, clearDraft, isCompleteDraft, type Draft } from "./draft";
 import SajuChart from "@/components/profile/SajuChart";
 import Choice from "@/components/ui/Choice";
 import PickerInput from "@/components/ui/PickerInput";
-
-const BLOODS: BloodType[] = ["A", "B", "O", "AB"];
-const MBTIS: Mbti[] = [
-  "INTJ", "INTP", "ENTJ", "ENTP", "INFJ", "INFP", "ENFJ", "ENFP",
-  "ISTJ", "ISFJ", "ESTJ", "ESFJ", "ISTP", "ISFP", "ESTP", "ESFP",
-];
 
 interface Result {
   ctx: ProfileContext;
@@ -28,8 +21,7 @@ interface Result {
 export default function OnboardingPage() {
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<Draft>({
-    nickname: "", birthDate: "", birthTime: "", timeUnknown: false,
-    bloodType: null, mbti: null, gender: null,
+    nickname: "", birthDate: "", birthTime: "", timeUnknown: false, gender: null,
   });
   const [result, setResult] = useState<Result | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -43,14 +35,12 @@ export default function OnboardingPage() {
         birthDate: d.birthDate,
         birthTime: d.timeUnknown ? null : d.birthTime,
         timeUnknown: d.timeUnknown,
-        bloodType: d.bloodType!,
-        mbti: d.mbti!,
         gender: d.gender ?? undefined,
       });
       const nickname = d.nickname.trim() || "당신";
       const sections = assembleProfile(ctx, nickname);
       setResult({ ctx, sections, nickname });
-      setStep(5);
+      setStep(3);
       // 로그인 왕복(OAuth)에 대비해 draft 보존 — 저장 성공 시 삭제
       saveDraft(d);
       // 로그인 상태면 백그라운드로 저장(best-effort). 미리보기는 항상 동작.
@@ -60,8 +50,6 @@ export default function OnboardingPage() {
         birthDate: d.birthDate,
         birthTime: d.timeUnknown ? null : d.birthTime,
         timeUnknown: d.timeUnknown,
-        bloodType: d.bloodType!,
-        mbti: d.mbti!,
         gender: d.gender ?? null,
       }).then((r) => {
         if (r.saved) {
@@ -93,7 +81,7 @@ export default function OnboardingPage() {
     return () => clearTimeout(t);
   }, []);
 
-  if (step === 5 && result) {
+  if (step === 3 && result) {
     return <ProfileView nickname={result.nickname} result={result} saveState={saveState} />;
   }
 
@@ -105,13 +93,11 @@ export default function OnboardingPage() {
   const canNext =
     (step === 0 && draft.nickname.trim().length > 0) ||
     (step === 1 && draft.birthDate.length === 10 && (draft.timeUnknown || draft.birthTime.length === 5)) ||
-    (step === 2 && draft.bloodType !== null) ||
-    (step === 3 && draft.mbti !== null) ||
-    step === 4;
+    step === 2;
 
   return (
     <main className="flex min-h-dvh flex-col p-6">
-      <Progress step={step} total={5} />
+      <Progress step={step} total={3} />
 
       <div key={step} className="mt-8 flex-1 fade-rise">
         {step === 0 && (
@@ -185,30 +171,6 @@ export default function OnboardingPage() {
         )}
 
         {step === 2 && (
-          <Field title="혈액형을 알려주세요." hint="작은 조각도 당신의 일부예요.">
-            <div className="grid grid-cols-2 gap-3">
-              {BLOODS.map((b) => (
-                <Choice key={b} selected={draft.bloodType === b} onClick={() => set({ bloodType: b })}>
-                  {b}형
-                </Choice>
-              ))}
-            </div>
-          </Field>
-        )}
-
-        {step === 3 && (
-          <Field title="MBTI는 무엇인가요?" hint="아직 모른다면 대략 골라도 괜찮아요.">
-            <div className="grid grid-cols-4 gap-2">
-              {MBTIS.map((m) => (
-                <Choice key={m} small selected={draft.mbti === m} onClick={() => set({ mbti: m })}>
-                  {m}
-                </Choice>
-              ))}
-            </div>
-          </Field>
-        )}
-
-        {step === 4 && (
           <Field title="별자리를 확인했어요." hint="생년월일에서 자동으로 찾았어요.">
             <div className="rounded-card bg-warm-surface p-6 text-center">
               <p className="font-[family-name:var(--font-serif-kr)] text-3xl text-primary-green">
@@ -231,7 +193,7 @@ export default function OnboardingPage() {
             이전
           </button>
         )}
-        {step < 4 ? (
+        {step < 2 ? (
           <button
             disabled={!canNext}
             onClick={() => setStep((s) => s + 1)}
@@ -335,8 +297,8 @@ function ProfileView({
       {(saveState === "guest" || saveState === "pending") && (
         <section className="mt-8 rounded-card bg-warm-surface p-5 text-center">
           <p className="text-sm text-text-soft">
-            지금은 미리보기예요. 로그인하면 이 이야기를 저장하고, 사주·MBTI·혈액형·별자리를 더
-            깊이 엮은 이야기와 매일의 기운도 받아볼 수 있어요.
+            지금은 미리보기예요. 로그인하면 이 이야기를 저장하고, 사주와 별자리를 더 깊이 엮은
+            이야기와 매일의 기운도 받아볼 수 있어요.
           </p>
           <Link
             href="/login"

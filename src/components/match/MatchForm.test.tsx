@@ -16,9 +16,7 @@ vi.mock("@/lib/engine/match", async (importOriginal) => {
   return { ...actual, computeMatch: vi.fn(actual.computeMatch) };
 });
 
-const ME: MatchMe = {
-  element: "목", zodiac: "사자자리", mbti: "ENFJ", dayGanzhi: "갑자", bloodType: "A",
-};
+const ME: MatchMe = { element: "목", zodiac: "사자자리", dayGanzhi: "갑자" };
 
 describe("MatchForm", () => {
   it(
@@ -32,48 +30,30 @@ describe("MatchForm", () => {
     },
   );
 
-  it("MBTI는 네이티브 select가 아니라 알약형 버튼 그리드로 고른다(브랜드 톤 일관성)", () => {
-    const { container } = render(<MatchForm me={ME} nickname="달빛" />);
-    expect(container.querySelector("select")).not.toBeInTheDocument();
-
-    fireEvent.click(screen.getByText("ENFJ"));
-    // 선택 상태는 전용 토큰(bg-selected) — 다크에서 primary-green이 베이지로 뒤집혀
-    // '흰 버튼에 안 보이는 글자'가 되는 문제를 피한다.
-    expect(screen.getByText("ENFJ")).toHaveClass("bg-selected");
-
-    // MBTI '아직 몰라요'(DOM 순서상 [1] — [0]은 혈액형 섹션)를 누르면 선택이 풀린다
-    const unknowns = screen.getAllByText("아직 몰라요");
-    fireEvent.click(unknowns[1]);
-    expect(unknowns[1]).toHaveClass("bg-selected");
-    expect(screen.getByText("ENFJ")).not.toHaveClass("bg-selected");
-  });
-
   it("빈 날짜·시간 입력에는 안내 문구가 보인다 — iOS WebKit은 빈 입력을 아무것도 없이 그린다", () => {
     render(<MatchForm me={ME} nickname="달빛" />);
     expect(screen.getByText("눌러서 날짜를 골라 주세요")).toBeInTheDocument();
     expect(screen.getByText("눌러서 시간을 골라 주세요")).toBeInTheDocument();
   });
 
-  it("상대 정보를 '나'처럼 입력한다 — 시간(+몰라요 체크)·혈액형 선택지가 있다", () => {
+  it("상대 정보를 '나'처럼 입력한다 — 시간(+몰라요 체크)이 있다", () => {
     const { container } = render(<MatchForm me={ME} nickname="달빛" />);
     const timeInput = container.querySelector('input[type="time"]');
     expect(timeInput).toBeInTheDocument();
-    for (const b of ["A형", "B형", "O형", "AB형"]) {
-      expect(screen.getByText(b)).toBeInTheDocument();
-    }
     // '태어난 시간을 몰라요' 체크 시 시간 입력 비활성
     fireEvent.click(screen.getByLabelText("태어난 시간을 몰라요"));
     expect(timeInput).toBeDisabled();
   });
 
-  it("혈액형까지 고르면 결과에 혈액형 섹션이 실린다", async () => {
+  it("날짜를 고르고 계산하면 사주·별자리 결과 섹션이 실린다(MBTI·혈액형 없이)", async () => {
     const { container } = render(<MatchForm me={ME} nickname="달빛" />);
     fireEvent.change(container.querySelector('input[type="date"]')!, {
       target: { value: "2000-01-07" },
     });
-    fireEvent.click(screen.getByText("O형"));
     fireEvent.click(screen.getByText(/우리의 조합 잇기/));
-    expect(await screen.findByText("혈액형이 말하길")).toBeInTheDocument();
+    expect(await screen.findByText("우리의 온도")).toBeInTheDocument();
+    expect(screen.getByText("기운의 흐름")).toBeInTheDocument();
+    expect(screen.getByText("별이 말하길")).toBeInTheDocument();
   });
 
   it("엔진이 입력을 거부하면(예: 시간 형식 오류) 날짜만 지목하지 않고 날짜·시간을 함께 확인하도록 안내한다", async () => {

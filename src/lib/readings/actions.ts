@@ -149,7 +149,7 @@ export async function unlockMatchDeep(raw: unknown): Promise<UnlockResult> {
     try {
       partnerCtx = computeProfile({
         birthDate: input.birthDate, birthTime: input.birthTime,
-        timeUnknown: input.timeUnknown, bloodType: input.bloodType, mbti: input.mbti,
+        timeUnknown: input.timeUnknown,
       });
     } catch {
       return { ok: false, reason: "invalid" };

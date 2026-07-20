@@ -1,4 +1,4 @@
-// P4-1 공유 카드 이미지 — GET /api/card?dm=갑&el=목&mbti=ENFJ&zo=사자자리&blood=O (유형 조합 티저)
+// P4-1 공유 카드 이미지 — GET /api/card?dm=갑&el=목&zo=사자자리&strength=신강&category=재성 (유형 조합 티저)
 // 또는 GET /api/card?mode=daily&dm=갑&el=목&headline=…&mind=…&color=…&keyword=…&lucky=… (오늘의 나, 전체 문구)
 // 또는 GET /api/card?mode=profile&dm=갑&el=목&nickname=…&sections=[…] (나의 조각, 프로필 전체 섹션)
 // 너비는 항상 1080, 높이는 모드별 콘텐츠 분량에 맞춘다(각 render* 함수가 함께 정한다).

@@ -4,13 +4,13 @@ import { computeDeepMatch, MATCH_MODES } from "@/lib/engine/match";
 import { assembleDeepMatch } from "./match";
 import { matchDeepPrompt, matchDeepSectionTitles } from "./match-deep";
 
+// 갑자 × 기사(갑기 천간합)로 고정 — "인연의 매듭" 섹션이 모든 모드에서 안정적으로 나오게 해,
+// matchDeepSectionTitles(정적 엿보기 목록)와 실제 assembleDeepMatch 출력이 항상 일치한다.
 const me = computeProfile({
-  birthDate: "1990-06-15", birthTime: "07:30", timeUnknown: false,
-  bloodType: "A", mbti: "ENFJ", gender: "male",
+  birthDate: "2000-01-07", birthTime: "07:30", timeUnknown: false, gender: "male",
 });
 const partner = computeProfile({
-  birthDate: "1992-03-10", birthTime: "14:20", timeUnknown: false,
-  bloodType: "O", mbti: "ISTP",
+  birthDate: "2000-01-12", birthTime: "14:20", timeUnknown: false,
 });
 
 describe("궁합 심층 제목·프롬프트 (3단계 스펙 §5)", () => {

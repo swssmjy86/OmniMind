@@ -7,7 +7,6 @@ import type { ChatInput, InterpretProvider } from "./provider";
 
 const profile = computeProfile({
   birthDate: "1995-08-20", birthTime: "14:30", timeUnknown: false,
-  bloodType: "A", mbti: "ENFP",
 });
 const base = (message: string): ChatInput => ({ profile, nickname: "다인", history: [], message });
 

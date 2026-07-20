@@ -125,7 +125,7 @@ export default async function ConnectPage({
     <Shell title="우리의 조합">
       <p className="mt-4 leading-relaxed text-text-main">{invitedLine}</p>
       <p className="mt-2 leading-relaxed text-text-soft">
-        수락하면 두 분의 사주·별자리·MBTI가 만나는 방식을 심층으로 읽어드려요. 결과는 두 분만
+        수락하면 두 분의 사주·별자리가 만나는 방식을 심층으로 읽어드려요. 결과는 두 분만
         볼 수 있어요.
       </p>
       <form action={accept} className="mt-6">

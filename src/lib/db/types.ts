@@ -7,8 +7,9 @@ export interface ProfileRow {
   birth_date: string; // "YYYY-MM-DD"
   birth_time: string | null; // "HH:mm:ss"
   time_unknown: boolean;
-  blood_type: "A" | "B" | "O" | "AB";
-  mbti: string;
+  /** 0014 마이그레이션(2026-07-20) 이후 신규 프로필은 채우지 않는다 — 기존 값만 남아있을 수 있다. */
+  blood_type?: "A" | "B" | "O" | "AB" | null;
+  mbti?: string | null;
   profile_context: ProfileContext;
   /** P7 프리미엄(레거시 이용권) — 구독 만료 시각(0004 마이그레이션 전이거나 무료면 null/undefined). */
   premium_until?: string | null;

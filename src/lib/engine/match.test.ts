@@ -2,9 +2,8 @@ import { describe, expect, it } from "vitest";
 import { computeProfile } from "./index";
 import {
   computeMatch, computeDeepMatch, computeBond, partnerFromBirth, zodiacElement,
-  mbtiSynergy, bloodSynergy, fillingElements, SLUG_TO_MODE, MODE_TO_SLUG, isMatchModeSlug,
+  fillingElements, SLUG_TO_MODE, MODE_TO_SLUG, isMatchModeSlug,
 } from "./match";
-import type { BloodType } from "./types";
 
 describe("partnerFromBirth — 상대 기운 산출", () => {
   it("일주 앵커일(2000-01-07)은 갑자·목·염소자리", () => {
@@ -32,7 +31,6 @@ describe("partnerFromBirth — 출생 시간 반영", () => {
   it("서머타임 시대(1988)도 computeProfile과 같은 일주 — 기록 시계 보정 공유", () => {
     const viaProfile = computeProfile({
       birthDate: "1988-07-01", birthTime: "23:30", timeUnknown: false,
-      bloodType: "A", mbti: "INFP",
     });
     expect(partnerFromBirth("1988-07-01", "23:30").dayGanzhi).toBe(viaProfile.pillars.day);
   });
@@ -40,33 +38,6 @@ describe("partnerFromBirth — 출생 시간 반영", () => {
   it("시간 형식·범위 오류는 throw", () => {
     expect(() => partnerFromBirth("2000-01-07", "25:00")).toThrow();
     expect(() => partnerFromBirth("2000-01-07", "9:00")).toThrow();
-  });
-});
-
-describe("bloodSynergy — 혈액형 어울림 0~2", () => {
-  it("보완의 짝(A×O, B×AB)은 2", () => {
-    expect(bloodSynergy("A", "O")).toBe(2);
-    expect(bloodSynergy("B", "AB")).toBe(2);
-  });
-
-  it("같은 형끼리는 1(익숙한 결)", () => {
-    for (const t of ["A", "B", "O", "AB"] as const) {
-      expect(bloodSynergy(t, t)).toBe(1);
-    }
-  });
-
-  it("다른 결(A×B, O×AB)은 0", () => {
-    expect(bloodSynergy("A", "B")).toBe(0);
-    expect(bloodSynergy("O", "AB")).toBe(0);
-  });
-
-  it("대칭 — 모든 짝에서 방향 무관", () => {
-    const TYPES: BloodType[] = ["A", "B", "O", "AB"];
-    for (const a of TYPES) {
-      for (const b of TYPES) {
-        expect(bloodSynergy(a, b)).toBe(bloodSynergy(b, a));
-      }
-    }
   });
 });
 
@@ -79,38 +50,22 @@ describe("zodiacElement — 별자리 4원소", () => {
   });
 });
 
-describe("mbtiSynergy — 성향 어울림 0~5", () => {
-  it("동일 유형은 최대치가 아니다(보완 축 점수 없음)", () => {
-    // 같은 SN(+2), 같은 TF(+1), EI/JP 동일이라 보완 점수 없음 → 3
-    expect(mbtiSynergy("INFP", "INFP")).toBe(3);
-  });
-  it("세상 보는 눈(SN)이 같고 에너지·리듬이 보완이면 높다", () => {
-    // INFP vs ENFJ: same N(+2), same F(+1), diff E/I(+1), diff J/P(+1) → 5
-    expect(mbtiSynergy("INFP", "ENFJ")).toBe(5);
-  });
-  it("모든 축이 다르면(SN 다름) 낮다", () => {
-    // INFP vs ESTJ: diff SN(0), diff TF(0), diff EI(+1), diff JP(+1) → 2
-    expect(mbtiSynergy("INFP", "ESTJ")).toBe(2);
-  });
-});
-
-describe("computeMatch — 우리의 조합", () => {
-  const me = { element: "목", zodiac: "사자자리", mbti: "INFP" } as const;
+describe("computeMatch — 우리의 조합(사주+별자리, MBTI·혈액형 없이)", () => {
+  const me = { element: "목", zodiac: "사자자리" } as const;
 
   it("상대 기운·관계·점수를 산출한다", () => {
-    const m = computeMatch(me, { birthDate: "2000-01-07", mbti: "ENFJ" }, "연인");
+    const m = computeMatch(me, { birthDate: "2000-01-07" }, "연인");
     expect(m.partner.dayGanzhi).toBe("갑자");
     expect(m.elementRelation).toBe("동행"); // 목 vs 목
     expect(m.zodiacHarmony).toBe("다름"); // 불 vs 흙
-    expect(m.mbtiSynergy).toBe(5);
     expect(m.score).toBeGreaterThanOrEqual(0);
     expect(m.score).toBeLessThanOrEqual(100);
   });
 
-  it("같은 날 태어난 같은 유형은 점수가 높다", () => {
+  it("같은 날 태어난 같은 별자리는 점수가 높다", () => {
     const twin = computeMatch(
-      { element: "목", zodiac: "염소자리", mbti: "INFP" },
-      { birthDate: "2000-01-07", mbti: "INFP" },
+      { element: "목", zodiac: "염소자리" },
+      { birthDate: "2000-01-07" },
       "친구",
     );
     expect(twin.elementRelation).toBe("동행");
@@ -118,16 +73,9 @@ describe("computeMatch — 우리의 조합", () => {
     expect(twin.score).toBeGreaterThanOrEqual(70);
   });
 
-  it("상대 MBTI 미입력이면 synergy는 null, 점수는 중립 반영", () => {
-    const m = computeMatch(me, { birthDate: "2000-01-07" }, "동료");
-    expect(m.mbtiSynergy).toBeNull();
-    expect(m.score).toBeGreaterThanOrEqual(0);
-    expect(m.score).toBeLessThanOrEqual(100);
-  });
-
   it("모드에 따라 점수 가중이 달라진다 (같은 입력, 다른 모드)", () => {
-    const lover = computeMatch(me, { birthDate: "1995-08-20", mbti: "ESTJ" }, "연인");
-    const worker = computeMatch(me, { birthDate: "1995-08-20", mbti: "ESTJ" }, "동료");
+    const lover = computeMatch(me, { birthDate: "1995-08-20" }, "연인");
+    const worker = computeMatch(me, { birthDate: "1995-08-20" }, "동료");
     expect(lover.mode).toBe("연인");
     expect(worker.mode).toBe("동료");
     // 결정적 산출 — 두 모드가 완전히 같은 점수일 필요는 없고, 각자 유효 범위면 된다.
@@ -138,26 +86,9 @@ describe("computeMatch — 우리의 조합", () => {
   });
 
   it("점수는 결정적(같은 입력 → 같은 점수)", () => {
-    const a = computeMatch(me, { birthDate: "1992-11-03", mbti: "ISTP" }, "친구");
-    const b = computeMatch(me, { birthDate: "1992-11-03", mbti: "ISTP" }, "친구");
+    const a = computeMatch(me, { birthDate: "1992-11-03" }, "친구");
+    const b = computeMatch(me, { birthDate: "1992-11-03" }, "친구");
     expect(a.score).toBe(b.score);
-  });
-
-  it("혈액형을 서로 알면 시너지·점수에 반영된다", () => {
-    const base = { ...me, bloodType: "A" } as const;
-    const good = computeMatch(base, { birthDate: "2000-01-07", bloodType: "O" }, "연인");
-    const far = computeMatch(base, { birthDate: "2000-01-07", bloodType: "B" }, "연인");
-    expect(good.bloodSynergy).toBe(2);
-    expect(good.partner.bloodType).toBe("O");
-    expect(far.bloodSynergy).toBe(0);
-    expect(good.score).toBeGreaterThan(far.score);
-  });
-
-  it("혈액형을 한쪽이라도 모르면 null·중립 반영", () => {
-    const m = computeMatch(me, { birthDate: "2000-01-07", bloodType: "O" }, "연인");
-    expect(m.bloodSynergy).toBeNull();
-    const m2 = computeMatch({ ...me, bloodType: "A" }, { birthDate: "2000-01-07" }, "연인");
-    expect(m2.bloodSynergy).toBeNull();
   });
 
   it("출생 시간까지 주면 그 시간의 일주로 계산한다", () => {
@@ -173,12 +104,12 @@ describe("computeMatch — 우리의 조합", () => {
     const b = partnerFromBirth("2000-01-09");
     for (const mode of ["연인", "친구", "동료"] as const) {
       const ab = computeMatch(
-        { element: a.element, zodiac: a.zodiac, mbti: "INFP", dayGanzhi: a.dayGanzhi, bloodType: "A" },
-        { birthDate: "2000-01-09", mbti: "ENFJ", bloodType: "O" }, mode,
+        { element: a.element, zodiac: a.zodiac, dayGanzhi: a.dayGanzhi },
+        { birthDate: "2000-01-09" }, mode,
       );
       const ba = computeMatch(
-        { element: b.element, zodiac: b.zodiac, mbti: "ENFJ", dayGanzhi: b.dayGanzhi, bloodType: "O" },
-        { birthDate: "2000-01-07", mbti: "INFP", bloodType: "A" }, mode,
+        { element: b.element, zodiac: b.zodiac, dayGanzhi: b.dayGanzhi },
+        { birthDate: "2000-01-07" }, mode,
       );
       expect(ab.score).toBe(ba.score);
     }
@@ -200,7 +131,7 @@ describe("computeBond — 간지의 인연", () => {
     expect(computeBond("기사", "갑자")).toEqual(computeBond("갑자", "기사"));
   });
   it("computeMatch — 내 일주를 주면 bond가 점수·결과에 반영된다", () => {
-    const base = { element: "목", zodiac: "사자자리", mbti: "INFP" } as const;
+    const base = { element: "목", zodiac: "사자자리" } as const;
     // 2000-01-12 = 기사 (갑자와 갑기합)
     const withBond = computeMatch({ ...base, dayGanzhi: "갑자" }, { birthDate: "2000-01-12" }, "친구");
     const noBond = computeMatch(base, { birthDate: "2000-01-12" }, "친구");
@@ -213,21 +144,16 @@ describe("computeBond — 간지의 인연", () => {
 describe("computeDeepMatch — 양방향 심층 궁합 (P7-2)", () => {
   const a = computeProfile({
     birthDate: "1990-03-15", birthTime: "08:30", timeUnknown: false,
-    bloodType: "A", mbti: "INFP",
   });
   const b = computeProfile({
     birthDate: "1993-11-02", birthTime: "22:10", timeUnknown: false,
-    bloodType: "O", mbti: "ESTJ",
   });
 
-  it("두 프로필로 관계·조화·시너지·보완을 산출한다", () => {
+  it("두 프로필로 관계·조화·보완을 산출한다", () => {
     const m = computeDeepMatch(a, b, "연인");
     expect(m.partner.dayGanzhi).toBe(b.pillars.day);
     expect(m.myDayGanzhi).toBe(a.pillars.day);
-    expect(m.partner.mbti).toBe("ESTJ");
-    expect(m.mbtiSynergy).toBe(mbtiSynergy("INFP", "ESTJ"));
-    expect(m.partner.bloodType).toBe("O");
-    expect(m.bloodSynergy).toBe(bloodSynergy("A", "O"));
+    expect(m.partner.element).toBe(b.dayMaster.element);
     expect(m.score).toBeGreaterThanOrEqual(0);
     expect(m.score).toBeLessThanOrEqual(100);
   });

@@ -8,7 +8,7 @@ import {
 
 const ctx = computeProfile({
   birthDate: "1990-06-15", birthTime: "07:30", timeUnknown: false,
-  bloodType: "A", mbti: "ENFJ", gender: "male",
+  gender: "male",
 });
 
 describe("크레딧 풀이 조립 4종 (3단계 스펙 §3)", () => {
@@ -31,11 +31,11 @@ describe("크레딧 풀이 조립 4종 (3단계 스펙 §3)", () => {
     }
   });
 
-  it("보조축 섹션은 MBTI 축과 혈액형을 수식으로만 담는다(단독 결론 금지 — 사주 결을 받는 문장)", () => {
+  it("보조축 섹션은 신강/신약과 강한 오행을 수식으로만 담는다(단독 결론 금지 — 사주 결을 받는 문장)", () => {
     for (const p of CREDIT_READING_PRODUCTS) {
       const aux = assembleCreditReading(p, ctx, "새벽", 36)[3].body;
       expect(aux).toMatch(/^이 |^이 결|^이 마음|^이 감각/); // 앞 섹션(팔자)의 결을 받아 수식
-      expect(aux).toContain("A형");
+      expect(aux).toContain(`${ctx.elements.dominant}(`); // "목(木)의 기운이…" 형태
     }
   });
 

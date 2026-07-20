@@ -1,6 +1,6 @@
 "use client";
 
-// 온보딩(혈액형·MBTI)과 우리의 조합(상대 MBTI)이 함께 쓰는 선택형 알약 버튼.
+// 온보딩(성별)과 우리의 조합(모드)이 함께 쓰는 선택형 알약 버튼.
 // 네이티브 <select>는 OS별로 브랜드 톤과 어긋나게 렌더링돼(§5.3 큰 라운드·부드러운 결) 쓰지 않는다.
 // <button> 대신 <div role="button">을 쓴다 — iOS Safari 실기기에서 w-full·appearance:none을
 // 다 걸어도 <button>이 getComputedStyle/getBoundingClientRect에는 안 잡히는 자체 렌더링

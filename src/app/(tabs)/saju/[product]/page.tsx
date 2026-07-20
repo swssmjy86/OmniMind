@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { createServerSupabase } from "@/lib/supabase/server";
-import { isPremium, UNLIMITED } from "@/lib/consult/quota";
+import { isPremium, UNLIMITED, FREE_FOR_ALL } from "@/lib/consult/quota";
 import { readingInputHash } from "@/lib/readings/hash";
 import { ensureCurrentProfile } from "@/lib/readings/ensure-profile";
 import {
@@ -139,7 +139,9 @@ export default async function CreditReadingPage({
     );
   }
 
-  const premium = isPremium(profile.premium_until, now);
+  // FREE_FOR_ALL(무료 전환)이면 화면도 무제한으로 보여준다 — readingAccess가 실제로
+  // 그렇게 판정하므로, 여기서 어긋나면 "잠긴 것처럼 보이는데 실제로는 열리는" 불일치가 생긴다.
+  const premium = isPremium(profile.premium_until, now) || FREE_FOR_ALL;
   const credits = profile.consult_credits ?? 0;
 
   return (

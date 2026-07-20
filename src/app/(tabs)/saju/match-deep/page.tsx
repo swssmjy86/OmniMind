@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { createServerSupabase } from "@/lib/supabase/server";
-import { isPremium } from "@/lib/consult/quota";
+import { isPremium, FREE_FOR_ALL } from "@/lib/consult/quota";
 import { matchDeepSectionTitles } from "@/lib/interpret/content/match-deep";
 import { PERSONAS } from "@/lib/persona/personas";
 import ReadingPeek from "@/components/saju/ReadingPeek";
@@ -72,7 +72,9 @@ export default async function MatchDeepPage() {
     );
   }
 
-  const premium = isPremium(profile.premium_until, new Date());
+  // FREE_FOR_ALL(무료 전환)이면 화면도 무제한으로 보여준다 — readingAccess가 실제로
+  // 그렇게 판정하므로, 여기서 어긋나면 "잠긴 것처럼 보이는데 실제로는 열리는" 불일치가 생긴다.
+  const premium = isPremium(profile.premium_until, new Date()) || FREE_FOR_ALL;
   const credits = profile.consult_credits ?? 0;
 
   // 지난 심층 궁합 — 재열람 무료(캐시 행 그대로)

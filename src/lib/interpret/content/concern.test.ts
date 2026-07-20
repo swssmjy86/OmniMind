@@ -8,8 +8,6 @@ const profile = computeProfile({
   birthDate: "1990-03-15",
   birthTime: "08:30",
   timeUnknown: false,
-  bloodType: "A",
-  mbti: "INFP",
 });
 
 const RELATIONS: (DailyRelation | null)[] = ["동행", "채움", "발산", "결실", "단련", null];

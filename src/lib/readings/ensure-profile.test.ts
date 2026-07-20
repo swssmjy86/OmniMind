@@ -14,7 +14,7 @@ describe("engineInputFromProfile (스펙 §2 — 순수 변환)", () => {
   it("HH:mm:ss → HH:MM, 필드 매핑", () => {
     expect(engineInputFromProfile(baseRow)).toEqual({
       birthDate: "1990-06-15", birthTime: "07:30", timeUnknown: false,
-      bloodType: "A", mbti: "ENFJ", gender: "male",
+      gender: "male",
     });
   });
 

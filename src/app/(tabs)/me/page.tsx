@@ -48,7 +48,7 @@ export default async function MePage() {
           <p className="text-text-soft">
             {user
               ? `반가워요, ${user.user_metadata?.name ?? "당신"}님. 당신의 조각들을 이어볼까요?`
-              : "사주·MBTI·혈액형·별자리를 종합해 '온전한 나'를 만나보세요."}
+              : "사주와 별자리를 종합해 '온전한 나'를 만나보세요."}
           </p>
           <Link
             href="/onboarding"

@@ -10,11 +10,6 @@ function fill() {
     target: { value: "1992-03-10" },
   });
   fireEvent.click(screen.getByRole("button", { name: "시간을 몰라요" }));
-  // MBTI 4축 — I / S / T / P
-  for (const axis of ["I", "S", "T", "P"]) {
-    fireEvent.click(screen.getByRole("button", { name: axis }));
-  }
-  fireEvent.click(screen.getByRole("button", { name: "O" }));   // 혈액형
   fireEvent.click(screen.getByRole("button", { name: "연인" })); // 모드
 }
 
@@ -25,13 +20,11 @@ describe("MatchDeepForm (3단계 스펙 §5)", () => {
     render(<MatchDeepForm remaining={2} unlimited={false} />);
     expect(screen.getByText("상대의 생년월일")).toBeInTheDocument();
     expect(screen.getByText("상대의 태어난 시간")).toBeInTheDocument();
-    expect(screen.getByText("상대의 MBTI")).toBeInTheDocument();
-    expect(screen.getByText("상대의 혈액형")).toBeInTheDocument();
     expect(screen.getByText("우리는 어떤 사이인가요?")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /크레딧 1개로 열기/ })).toBeDisabled();
   });
 
-  it("전부 채우면 버튼 활성 → 성공 시 섹션 렌더·액션에 슬러그 모드 전달", async () => {
+  it("전부 채우면 버튼 활성 → 성공 시 섹션 렌더·액션에 슬러그 모드 전달(MBTI·혈액형 없이)", async () => {
     vi.mocked(unlockMatchDeep).mockResolvedValue({
       ok: true, usedCredit: true, remaining: 1, readingId: "r-1",
       sections: [{ title: "우리의 온도", body: "두 분의 온도는 78°예요." }],
@@ -43,8 +36,7 @@ describe("MatchDeepForm (3단계 스펙 §5)", () => {
     fireEvent.click(btn);
     expect(await screen.findByText("우리의 온도")).toBeInTheDocument();
     expect(vi.mocked(unlockMatchDeep)).toHaveBeenCalledWith({
-      birthDate: "1992-03-10", birthTime: "", timeUnknown: true,
-      mbti: "ISTP", bloodType: "O", mode: "lover",
+      birthDate: "1992-03-10", birthTime: "", timeUnknown: true, mode: "lover",
     });
   });
 
