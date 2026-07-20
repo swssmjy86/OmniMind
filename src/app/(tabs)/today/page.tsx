@@ -56,7 +56,7 @@ export default async function TodayPage() {
       profile.profile_context.dayMaster.element,
       profile.profile_context.dayMaster.stem,
     );
-    const guide = assembleDaily(daily, profile.nickname);
+    const guide = assembleDaily(daily, profile.nickname, profile.profile_context.pillars);
     const llmParagraph =
       cachedDaily?.body.find((s) => s.title === "오늘, 당신만을 위한 이야기")?.body ?? null;
 

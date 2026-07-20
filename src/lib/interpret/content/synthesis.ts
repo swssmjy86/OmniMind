@@ -74,6 +74,9 @@ export function profileSynthesisPrompt(ctx: ProfileContext, nickname: string): s
     `네 기둥(근묘화실): ${pillarPalaceSummary(ctx)}`,
     `별자리(${ctx.zodiac}): ${zodiac}`,
     `${nickname}님을 위해, 위 결들을 각각 나열하지 말고 한 사람의 이야기로 엮어서,`,
+    `특히 '성격과 취향'·'지금과 앞으로'는 월주(${ctx.pillars.month}, 자라온 환경 속 본바탕) →`,
+    "타고난 재능이 실제로 드러나는 모습(활동) → 일주(당신 자신이 마음을 정하는 방식) →",
+    "대운의 방향(생애 흐름) 순으로 자연스럽게 흘러가듯 엮어요.",
     "시스템 프롬프트가 지시한 형식(성격과 취향·당신의 색·지금과 앞으로·연애운·사업운·커리어·",
     "관계운·금전운) 그대로, 지금까지의 요약보다 훨씬 더 깊고 구체적으로 들려줘요.",
   ].join("\n");

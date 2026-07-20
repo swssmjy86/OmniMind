@@ -39,7 +39,7 @@ export async function recordTodayDaily(): Promise<void> {
       .eq("user_id", user.id).eq("kind", "daily").eq("target_date", daily.date).maybeSingle();
     if (existing) return;
 
-    const guide = assembleDaily(daily, profile.nickname);
+    const guide = assembleDaily(daily, profile.nickname, profile.profile_context.pillars);
 
     const r = await respond(
       {
