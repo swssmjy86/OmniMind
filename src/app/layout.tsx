@@ -33,7 +33,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="ko" className={notoSerifKr.variable}>
+    <html lang="ko" className={notoSerifKr.variable} suppressHydrationWarning>
       <head>
         <link
           rel="stylesheet"
@@ -46,7 +46,7 @@ export default function RootLayout({
           <RefTracker />
           <IdleLogout />
           <ThemeToggle />
-          <div className="pt-14">{children}</div>
+          {children}
           <Footer />
           <Analytics />
         </div>
