@@ -22,8 +22,17 @@ const PREMIUM_DEFAULT_MODEL = "anthropic/claude-3.5-haiku";
 const ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
 
 export interface OpenRouterOptions {
-  /** true면 P8 상담 크레딧을 소비하는 자리 — 유료 모델·확장 프롬프트·더 긴 응답. */
+  /** true면 P8 상담 크레딧을 소비하는 자리(마음 챗·고민 상담) — 유료 모델·확장 프롬프트·
+   *  더 긴 대화형 응답(4~7문장). OPENROUTER_PREMIUM_MODEL이 유효한 모델을 가리켜야 동작한다
+   *  (계정에 결제 수단 없이 유료 모델을 쓰면 OpenRouter가 404/"No endpoints found"를 낸다 —
+   *  이때는 상위 폴백 체인이 템플릿으로 조용히 대체한다). */
   premium?: boolean;
+  /** true면 크레딧 풀이(직업/연애/재물/결혼·궁합) 전용 — "구조를 조금 더 풀어쓴 서술형"
+   *  응답 예산으로 늘린다. premium 없이 단독으로 켜면 무료 모델 그대로 쓰되(2026-07-20
+   *  실측: 결제 수단 없는 계정에서 premium 기본 모델이 404) 무료 모델의 느린 생성 속도에
+   *  맞춰 예산을 보수적으로 잡는다. premium과 함께 켜면(유효한 유료 모델 설정 시) 더 크게
+   *  잡는다 — 유료 모델이 보통 훨씬 빠르다. */
+  longForm?: boolean;
   /** true면 P8 로그인 전용 심층 리포트(다중 섹션) — 무료 모델 그대로, 응답 예산만 크게. */
   report?: boolean;
 }
@@ -41,7 +50,9 @@ export class OpenRouterProvider implements InterpretProvider {
     const messages = [
       {
         role: "system",
-        content: chatSystemPrompt(input, { premium: this.opts.premium, report: this.opts.report }),
+        content: chatSystemPrompt(input, {
+          premium: this.opts.premium, longForm: this.opts.longForm, report: this.opts.report,
+        }),
       },
       ...input.history.map((m) => ({
         role: m.role === "assistant" ? "assistant" : "user",
@@ -59,8 +70,18 @@ export class OpenRouterProvider implements InterpretProvider {
       body: JSON.stringify({
         model,
         messages,
-        temperature: this.opts.report ? 0.85 : this.opts.premium ? 0.8 : 0.9,
-        max_tokens: this.opts.report ? 1200 : this.opts.premium ? 600 : 300,
+        temperature: this.opts.report ? 0.85 : (this.opts.longForm || this.opts.premium) ? 0.8 : 0.9,
+        // longForm 예산(2026-07-20 실측 반영): 무료 모델(gemma-4-26b-a4b-it:free)은 초당
+        // ~33~36 토큰으로 느리고 가변적이라(공용 무료 풀), interpret.ts의 25초 내부 타임아웃
+        // 안에 안전하게 끝내려면 800 토큰 정도가 상한이다(여유분 포함). premium까지 함께 켜면
+        // (유효한 유료 모델 설정 시) 유료 모델이 보통 훨씬 빨라 1800까지 넉넉히 잡는다.
+        // report(온보딩 심층 리포트)는 건드리지 않는다 — 실측 결과 예산을 1200·1400·2600 중
+        // 어느 쪽으로 둬도 42~73초가 걸려 무료 모델 생성 속도 자체가 병목이었다(기존 동작 유지).
+        max_tokens: this.opts.report
+          ? 1200
+          : this.opts.longForm
+            ? (this.opts.premium ? 1800 : 800)
+            : this.opts.premium ? 600 : 300,
       }),
     });
     if (!res.ok) throw new Error(`openrouter:http-${res.status}`);

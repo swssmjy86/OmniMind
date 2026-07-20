@@ -7,6 +7,7 @@ import { synthesisText } from "./content/synthesis";
 import { MBTI_AXIS_TEXT } from "./content/mbti";
 import { BLOOD_TEXT } from "./content/blood";
 import { ZODIAC_TEXT } from "./content/zodiac";
+import { strengthText, patternsText } from "./content/strength";
 
 /**
  * "온전한 나" 프로필을 결정론적으로 조립한다(템플릿 0단계, 항상 동작·0원).
@@ -33,7 +34,7 @@ export function assembleProfile(
     },
     {
       title: "타고난 결",
-      body: `사주의 중심이 되는 일간은 '${ctx.dayMaster.stem}', ${ctx.dayMaster.element}의 기운을 타고났어요. ${dm.body}`,
+      body: `사주의 중심이 되는 일간은 '${ctx.dayMaster.stem}', ${ctx.dayMaster.element}의 기운을 타고났어요. ${dm.body} ${strengthText(ctx.strength)}`,
     },
     {
       title: "마음의 균형",
@@ -41,7 +42,7 @@ export function assembleProfile(
     },
     {
       title: "타고난 재능과 관계",
-      body: talent,
+      body: patternsText(ctx.patterns) ? `${talent} ${patternsText(ctx.patterns)}` : talent,
     },
     {
       title: "겉과 속",

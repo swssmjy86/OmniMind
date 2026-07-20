@@ -4,6 +4,7 @@ import { computePillars, resolveBirthInstant } from "./pillars";
 import { elementDistribution, type ElementDistribution } from "./elements";
 import { computeDaeun, type Daeun, type Gender } from "./daeun";
 import { tenGods, type TenGodChart } from "./ten-gods";
+import { dayMasterStrength, detectPatterns, type DayMasterStrength, type GyeokPattern } from "./strength";
 import { zodiacSign, type ZodiacSign } from "./zodiac";
 import { mbtiTrait, isMbti, type MbtiTrait } from "./mbti";
 import { bloodTrait, isBloodType, type BloodTrait } from "./blood";
@@ -17,8 +18,9 @@ export type { ProfileContext };
  * 다른 값을 담고 있다는 뜻이다(재계산 대상). 입력만 있으면 언제든 다시 계산할 수 있으므로
  * 저장값은 캐시일 뿐이다.
  *   1 → 2 (2026-07-16): 표준시 UTC+8:30 보정, 절기 초 단위 경계, 대운이 4주와 같은 시각 사용.
+ *   2 → 3 (2026-07-20): 신강/신약(strength)·격국 구조 패턴(patterns) 추가.
  */
-export const PROFILE_CONTEXT_VERSION = 2;
+export const PROFILE_CONTEXT_VERSION = 3;
 
 interface ProfileContext {
   version: number;
@@ -26,6 +28,10 @@ interface ProfileContext {
   dayMaster: { stem: string; element: string; yang: boolean }; // 일간=아신
   elements: ElementDistribution;
   tenGods: TenGodChart;
+  /** 억부법 신강/신약/중화 — 십성표(tenGods)에서 결정론적으로 파생 */
+  strength: DayMasterStrength;
+  /** 감지된 격국(구조) 패턴 — 없으면 빈 배열 */
+  patterns: GyeokPattern[];
   zodiac: ZodiacSign;
   mbti: MbtiTrait;
   blood: BloodTrait;
@@ -90,6 +96,7 @@ export function computeProfile(input: EngineInput): ProfileContext {
   const [, mo, d] = input.birthDate.split("-").map(Number);
 
   const dm = fp.day.stem;
+  const chart = tenGods(fp);
   return {
     version: PROFILE_CONTEXT_VERSION,
     pillars: {
@@ -104,7 +111,9 @@ export function computeProfile(input: EngineInput): ProfileContext {
       yang: stemYang(dm),
     },
     elements: elementDistribution(fp),
-    tenGods: tenGods(fp),
+    tenGods: chart,
+    strength: dayMasterStrength(chart),
+    patterns: detectPatterns(chart),
     zodiac: zodiacSign(mo, d),
     mbti: mbtiTrait(input.mbti),
     blood: bloodTrait(input.bloodType),

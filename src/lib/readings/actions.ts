@@ -33,7 +33,7 @@ export type UnlockResult =
 
 
 /**
- * 크레딧 풀이 열람(3단계 스펙 §1) — 캐시 히트=무차감, 차감은 유료 LLM 포함 생성 성공 후,
+ * 크레딧 풀이 열람(3단계 스펙 §1) — 캐시 히트=무차감, 차감은 LLM 개인화 포함 생성 성공 후,
  * LLM 실패=차감·캐시 없이 템플릿본 반환(P9 §12). 레거시 프리미엄=무제한·무차감.
  */
 export async function unlockReading(productRaw: string): Promise<UnlockResult> {
@@ -82,14 +82,16 @@ export async function unlockReading(productRaw: string): Promise<UnlockResult> {
 
     const sections = assembleCreditReading(product, ctx, profile.nickname, age);
 
-    // 유료 LLM 개인화 — 실패하면 아래 폴백으로
+    // LLM 개인화(긴 서술형) — 무료 모델 기본(월 고정비 0원 원칙). OPENROUTER_PREMIUM_MODEL을
+    // 유효한 모델로 설정하면 premium: true를 더해 더 빠른 유료 모델·더 큰 예산을 쓸 수 있다.
+    // 실패하면 아래 폴백으로.
     const r = await respond(
       {
         profile: ctx, nickname: profile.nickname, history: [],
         message: creditReadingPrompt(product, ctx, sections),
         personaId: PRODUCT_PERSONA[product],
       },
-      { template: { chat: async () => "" }, llm: new OpenRouterProvider({ premium: true }) },
+      { template: { chat: async () => "" }, llm: new OpenRouterProvider({ longForm: true }) },
     );
 
     if (r.source === "llm" && r.text) {
@@ -111,7 +113,7 @@ export async function unlockReading(productRaw: string): Promise<UnlockResult> {
       };
     }
 
-    // 유료 LLM 실패 — 차감·캐시 없이 템플릿본(P9 §12). 다음 시도에서 재생성된다.
+    // LLM 개인화 실패 — 차감·캐시 없이 템플릿본(P9 §12). 다음 시도에서 재생성된다.
     await recordEvent("reading_unlock", { product, source: "template" });
     return { ok: true, sections, usedCredit: false, remaining: remainingNow, readingId: null };
   } catch {
@@ -177,13 +179,13 @@ export async function unlockMatchDeep(raw: unknown): Promise<UnlockResult> {
       myName: profile.nickname, partnerName: "상대",
     });
 
-    // 유료 LLM 개인화 — 실패하면 아래 폴백으로
+    // LLM 개인화(긴 서술형) — 무료 모델 기본. 실패하면 아래 폴백으로.
     const r = await respond(
       {
         profile: ctx, nickname: profile.nickname, history: [], message: matchDeepPrompt(sections),
         personaId: PRODUCT_PERSONA.match,
       },
-      { template: { chat: async () => "" }, llm: new OpenRouterProvider({ premium: true }) },
+      { template: { chat: async () => "" }, llm: new OpenRouterProvider({ longForm: true }) },
     );
 
     if (r.source === "llm" && r.text) {
@@ -205,7 +207,7 @@ export async function unlockMatchDeep(raw: unknown): Promise<UnlockResult> {
       };
     }
 
-    // 유료 LLM 실패 — 차감·캐시 없이 템플릿본(P9 §12). 다음 시도에서 재생성된다.
+    // LLM 개인화 실패 — 차감·캐시 없이 템플릿본(P9 §12). 다음 시도에서 재생성된다.
     await recordEvent("reading_unlock", { product: "match", source: "template" });
     return { ok: true, sections, usedCredit: false, remaining: remainingNow, readingId: null };
   } catch {
