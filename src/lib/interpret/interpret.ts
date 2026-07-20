@@ -27,9 +27,11 @@ export async function respond(
   const template = deps.template ?? new TemplateProvider();
 
   try {
-    // 무료 티어 모델(OpenRouter :free 등)은 부하 시 대기열에 걸려 응답이 느려질 수 있어
-    // 여유를 두었다 — 그래도 넘기면 정상 경로인 템플릿 폴백으로(설계서 §8).
-    const text = await withTimeout(llm.chat(input), 12000);
+    // 무료 티어 모델(OpenRouter :free 등)은 부하 시 대기열에 걸려 응답이 느려질 수 있고,
+    // premium/report 모드는 응답 예산이 커서(openrouter-provider.ts) 생성 자체도 오래 걸릴 수
+    // 있어 여유를 두었다 — 그래도 넘기면 정상 경로인 템플릿 폴백으로(설계서 §8). 호출부
+    // ("use server" 액션)도 Vercel 함수 제한 시간을 이 값보다 넉넉히 잡아야 한다(maxDuration).
+    const text = await withTimeout(llm.chat(input), 25000);
     if (text.trim() && checkTone(text).length === 0) {
       return { text: text.trim(), source: "llm" };
     }

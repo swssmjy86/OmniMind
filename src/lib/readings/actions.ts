@@ -89,7 +89,7 @@ export async function unlockReading(productRaw: string): Promise<UnlockResult> {
         message: creditReadingPrompt(product, ctx, sections),
         personaId: PRODUCT_PERSONA[product],
       },
-      { template: { chat: async () => "" }, llm: new OpenRouterProvider({ premium: true }) },
+      { template: { chat: async () => "" }, llm: new OpenRouterProvider({ premium: true, longForm: true }) },
     );
 
     if (r.source === "llm" && r.text) {
@@ -183,7 +183,7 @@ export async function unlockMatchDeep(raw: unknown): Promise<UnlockResult> {
         profile: ctx, nickname: profile.nickname, history: [], message: matchDeepPrompt(sections),
         personaId: PRODUCT_PERSONA.match,
       },
-      { template: { chat: async () => "" }, llm: new OpenRouterProvider({ premium: true }) },
+      { template: { chat: async () => "" }, llm: new OpenRouterProvider({ premium: true, longForm: true }) },
     );
 
     if (r.source === "llm" && r.text) {

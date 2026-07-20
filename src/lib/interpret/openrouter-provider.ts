@@ -22,8 +22,12 @@ const PREMIUM_DEFAULT_MODEL = "anthropic/claude-3.5-haiku";
 const ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
 
 export interface OpenRouterOptions {
-  /** true면 P8 상담 크레딧을 소비하는 자리 — 유료 모델·확장 프롬프트·더 긴 응답. */
+  /** true면 P8 상담 크레딧을 소비하는 자리(마음 챗·고민 상담) — 유료 모델·확장 프롬프트·
+   *  더 긴 대화형 응답(4~7문장). */
   premium?: boolean;
+  /** true면 크레딧 풀이(직업/연애/재물/결혼·궁합) 전용 — premium과 함께 켜서 유료 모델은
+   *  그대로 쓰되, 응답 예산을 "1페이지 서술형"에 맞게 훨씬 크게 잡는다. */
+  longForm?: boolean;
   /** true면 P8 로그인 전용 심층 리포트(다중 섹션) — 무료 모델 그대로, 응답 예산만 크게. */
   report?: boolean;
 }
@@ -41,7 +45,9 @@ export class OpenRouterProvider implements InterpretProvider {
     const messages = [
       {
         role: "system",
-        content: chatSystemPrompt(input, { premium: this.opts.premium, report: this.opts.report }),
+        content: chatSystemPrompt(input, {
+          premium: this.opts.premium, longForm: this.opts.longForm, report: this.opts.report,
+        }),
       },
       ...input.history.map((m) => ({
         role: m.role === "assistant" ? "assistant" : "user",
@@ -59,8 +65,15 @@ export class OpenRouterProvider implements InterpretProvider {
       body: JSON.stringify({
         model,
         messages,
-        temperature: this.opts.report ? 0.85 : this.opts.premium ? 0.8 : 0.9,
-        max_tokens: this.opts.report ? 1200 : this.opts.premium ? 600 : 300,
+        temperature: this.opts.report ? 0.85 : (this.opts.longForm || this.opts.premium) ? 0.8 : 0.9,
+        // longForm(크레딧 풀이 — 유료 모델)은 "각 운을 풍성한 서술형 한 페이지 분량으로" 요청에
+        // 맞춰 예산을 크게 잡는다(2026-07-20). report(온보딩 심층 리포트 — 무료 모델)는 건드리지
+        // 않는다 — 실측 결과 max_tokens를 1200(기존값)·1400·2600 어느 쪽으로 둬도 42~73초가
+        // 걸려(gemma-4-26b-a4b-it:free, 공용 무료 풀이라 가변적) interpret.ts의 25초 내부
+        // 타임아웃을 넘긴다. 무료 모델의 생성 속도 자체가 병목이라 예산 조정으로는 못 고치는
+        // 문제이며, 이 상태는 이번 변경 이전부터 있던 기존 동작이다(프리미엄 모델 전환이나
+        // 비동기 생성 같은 구조 변경이 필요 — 별도 과제로 남긴다).
+        max_tokens: this.opts.report ? 1200 : this.opts.longForm ? 1800 : this.opts.premium ? 600 : 300,
       }),
     });
     if (!res.ok) throw new Error(`openrouter:http-${res.status}`);

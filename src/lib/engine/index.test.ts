@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { computeProfile, dayMasterOf, PROFILE_CONTEXT_VERSION } from "./index";
 import { CASES } from "./fixtures/manseryeok-cases";
+import { dayMasterStrength, detectPatterns } from "./strength";
 
 describe("computeProfile — 만세력 대조 코퍼스", () => {
   it.each(CASES)("$label", (c) => {
@@ -29,6 +30,15 @@ describe("computeProfile — 통합·계약", () => {
     expect(p.blood.type).toBe("A");
     expect(p.elements.counts).toBeDefined();
     expect(p.tenGods.yearStem).toBeDefined();
+  });
+
+  it("신강/신약과 격국 패턴이 십성표에서 결정론적으로 파생돼 함께 담긴다", () => {
+    const p = computeProfile(base);
+    expect(["신강", "신약", "중화"]).toContain(p.strength);
+    expect(Array.isArray(p.patterns)).toBe(true);
+    // 직접 계산과 일치 — computeProfile 내부 배선이 strength.ts를 그대로 쓰는지 감사
+    expect(p.strength).toBe(dayMasterStrength(p.tenGods));
+    expect(p.patterns).toEqual(detectPatterns(p.tenGods));
   });
 
   it("출력은 JSON 직렬화 가능(순수 데이터)", () => {

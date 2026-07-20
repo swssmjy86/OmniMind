@@ -38,17 +38,26 @@ describe("chatSystemPrompt — 페르소나별 말투", () => {
     expect(seoon).toContain("사서");
   });
 
-  it("4개 페르소나 전부 + personaId 없음, report/premium 조합에서도 프롬프트가 예외 없이 만들어진다", () => {
+  it("4개 페르소나 전부 + personaId 없음, report/premium/longForm 조합에서도 프롬프트가 예외 없이 만들어진다", () => {
     // checkTone은 LLM '출력'에만 적용되는 필터라 여기선 안 쓴다 — 이 프롬프트는 지시문 안에
     // "'~하세요' 금지"처럼 금지 표현을 예시로 인용하므로 checkTone을 걸면 필터가 자기 자신의
     // 설명문에 걸린다(오탐).
     const personas = ["dalzigi", "seoon", "hongyeon", "geumo", undefined] as const;
     for (const personaId of personas) {
-      for (const opts of [{}, { premium: true }, { report: true }]) {
+      for (const opts of [{}, { premium: true }, { premium: true, longForm: true }, { report: true }]) {
         const prompt = chatSystemPrompt({ ...baseInput, personaId }, opts);
         expect(prompt.length).toBeGreaterThan(0);
       }
     }
+  });
+
+  it("longForm이면 premium의 '4~7문장' 상한 대신 사용자 메시지의 길이 지시를 따르라고 한다", () => {
+    const withoutLongForm = chatSystemPrompt(baseInput, { premium: true });
+    expect(withoutLongForm).toContain("4~7문장");
+
+    const withLongForm = chatSystemPrompt(baseInput, { premium: true, longForm: true });
+    expect(withLongForm).not.toContain("4~7문장");
+    expect(withLongForm).toContain("사용자 메시지");
   });
 
   it("report 모드 지시문은 페르소나 유무와 무관하게 항상 포함된다(구조화 응답 파싱 안정성)", () => {
