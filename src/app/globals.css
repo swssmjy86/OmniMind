@@ -90,6 +90,13 @@
   --shell-shadow: var(--dark-shell-shadow);
 }
 
+/* TodayInputSheet 같은 "닫기 없는" 관문 모달이 body에 떠 있는 동안 ThemeToggle을 완전히
+   숨긴다 — 딤 배경 위에 토글만 홀로 밝게 뜬 채 남아 관문을 우회할 수 있는 것처럼 보이던
+   문제(모바일 실기기 제보) 수정. */
+body:has(> .today-input-sheet-overlay) .theme-toggle {
+  display: none;
+}
+
 @theme inline {
   --color-warm-base: var(--warm-base);
   --color-warm-surface: var(--warm-surface);
