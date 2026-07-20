@@ -42,7 +42,7 @@ export default function TodayInputSheet({
   };
 
   return createPortal(
-    <div className="today-input-sheet-overlay fixed inset-0 z-50 flex items-end justify-center">
+    <div className="today-input-sheet-overlay fixed inset-y-0 left-1/2 z-50 flex w-full max-w-[var(--shell-width)] -translate-x-1/2 items-end justify-center lg:max-w-[var(--shell-width-lg)]">
       {/* 딤 배경 — 닫기 없음(입력해야 진행되는 첫 관문). today-input-sheet-overlay 클래스는
           globals.css의 :has() 훅 — 이 관문이 떠 있는 동안 ThemeToggle을 완전히 숨긴다. */}
       <div aria-hidden className="absolute inset-0 bg-black/50" />
