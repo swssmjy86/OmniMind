@@ -6,11 +6,11 @@ import { CASES } from "@/lib/engine/fixtures/manseryeok-cases";
 
 describe("assembleProfile", () => {
   it.each(CASES.map((c) => c.input))(
-    "모든 코퍼스 입력에서 6섹션·비지 않음·닉네임 삽입·톤 통과",
+    "모든 코퍼스 입력에서 7섹션·비지 않음·닉네임 삽입·톤 통과",
     (input) => {
       const ctx = computeProfile(input);
       const sections = assembleProfile(ctx, "다인");
-      expect(sections).toHaveLength(6);
+      expect(sections).toHaveLength(7);
       for (const s of sections) {
         expect(s.title.trim().length).toBeGreaterThan(0);
         expect(s.body.trim().length).toBeGreaterThan(0);
@@ -23,12 +23,12 @@ describe("assembleProfile", () => {
     },
   );
 
-  it("timeUnknown 프로필도 정상 조립된다(6섹션)", () => {
+  it("timeUnknown 프로필도 정상 조립된다(7섹션)", () => {
     const ctx = computeProfile({
       birthDate: "1988-12-31", birthTime: null, timeUnknown: true,
     });
     const sections = assembleProfile(ctx, "하늘");
-    expect(sections).toHaveLength(6);
+    expect(sections).toHaveLength(7);
   });
 
   it("종합 섹션(조각이 만나는 자리)이 십성×신강신약 교차를 담는다", () => {
