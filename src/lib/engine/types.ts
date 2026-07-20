@@ -1,10 +1,3 @@
-export type BloodType = "A" | "B" | "O" | "AB";
-export type Mbti =
-  | "INTJ" | "INTP" | "ENTJ" | "ENTP"
-  | "INFJ" | "INFP" | "ENFJ" | "ENFP"
-  | "ISTJ" | "ISFJ" | "ESTJ" | "ESFJ"
-  | "ISTP" | "ISFP" | "ESTP" | "ESFP";
-
 /** 오행: 목0 화1 토2 금3 수4 (생 순환 인덱스) */
 export type ElementIndex = 0 | 1 | 2 | 3 | 4;
 
@@ -25,8 +18,6 @@ export interface EngineInput {
   birthDate: string; // "YYYY-MM-DD" (KST 벽시계)
   birthTime: string | null; // "HH:mm" | null
   timeUnknown: boolean;
-  bloodType: BloodType;
-  mbti: Mbti;
   /** 선택 — 있으면 대운(10년 단위 운의 흐름)까지 계산한다 */
   gender?: "male" | "female";
 }

@@ -28,21 +28,20 @@ describe("/sources (§7 출처)", () => {
 });
 
 describe("/faq (§8 Q&A)", () => {
-  it("7개 문항이 <details>로 렌더된다", () => {
+  it("6개 문항이 <details>로 렌더된다", () => {
     const { container } = render(<FaqPage />);
-    expect(FAQ_ITEMS).toHaveLength(7);
-    expect(container.querySelectorAll("details")).toHaveLength(7);
+    expect(FAQ_ITEMS).toHaveLength(6);
+    expect(container.querySelectorAll("details")).toHaveLength(6);
     expect(screen.getByText("사주 계산은 정확한가요?")).toBeInTheDocument();
-    expect(screen.getByText("MBTI·혈액형은 왜 물어보나요?")).toBeInTheDocument();
   });
 
-  it("FAQPage JSON-LD가 7개 문항과 함께 들어간다", () => {
+  it("FAQPage JSON-LD가 6개 문항과 함께 들어간다", () => {
     const { container } = render(<FaqPage />);
     const script = container.querySelector('script[type="application/ld+json"]');
     expect(script).not.toBeNull();
     const data = JSON.parse(script!.textContent ?? "{}");
     expect(data["@type"]).toBe("FAQPage");
-    expect(data.mainEntity).toHaveLength(7);
+    expect(data.mainEntity).toHaveLength(6);
     expect(data.mainEntity[0]["@type"]).toBe("Question");
   });
 

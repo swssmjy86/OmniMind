@@ -1,8 +1,10 @@
 // 크레딧 풀이 4종 조립(3단계 스펙 §3) — 순수 템플릿, LLM 문단은 액션이 성공 시에만 덧붙인다.
 // 구조(해석 축 위계 §3): ①상품별 핵심 결(십성 5갈래 — 팔자 주축) ②오행 ③운의 계절(대운)
-// ④보조축(MBTI E/I 수식 + 혈액형 마무리 — 결론을 만들지 않고 앞의 결을 받아 수식만 한다).
+// ④보조축(신강/신약 수식 + 강한 오행 마무리 — 결론을 만들지 않고 앞의 결을 받아 수식만 한다.
+// 전부 사주 한 장 안에서 나오는 결이라 외부 체계 없이도 성립한다).
 import type { ProfileContext } from "@/lib/engine/index";
 import type { InterpretationSection } from "../types";
+import type { DayMasterStrength } from "@/lib/engine/strength";
 import { dominantCategory, type TenGodCategory } from "./ten-gods";
 import { ELEMENT_BALANCE_TEXT } from "./elements";
 import { daeunSeasonBody } from "./chongun";
@@ -65,32 +67,37 @@ const FLOW_INTRO: Record<CreditReadingProduct, string> = {
   marriage: "함께의 때도 계절처럼 와요.",
 };
 
-// ④ 보조축 — MBTI E/I 수식(상품별). 전부 "이 …" 로 시작해 앞 섹션(팔자)의 결을 받는다.
-const AUX_TEXT: Record<CreditReadingProduct, Record<"E" | "I", string>> = {
+// ④ 보조축 — 신강/신약/중화 수식(상품별). 전부 "이 …" 로 시작해 앞 섹션(팔자)의 결을 받는다.
+const AUX_TEXT: Record<CreditReadingProduct, Record<DayMasterStrength, string>> = {
   career: {
-    E: "이 결이 E의 기운을 타면 사람들 앞에서 성과가 드러나는 자리에서 더 크게 자라요.",
-    I: "이 결이 I의 기운과 만나면 혼자 몰입하는 시간에서 성과가 깊어져요 — 조용한 집중을 지켜주는 환경을 골라보아요.",
+    신강: "이 결이 힘 있게 뻗어나가는 사주라, 주도적인 자리일수록 성과가 크게 드러나요.",
+    신약: "이 결이 아직 힘을 키워가는 사주라, 무리하게 넓히기보다 한 걸음씩 다지는 쪽이 오래가요.",
+    중화: "이 결이 무리 없이 자리 잡은 사주라, 급히 밀어붙이지 않아도 꾸준히 성과가 쌓여요.",
   },
   love: {
-    E: "이 마음이 E의 결을 타면 표현이 앞서 나가요 — 속도를 상대에게 맞춰주면 더 오래 흘러요.",
-    I: "이 마음이 I의 결 안에 있으면 겉으로 잔잔해 보여요 — 이따금 마음을 소리 내어 건네면 관계가 한결 가까워져요.",
+    신강: "이 마음이 힘 있게 뻗어나가는 사주라, 마음을 표현할수록 관계가 깊어져요.",
+    신약: "이 마음이 아직 힘을 키워가는 사주라, 서두르지 않고 천천히 다가가는 쪽이 당신에게 잘 맞아요.",
+    중화: "이 마음이 무리 없이 자리 잡은 사주라, 있는 그대로 다가가도 관계가 편안하게 이어져요.",
   },
   wealth: {
-    E: "이 감각이 E의 추진력과 만나면 벌리는 힘이 커져요 — 매듭짓는 손만 더해주면 돼요.",
-    I: "이 감각이 I의 신중함과 만나면 새는 돈이 적어요 — 기회 앞에서 반 박자만 빨라져도 충분해요.",
+    신강: "이 감각이 힘 있게 뻗어나가는 사주라, 기회를 크게 벌릴수록 결실도 커져요.",
+    신약: "이 감각이 아직 힘을 키워가는 사주라, 한 번에 크게 벌리기보다 하나씩 쌓아가는 쪽이 안전해요.",
+    중화: "이 감각이 무리 없이 자리 잡은 사주라, 무리한 확장 없이도 꾸준히 실속을 챙길 수 있어요.",
   },
   marriage: {
-    E: "이 결이 E의 기운과 만나면 사람들로 북적이는 따뜻한 집의 그림이에요 — 둘만의 시간도 함께 챙겨보아요.",
-    I: "이 결이 I의 기운과 만나면 조용하고 아늑한 가정의 그림이에요 — 서로의 혼자 시간을 존중하는 약속이 힘이 돼요.",
+    신강: "이 결이 힘 있게 뻗어나가는 사주라, 두 사람의 그림을 적극적으로 그려갈수록 가정이 단단해져요.",
+    신약: "이 결이 아직 힘을 키워가는 사주라, 서두르지 않고 천천히 쌓아가는 쪽이 당신에게 잘 맞아요.",
+    중화: "이 결이 무리 없이 자리 잡은 사주라, 있는 그대로도 편안한 가정을 꾸릴 수 있어요.",
   },
 };
 
-// ④ 마무리 절 — 혈액형(공용 4종). 보조축 안에서 한 문장 수식으로만 쓰인다.
-const BLOOD_CLOSE: Record<"A" | "B" | "O" | "AB", string> = {
-  A: "A형 특유의 섬세함이 그 위에 정성을 한 겹 더해줘요.",
-  B: "B형의 자유로운 결이 그 위에 생기를 불어넣어요.",
-  O: "O형의 뚝심이 그 흐름을 끝까지 밀어줘요.",
-  AB: "AB형의 균형 감각이 그 결을 차분히 다듬어줘요.",
+// ④ 마무리 절 — 강한 오행(공용 5종). 보조축 안에서 한 문장 수식으로만 쓰인다.
+const ELEMENT_CLOSE: Record<"목" | "화" | "토" | "금" | "수", string> = {
+  목: "목(木)의 기운이 그 위에 성장의 활력을 더해줘요.",
+  화: "화(火)의 기운이 그 위에 환한 생기를 더해줘요.",
+  토: "토(土)의 기운이 그 위에 든든한 안정감을 더해줘요.",
+  금: "금(金)의 기운이 그 위에 단단한 결단력을 더해줘요.",
+  수: "수(水)의 기운이 그 위에 유연한 지혜를 더해줘요.",
 };
 
 // 공통 섹션 제목 — 조립과 엿보기 제목 목록이 같은 상수를 참조해 구조적으로 어긋날 수 없다.
@@ -120,7 +127,7 @@ export function assembleCreditReading(
     { title: SEASON_TITLE, body: `${FLOW_INTRO[product]} ${daeunSeasonBody(ctx, age)}` },
     {
       title: AUX_TITLE,
-      body: `${AUX_TEXT[product][ctx.mbti.axes.EI]} ${BLOOD_CLOSE[ctx.blood.type]}`,
+      body: `${AUX_TEXT[product][ctx.strength]} ${ELEMENT_CLOSE[ctx.elements.dominant]}`,
     },
   ];
 }
@@ -155,7 +162,7 @@ export function creditReadingPrompt(
 export const __TEXT_FOR_TEST: string[] = [
   ...Object.values(KEY_TEXT).flatMap((m) => Object.values(m)),
   ...Object.values(AUX_TEXT).flatMap((m) => Object.values(m)),
-  ...Object.values(BLOOD_CLOSE),
+  ...Object.values(ELEMENT_CLOSE),
   ...Object.values(FLOW_INTRO),
   ...Object.values(KEY_TITLE),
 ];

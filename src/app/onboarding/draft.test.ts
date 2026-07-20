@@ -6,8 +6,6 @@ const draft: Draft = {
   birthDate: "1995-08-15",
   birthTime: "10:30",
   timeUnknown: false,
-  bloodType: "O",
-  mbti: "ENFJ",
 };
 
 describe("onboarding draft", () => {
@@ -27,7 +25,7 @@ describe("onboarding draft", () => {
     expect(loadDraft()).toBeNull();
     localStorage.setItem(
       "om_onboarding_draft",
-      JSON.stringify({ ...draft, mbti: "ABCD" }),
+      JSON.stringify({ ...draft, gender: "unknown" }),
     );
     expect(loadDraft()).toBeNull();
   });
@@ -40,7 +38,6 @@ describe("onboarding draft", () => {
 
   it("isCompleteDraft — 완주 여부 판정", () => {
     expect(isCompleteDraft(draft)).toBe(true);
-    expect(isCompleteDraft({ ...draft, mbti: null })).toBe(false);
     expect(isCompleteDraft({ ...draft, birthDate: "1995-8-15" })).toBe(false);
     expect(isCompleteDraft({ ...draft, birthTime: "", timeUnknown: true })).toBe(true);
   });

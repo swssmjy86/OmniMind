@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createServerSupabase } from "@/lib/supabase/server";
-import { isPremium } from "@/lib/consult/quota";
+import { isPremium, FREE_FOR_ALL } from "@/lib/consult/quota";
 import { toKstParts } from "@/lib/engine/kst";
 import { PASS_DAYS, CREDIT_PACKAGES } from "@/lib/payment/constants";
 import CreditPayButton from "@/components/premium/CreditPayButton";
@@ -22,6 +22,24 @@ export default async function PremiumPage() {
   const { data: profile } = await supabase
     .from("profiles").select("*").eq("user_id", user.id).maybeSingle<ProfileRow>();
   if (!profile) redirect("/onboarding");
+
+  // 무료 전환(2026-07-21) — 결제 화면 자체를 숨긴다. 코드는 그대로 두어 나중에
+  // FREE_FOR_ALL을 끄면 바로 되돌아온다.
+  if (FREE_FOR_ALL) {
+    return (
+      <main className="flex min-h-dvh flex-col items-center justify-center gap-4 p-6 text-center">
+        <h1 className="font-[family-name:var(--font-serif-kr)] text-2xl text-primary-green">
+          지금은 모두 무료예요
+        </h1>
+        <p className="text-text-soft">
+          로그인만 하면 마음·고민 상담을 포함해 모든 풀이를 마음껏 이용할 수 있어요.
+        </p>
+        <Link href="/mind" className="mt-2 text-sm text-text-soft underline underline-offset-4">
+          마음으로 돌아가기
+        </Link>
+      </main>
+    );
+  }
 
   const now = new Date();
   const legacyPremium = isPremium(profile.premium_until, now);

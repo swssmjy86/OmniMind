@@ -40,28 +40,6 @@ export function bondText(bond: MatchBond | null): string {
   return parts.join(" ");
 }
 
-// MBTI 어울림 0~5 → 3단 문구
-function synergyText(synergy: number | null): string {
-  if (synergy === null)
-    return "상대의 MBTI까지 알게 되면, 마음의 결이 만나는 방식도 더 깊이 읽어드릴 수 있어요.";
-  if (synergy >= 4)
-    return "성향의 결이 서로를 예쁘게 보완해요. 같은 곳을 바라보면서도 각자 다른 힘을 보태는 조합이죠.";
-  if (synergy >= 2)
-    return "성향이 닮은 구석과 다른 구석이 고루 섞여 있어요. 익숙함과 새로움을 오가며 서로를 알아가게 되죠.";
-  return "성향의 결이 꽤 다른 편이에요. 서로의 방식을 번역하는 데 품이 들지만, 그만큼 세계가 두 배로 넓어지는 사이죠.";
-}
-
-/** 혈액형 어울림 0~2 → 문구. null이면 알려주면 더 읽어주겠다는 손짓. */
-export function bloodText(synergy: number | null): string {
-  if (synergy === null)
-    return "서로의 혈액형까지 알게 되면, 몸에 새겨진 결이 만나는 방식도 살짝 읽어드릴 수 있어요.";
-  if (synergy >= 2)
-    return "혈액형의 결로 보면 서로의 빈 곳을 자연스럽게 채워주는 짝이에요. 함께 있으면 마음의 온도가 알맞게 데워지죠.";
-  if (synergy === 1)
-    return "혈액형의 결이 익숙하고 편안한 조합이에요. 크게 부딪힐 일 없이, 서로의 리듬에 스며들기 쉬운 사이죠.";
-  return "혈액형의 결은 서로 꽤 다른 편이에요. 그 다름이 처음엔 낯설어도, 서로에게 없는 온도를 건네주는 사이가 될 수 있어요.";
-}
-
 const MODE_CLOSING: Record<MatchMode, string> = {
   연인:
     "사랑은 닮음보다 리듬이에요. 오늘 서로의 속도를 한 번씩 물어봐주는 것 — 그게 이 조합을 가장 아름답게 하는 습관이에요.",
@@ -73,12 +51,13 @@ const MODE_CLOSING: Record<MatchMode, string> = {
 
 /**
  * 점수 → 따뜻한 온도 표현(서열화 없이).
- * 실제 점수 분포(약 54~100, 합충·보완 반영)에 맞춘 경계 — 모든 구간이 도달 가능하다.
+ * 실제 점수 분포(사주+별자리 재설계 후 약 55~92, 합충 반영)에 맞춘 경계 — 모든 구간이
+ * 도달 가능하다. MBTI 시너지가 빠지며 상한이 낮아져(과거 ~100 → 지금 ~92) 경계도 함께 내렸다.
  */
 export function scoreLine(score: number): string {
-  if (score >= 90) return "함께 있을 때 서로가 더 커지는, 보기 드문 결이에요.";
-  if (score >= 78) return "결이 잘 스며드는, 편안하고 든든한 조합이에요.";
-  if (score >= 65) return "서로 다른 결이 리듬을 맞춰가는, 자라나는 조합이에요.";
+  if (score >= 78) return "함께 있을 때 서로가 더 커지는, 보기 드문 결이에요.";
+  if (score >= 70) return "결이 잘 스며드는, 편안하고 든든한 조합이에요.";
+  if (score >= 62) return "서로 다른 결이 리듬을 맞춰가는, 자라나는 조합이에요.";
   return "낯선 결이 만나 서로의 세계를 넓혀주는 조합이에요.";
 }
 
@@ -118,12 +97,11 @@ export function assembleDeepMatch(input: {
     },
     {
       title: "기운의 흐름",
-      body: `${myName}님은 ${myElement}(${match.myDayGanzhi}), ${partnerName}님은 ${match.partner.element}(${match.partner.dayGanzhi})의 기운이에요. ${RELATION_TEXT[match.elementRelation]}${bond ? ` ${bond}` : ""}`,
+      body: `${myName}님은 ${myElement}(${match.myDayGanzhi}), ${partnerName}님은 ${match.partner.element}(${match.partner.dayGanzhi})의 기운이에요. ${RELATION_TEXT[match.elementRelation]}`,
     },
     { title: "서로를 채우는 조각", body: complementText(match.complement) },
+    ...(bond ? [{ title: "인연의 매듭", body: bond }] : []),
     { title: "별이 말하길", body: HARMONY_TEXT[match.zodiacHarmony] },
-    { title: "마음이 만나는 자리", body: synergyText(match.mbtiSynergy) },
-    { title: "혈액형이 말하길", body: bloodText(match.bloodSynergy) },
     { title: `${match.mode}로서 함께할 때`, body: MODE_CLOSING[match.mode] },
   ];
 }
@@ -140,11 +118,10 @@ export function assembleMatch(input: MatchAssembleInput): InterpretationSection[
     },
     {
       title: "기운의 흐름",
-      body: `당신은 ${myElement}, 상대는 ${match.partner.element}(${match.partner.dayGanzhi})의 기운이에요. ${RELATION_TEXT[match.elementRelation]}${bond ? ` ${bond}` : ""}`,
+      body: `당신은 ${myElement}, 상대는 ${match.partner.element}(${match.partner.dayGanzhi})의 기운이에요. ${RELATION_TEXT[match.elementRelation]}`,
     },
+    ...(bond ? [{ title: "인연의 매듭", body: bond }] : []),
     { title: "별이 말하길", body: HARMONY_TEXT[match.zodiacHarmony] },
-    { title: "마음이 만나는 자리", body: synergyText(match.mbtiSynergy) },
-    { title: "혈액형이 말하길", body: bloodText(match.bloodSynergy) },
     { title: `${match.mode}로서 함께할 때`, body: MODE_CLOSING[match.mode] },
   ];
 }

@@ -16,7 +16,6 @@ describe("computeProfile — 만세력 대조 코퍼스", () => {
 describe("computeProfile — 통합·계약", () => {
   const base = {
     birthDate: "1995-08-20", birthTime: "14:30", timeUnknown: false,
-    bloodType: "A" as const, mbti: "ENFP" as const,
   };
 
   it("전체 컨텍스트를 채운다", () => {
@@ -26,8 +25,6 @@ describe("computeProfile — 통합·계약", () => {
     expect(p.dayMaster.element).toBe("수");
     expect(p.dayMaster.yang).toBe(false);
     expect(p.zodiac).toBe("사자자리"); // 8/20
-    expect(p.mbti.type).toBe("ENFP");
-    expect(p.blood.type).toBe("A");
     expect(p.elements.counts).toBeDefined();
     expect(p.tenGods.yearStem).toBeDefined();
   });
@@ -58,10 +55,6 @@ describe("computeProfile — 통합·계약", () => {
     expect(() => computeProfile({ ...base, birthDate: "1800-01-01" })).toThrow(RangeError);
     expect(() => computeProfile({ ...base, birthTime: null, timeUnknown: false })).toThrow();
     expect(() => computeProfile({ ...base, birthDate: "1995/08/20" })).toThrow();
-    // @ts-expect-error 런타임 검증 확인
-    expect(() => computeProfile({ ...base, mbti: "XXXX" })).toThrow();
-    // @ts-expect-error 런타임 검증 확인
-    expect(() => computeProfile({ ...base, bloodType: "C" })).toThrow();
   });
 
   it("대조 코퍼스를 최소 20건 보유(년주·오호둔·오서둔 감사 + 앵커 외부확정)", () => {
@@ -73,7 +66,6 @@ describe("dayMasterOf — MBTI·혈액형 없이 일간만 가볍게 계산", ()
   it("computeProfile의 dayMaster와 동일한 값을 낸다(시간 앎)", () => {
     const p = computeProfile({
       birthDate: "1995-08-20", birthTime: "14:30", timeUnknown: false,
-      bloodType: "A", mbti: "ENFP",
     });
     const dm = dayMasterOf("1995-08-20", "14:30", false);
     expect(dm.stem).toBe(p.dayMaster.stem);
@@ -83,7 +75,6 @@ describe("dayMasterOf — MBTI·혈액형 없이 일간만 가볍게 계산", ()
   it("computeProfile의 dayMaster와 동일한 값을 낸다(시간 모름)", () => {
     const p = computeProfile({
       birthDate: "1995-08-20", birthTime: null, timeUnknown: true,
-      bloodType: "A", mbti: "ENFP",
     });
     const dm = dayMasterOf("1995-08-20", null, true);
     expect(dm.stem).toBe(p.dayMaster.stem);

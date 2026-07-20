@@ -6,8 +6,6 @@ import { computeDaeun, type Daeun, type Gender } from "./daeun";
 import { tenGods, type TenGodChart } from "./ten-gods";
 import { dayMasterStrength, detectPatterns, type DayMasterStrength, type GyeokPattern } from "./strength";
 import { zodiacSign, type ZodiacSign } from "./zodiac";
-import { mbtiTrait, isMbti, type MbtiTrait } from "./mbti";
-import { bloodTrait, isBloodType, type BloodTrait } from "./blood";
 import { YEAR_MIN, YEAR_MAX } from "./solar-terms";
 import { kstStringToInstant } from "./kst";
 
@@ -19,8 +17,9 @@ export type { ProfileContext };
  * 저장값은 캐시일 뿐이다.
  *   1 → 2 (2026-07-16): 표준시 UTC+8:30 보정, 절기 초 단위 경계, 대운이 4주와 같은 시각 사용.
  *   2 → 3 (2026-07-20): 신강/신약(strength)·격국 구조 패턴(patterns) 추가.
+ *   3 → 4 (2026-07-20): MBTI·혈액형을 온보딩·계산에서 제거(mbti/blood 필드 삭제).
  */
-export const PROFILE_CONTEXT_VERSION = 3;
+export const PROFILE_CONTEXT_VERSION = 4;
 
 interface ProfileContext {
   version: number;
@@ -33,8 +32,6 @@ interface ProfileContext {
   /** 감지된 격국(구조) 패턴 — 없으면 빈 배열 */
   patterns: GyeokPattern[];
   zodiac: ZodiacSign;
-  mbti: MbtiTrait;
-  blood: BloodTrait;
   /** 성별을 알 때만 — 10년 단위 운의 흐름(대운) */
   daeun?: Daeun;
   gender?: Gender;
@@ -85,9 +82,6 @@ export function dayMasterOf(
 }
 
 export function computeProfile(input: EngineInput): ProfileContext {
-  if (!isMbti(input.mbti)) throw new Error(`MBTI 오류: ${input.mbti}`);
-  if (!isBloodType(input.bloodType)) throw new Error(`혈액형 오류: ${input.bloodType}`);
-
   const rawInstant = parseKstInstant(input);
   const fp: FourPillars = computePillars(rawInstant, { timeUnknown: input.timeUnknown });
   // 대운도 4주와 같은 시각을 봐야 한다 — 기록 벽시계(raw)를 그대로 넘기면 서머타임·표준시
@@ -115,8 +109,6 @@ export function computeProfile(input: EngineInput): ProfileContext {
     strength: dayMasterStrength(chart),
     patterns: detectPatterns(chart),
     zodiac: zodiacSign(mo, d),
-    mbti: mbtiTrait(input.mbti),
-    blood: bloodTrait(input.bloodType),
     // 성별을 알면 대운까지 — 시 미상이어도 그날 정오 기준 근사(대운수 오차 미미)
     ...(input.gender
       ? { gender: input.gender, daeun: computeDaeun(birthInstant, fp, input.gender) }

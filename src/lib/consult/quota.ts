@@ -4,6 +4,13 @@
 // 2단계(로그인)    — 마음·고민 각각 하루 1회 무료.
 // 3단계(구독)      — 그 이상은 consult_credits(구매한 상담 크레딧)로 이어간다.
 // 레거시 30일 이용권(premium_until)은 구매 당시 약속대로 계속 무제한 유지.
+//
+// 무료 전환(2026-07-21): 로그인 사용자는 전부 위 3단계 전체를 무료로 쓴다. 결제·크레딧
+// 코드(payment/, cache-and-charge.ts, RPC 등)는 나중에 되돌릴 수 있게 그대로 남겨두고,
+// 판정만 이 플래그로 우회한다. usesCredit/consumesCredit을 true로 두면 유료 LLM 모델이
+// 실제로 호출되거나 크레딧이 깎이므로, 반드시 false로 고정해야 매출 없이 비용만 나가는
+// 상황(CLAUDE.md "월 고정비 0원" 위반)을 피한다.
+export const FREE_FOR_ALL = true;
 
 /** 무제한을 뜻하는 잔여 횟수 센티널(서버 액션 직렬화 때문에 Infinity 대신 사용). */
 export const UNLIMITED = -1;
@@ -37,6 +44,8 @@ export function consultAccess(
   usedToday: number,
   now: Date,
 ): ConsultAccess {
+  if (FREE_FOR_ALL) return { allowed: true, usesCredit: false, remaining: UNLIMITED };
+
   if (isPremium(premiumUntil, now)) return { allowed: true, usesCredit: false, remaining: UNLIMITED };
 
   const freeLeft = Math.max(0, FREE_DAILY_CONSULT - usedToday);
@@ -69,6 +78,7 @@ export interface ReadingAccess {
 /** 풀이 상품 접근 판정: 비로그인→login / 총운→로그인 무료 / 레거시 무제한 / 크레딧 / credit 잠금. */
 export function readingAccess(product: ReadingProduct, s: ReadingUserState): ReadingAccess {
   if (!s.loggedIn) return { allowed: false, lockReason: "login", consumesCredit: false };
+  if (FREE_FOR_ALL) return { allowed: true, lockReason: null, consumesCredit: false };
   if (product === "chongun") return { allowed: true, lockReason: null, consumesCredit: false };
   if (isPremium(s.premiumUntil, s.now)) return { allowed: true, lockReason: null, consumesCredit: false };
   if (s.credits > 0) return { allowed: true, lockReason: null, consumesCredit: true };

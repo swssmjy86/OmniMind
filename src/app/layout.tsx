@@ -21,7 +21,7 @@ const notoSerifKr = Noto_Serif_KR({
 export const metadata: Metadata = {
   title: "옴니마인드 — 모든 나를 잇다",
   description:
-    "사주, MBTI, 혈액형, 별자리… 흩어져 있던 '나'의 조각들을 하나로 이어드릴게요.",
+    "사주와 별자리… 흩어져 있던 '나'의 조각들을 하나로 이어드릴게요.",
 };
 
 export const viewport: Viewport = {

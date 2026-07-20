@@ -8,16 +8,8 @@ import {
 import { assembleMatch } from "@/lib/interpret/content/match";
 import { createInvite } from "@/lib/match/actions";
 import { recordClientEvent } from "@/lib/metrics/actions";
-import Choice from "@/components/ui/Choice";
 import PickerInput from "@/components/ui/PickerInput";
 import type { InterpretationSection } from "@/lib/interpret/types";
-import type { BloodType, Mbti } from "@/lib/engine/types";
-
-const MBTIS: Mbti[] = [
-  "INTJ", "INTP", "ENTJ", "ENTP", "INFJ", "INFP", "ENFJ", "ENFP",
-  "ISTJ", "ISFJ", "ESTJ", "ESFJ", "ISTP", "ISFP", "ESTP", "ESFP",
-];
-const BLOODS: BloodType[] = ["A", "B", "O", "AB"];
 
 // 유입 파라미터는 ASCII 토큰만 허용(ref.ts TOKEN 규칙) — 모드를 슬러그로.
 const MODE_SLUG: Record<MatchMode, string> = { 연인: "lover", 친구: "friend", 동료: "coworker" };
@@ -27,8 +19,6 @@ export default function MatchForm({ me, nickname }: { me: MatchMe; nickname: str
   const [birthDate, setBirthDate] = useState("");
   const [birthTime, setBirthTime] = useState("");
   const [timeUnknown, setTimeUnknown] = useState(false);
-  const [mbti, setMbti] = useState<"" | Mbti>("");
-  const [blood, setBlood] = useState<"" | BloodType>("");
   const [result, setResult] = useState<{ match: MatchContext; sections: InterpretationSection[] } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -42,8 +32,6 @@ export default function MatchForm({ me, nickname }: { me: MatchMe; nickname: str
         {
           birthDate,
           birthTime: timeUnknown || !birthTime ? undefined : birthTime,
-          mbti: mbti || undefined,
-          bloodType: blood || undefined,
         },
         mode,
       );
@@ -51,8 +39,6 @@ export default function MatchForm({ me, nickname }: { me: MatchMe; nickname: str
       setResult({ match, sections });
       void recordClientEvent("match_compute", {
         mode: MODE_SLUG[mode],
-        hasMbti: !!mbti,
-        hasBlood: !!blood,
         hasTime: !timeUnknown && !!birthTime,
       });
     } catch {
@@ -142,48 +128,6 @@ export default function MatchForm({ me, nickname }: { me: MatchMe; nickname: str
           <span className="mt-1 block text-xs text-text-soft">
             시간까지는 몰라도 괜찮아요 — 그날의 기운(일주)으로 읽어드려요.
           </span>
-        </div>
-        <div>
-          <span className="text-sm text-text-soft">상대의 혈액형 (알고 있다면)</span>
-          <div className="mt-1.5 space-y-2">
-            <Choice small unselectedBg="bg-warm-base" selected={blood === ""} onClick={() => setBlood("")}>
-              아직 몰라요
-            </Choice>
-            <div className="grid grid-cols-4 gap-2">
-              {BLOODS.map((b) => (
-                <Choice
-                  key={b}
-                  small
-                  unselectedBg="bg-warm-base"
-                  selected={blood === b}
-                  onClick={() => setBlood(b)}
-                >
-                  {b}형
-                </Choice>
-              ))}
-            </div>
-          </div>
-        </div>
-        <div>
-          <span className="text-sm text-text-soft">상대의 MBTI (알고 있다면)</span>
-          <div className="mt-1.5 space-y-2">
-            <Choice small unselectedBg="bg-warm-base" selected={mbti === ""} onClick={() => setMbti("")}>
-              아직 몰라요
-            </Choice>
-            <div className="grid grid-cols-4 gap-2">
-              {MBTIS.map((m) => (
-                <Choice
-                  key={m}
-                  small
-                  unselectedBg="bg-warm-base"
-                  selected={mbti === m}
-                  onClick={() => setMbti(m)}
-                >
-                  {m}
-                </Choice>
-              ))}
-            </div>
-          </div>
         </div>
         {error && <p className="text-sm text-accent-coral">{error}</p>}
         <button

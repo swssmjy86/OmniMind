@@ -9,15 +9,12 @@ import { OpenRouterProvider } from "@/lib/interpret/openrouter-provider";
 import { assertTone } from "@/lib/interpret/tone-guard";
 import { recordEvent } from "@/lib/metrics/events";
 import { PRODUCT_PERSONA } from "@/lib/persona/products";
-import type { BloodType, Mbti } from "@/lib/engine/types";
 
 export interface CreateProfileInput {
   nickname: string;
   birthDate: string;
   birthTime: string | null;
   timeUnknown: boolean;
-  bloodType: BloodType;
-  mbti: Mbti;
   /** 선택 — 있으면 대운까지 계산해 profile_context에 담는다 */
   gender?: "male" | "female" | null;
 }
@@ -39,8 +36,6 @@ export async function saveProfile(
       birthDate: input.birthDate,
       birthTime: input.timeUnknown ? null : input.birthTime,
       timeUnknown: input.timeUnknown,
-      bloodType: input.bloodType,
-      mbti: input.mbti,
       gender: input.gender ?? undefined,
     });
 
@@ -50,8 +45,6 @@ export async function saveProfile(
       birth_date: input.birthDate,
       birth_time: input.timeUnknown ? null : input.birthTime,
       time_unknown: input.timeUnknown,
-      blood_type: input.bloodType,
-      mbti: input.mbti,
       profile_context: context,
       updated_at: new Date().toISOString(),
     };
@@ -95,7 +88,7 @@ export async function saveProfile(
       { onConflict: "user_id,kind,target_date" },
     );
 
-    await recordEvent("onboard_complete", { mbti: input.mbti }); // 유입(ref/via)은 쿠키에서 병합
+    await recordEvent("onboard_complete"); // 유입(ref/via)은 쿠키에서 병합
     return { saved: true };
   } catch (e) {
     return { saved: false, reason: e instanceof Error ? e.message : "unknown" };

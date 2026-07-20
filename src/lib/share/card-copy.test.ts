@@ -3,11 +3,11 @@ import { computeProfile } from "@/lib/engine";
 import { checkTone } from "@/lib/interpret/tone-guard";
 import { computeDaily } from "@/lib/engine/daily";
 import { assembleDaily } from "@/lib/interpret/content/daily";
+import { dominantCategory } from "@/lib/interpret/content/ten-gods";
 import {
   COMBO_COUNT,
   cardCopy,
   cardQuery,
-  copyFromParams,
   parseCardParams,
   dailyCardQuery,
   dailyCardParams,
@@ -23,26 +23,19 @@ const ctx = computeProfile({
   birthDate: "1995-08-15",
   birthTime: "10:30",
   timeUnknown: false,
-  bloodType: "O",
-  mbti: "ENFJ",
 });
 
 describe("cardCopy", () => {
   it("프로필 컨텍스트에서 카피를 만든다", () => {
     const c = cardCopy(ctx);
-    expect(c.line1).toBe(`${ctx.dayMaster.stem}${ctx.dayMaster.element}(${c.hanja})의 ENFJ`);
-    expect(c.line2).toBe("사자자리 · O형");
-    expect(c.hook).toContain("1,920");
+    expect(c.line1).toBe(`${ctx.dayMaster.stem}${ctx.dayMaster.element}(${c.hanja})의 ${ctx.strength}`);
+    expect(c.line2).toBe(`사자자리 · ${dominantCategory(ctx.tenGods)} 우세`);
+    expect(c.hook).toContain("1,800");
     expect(c.hanja).toHaveLength(2);
   });
 
-  it("혈액형이 없으면 line2에서 생략한다", () => {
-    const c = copyFromParams({ dm: "갑", el: "목", mbti: "INFP", zo: "게자리", blood: null });
-    expect(c.line2).toBe("게자리");
-  });
-
-  it("조합 수는 1,920 (일간10×MBTI16×별자리12)", () => {
-    expect(COMBO_COUNT).toBe(1920);
+  it("조합 수는 1,800 (일간10×별자리12×신강신약3×십성갈래5)", () => {
+    expect(COMBO_COUNT).toBe(1800);
   });
 
   it("모든 카피가 톤 가드를 통과한다", () => {
@@ -60,9 +53,9 @@ describe("cardQuery ↔ parseCardParams 왕복", () => {
     expect(p).toEqual({
       dm: ctx.dayMaster.stem,
       el: ctx.dayMaster.element,
-      mbti: "ENFJ",
       zo: "사자자리",
-      blood: "O",
+      strength: ctx.strength,
+      category: dominantCategory(ctx.tenGods),
     });
   });
 
@@ -73,26 +66,21 @@ describe("cardQuery ↔ parseCardParams 왕복", () => {
 });
 
 describe("parseCardParams 검증", () => {
-  const valid = "dm=갑&el=목&mbti=ENFJ&zo=사자자리&blood=O";
+  const valid = "dm=갑&el=목&zo=사자자리&strength=신강&category=재성";
 
   it("유효한 쿼리를 파싱한다", () => {
     expect(parseCardParams(new URLSearchParams(valid))).toEqual({
-      dm: "갑", el: "목", mbti: "ENFJ", zo: "사자자리", blood: "O",
+      dm: "갑", el: "목", zo: "사자자리", strength: "신강", category: "재성",
     });
   });
 
-  it("blood 없이도 유효하다", () => {
-    const p = parseCardParams(new URLSearchParams("dm=계&el=수&mbti=ISTP&zo=물병자리"));
-    expect(p).toEqual({ dm: "계", el: "수", mbti: "ISTP", zo: "물병자리", blood: null });
-  });
-
   it.each([
-    ["없는 천간", "dm=강&el=목&mbti=ENFJ&zo=사자자리"],
-    ["천간·오행 불일치", "dm=갑&el=화&mbti=ENFJ&zo=사자자리"],
-    ["없는 MBTI", "dm=갑&el=목&mbti=ABCD&zo=사자자리"],
-    ["없는 별자리", "dm=갑&el=목&mbti=ENFJ&zo=용자리"],
-    ["없는 혈액형", "dm=갑&el=목&mbti=ENFJ&zo=사자자리&blood=C"],
-    ["파라미터 누락", "mbti=ENFJ&zo=사자자리"],
+    ["없는 천간", "dm=강&el=목&zo=사자자리&strength=신강&category=재성"],
+    ["천간·오행 불일치", "dm=갑&el=화&zo=사자자리&strength=신강&category=재성"],
+    ["없는 별자리", "dm=갑&el=목&zo=용자리&strength=신강&category=재성"],
+    ["없는 신강신약", "dm=갑&el=목&zo=사자자리&strength=강함&category=재성"],
+    ["없는 십성갈래", "dm=갑&el=목&zo=사자자리&strength=신강&category=식신"],
+    ["파라미터 누락", "zo=사자자리&strength=신강"],
   ])("%s → null", (_label, q) => {
     expect(parseCardParams(new URLSearchParams(q))).toBeNull();
   });

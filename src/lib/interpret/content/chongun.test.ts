@@ -7,11 +7,10 @@ import { SEASON_TITLE, assembleChongun } from "./chongun";
 // 실제 엔진으로 만든 컨텍스트 — 목이 아닌 진짜 값으로 조립을 검증한다.
 const ctx = computeProfile({
   birthDate: "1990-06-15", birthTime: "07:30", timeUnknown: false,
-  bloodType: "A", mbti: "ENFJ", gender: "male",
+  gender: "male",
 });
 const noGenderCtx = computeProfile({
   birthDate: "1990-06-15", birthTime: "07:30", timeUnknown: false,
-  bloodType: "A", mbti: "ENFJ",
 });
 
 describe("총운 조립 (2단계 스펙 §4)", () => {

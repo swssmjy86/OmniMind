@@ -119,6 +119,6 @@ export function dailyPrompt(daily: DailyContext, guide: DailyGuide): string {
     "[오늘의 기운 · 개인화]",
     `오늘은 ${daily.element}(${daily.dayGanzhi})의 기운이 흐르는 날이에요.`,
     `템플릿 마음가짐: ${guide.mind}`,
-    "이 사람의 사주·MBTI·별자리 결을 살려, 오늘 하루를 보내는 다정한 조언을 2~3문장으로 더 구체적으로 들려줘요. 위 템플릿 문장을 그대로 반복하지 말고, 새로운 표현으로.",
+    "이 사람의 사주·별자리 결을 살려, 오늘 하루를 보내는 다정한 조언을 2~3문장으로 더 구체적으로 들려줘요. 위 템플릿 문장을 그대로 반복하지 말고, 새로운 표현으로.",
   ].join("\n");
 }

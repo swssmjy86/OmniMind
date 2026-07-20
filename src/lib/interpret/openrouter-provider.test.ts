@@ -7,8 +7,6 @@ const ctx = computeProfile({
   birthDate: "1995-08-15",
   birthTime: "10:30",
   timeUnknown: false,
-  bloodType: "O",
-  mbti: "ENFJ",
 });
 
 const input: ChatInput = {

@@ -35,10 +35,6 @@ export const FAQ_ITEMS: { q: string; a: string; link?: { href: string; label: st
     a: "꼭 필요한 정보만 받고, 처리 방식을 개인정보처리방침에 그대로 적어 두었어요. 마음·고민 기록은 언제든 직접 지울 수 있어요.",
     link: { href: "/privacy", label: "개인정보처리방침 보기" },
   },
-  {
-    q: "MBTI·혈액형은 왜 물어보나요?",
-    a: "풀이의 뼈대는 사주가 세워요. MBTI와 혈액형은 그 기운이 당신에게 어떻게 드러나는지 설명하는 보조 지표로만 쓰고, 없어도 풀이는 동작해요.",
-  },
 ];
 
 export default function FaqPage() {

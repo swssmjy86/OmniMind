@@ -2,64 +2,59 @@ import { describe, expect, it } from "vitest";
 import { computeProfile } from "@/lib/engine";
 import { synthesisText, profileSynthesisPrompt, parseReportSections } from "./synthesis";
 import { DAY_MASTER_TEXT } from "./day-master";
-import { BLOOD_TEXT } from "./blood";
 import { ZODIAC_TEXT } from "./zodiac";
 import { checkTone } from "../tone-guard";
 import { chatSystemPrompt } from "../chat-prompt";
 import type { ProfileContext } from "@/lib/engine";
+import type { DayMasterStrength } from "@/lib/engine/strength";
 import type { TenGodChart } from "@/lib/engine/ten-gods";
 import type { ChatInput } from "../provider";
 
-// 십성 5갈래 × E/I = 10개 교차 문구의 완전성·톤을 검사한다.
+// 십성 5갈래 × 신강/신약/중화 3단 = 15개 교차 문구의 완전성·톤을 검사한다.
 const gods = ["비견", "식신", "편재", "정관", "정인"] as const;
+const STRENGTHS = ["신강", "신약", "중화"] as const;
 
 const base = computeProfile({
   birthDate: "1995-08-20", birthTime: "14:30", timeUnknown: false,
-  bloodType: "A", mbti: "ENFP",
 });
 
-function withChart(g: (typeof gods)[number], ei: "E" | "I"): ProfileContext {
+function withChart(g: (typeof gods)[number], strength: DayMasterStrength): ProfileContext {
   const chart: TenGodChart = {
     yearStem: g, monthStem: g, hourStem: g,
     yearBranch: g, monthBranch: g, dayBranch: g, hourBranch: g,
   };
-  return {
-    ...base,
-    tenGods: chart,
-    mbti: { ...base.mbti, axes: { ...base.mbti.axes, EI: ei } },
-  };
+  return { ...base, tenGods: chart, strength };
 }
 
-describe("synthesisText — 사주×MBTI 교차(조각이 만나는 자리)", () => {
-  it("10개 조합 전부 문구 존재·서로 다름·톤 통과", () => {
+describe("synthesisText — 사주 안 십성×신강신약 교차(조각이 만나는 자리)", () => {
+  it("15개 조합 전부 문구 존재·서로 다름·톤 통과", () => {
     const seen = new Set<string>();
     for (const g of gods) {
-      for (const ei of ["E", "I"] as const) {
-        const t = synthesisText(withChart(g, ei));
+      for (const s of STRENGTHS) {
+        const t = synthesisText(withChart(g, s));
         expect(t.length).toBeGreaterThan(0);
         expect(checkTone(t)).toHaveLength(0);
         seen.add(t);
       }
     }
-    expect(seen.size).toBe(10);
+    expect(seen.size).toBe(15);
   });
 
-  it("E/I가 다르면 같은 십성이라도 다른 이야기", () => {
-    expect(synthesisText(withChart("식신", "E"))).not.toBe(synthesisText(withChart("식신", "I")));
+  it("신강/신약이 다르면 같은 십성이라도 다른 이야기", () => {
+    expect(synthesisText(withChart("식신", "신강"))).not.toBe(synthesisText(withChart("식신", "신약")));
   });
 });
 
-describe("profileSynthesisPrompt — P8 로그인 전용 심층 리포트(4체계 전체 서술 혼합)", () => {
+describe("profileSynthesisPrompt — P8 로그인 전용 심층 리포트(사주+별자리 전체 서술 혼합)", () => {
   it("유형 라벨만이 아니라 각 체계에 이미 정의된 전체 서술을 그대로 담는다", () => {
     const prompt = profileSynthesisPrompt(base, "다인");
     expect(prompt).toContain(DAY_MASTER_TEXT[base.dayMaster.stem].body);
-    expect(prompt).toContain(BLOOD_TEXT[base.blood.type].body);
     expect(prompt).toContain(ZODIAC_TEXT[base.zodiac].intro);
-    expect(prompt).toContain(base.mbti.type);
+    expect(prompt).toContain(base.strength);
     expect(prompt).toContain("다인");
   });
 
-  it("여섯 체계를 나열하지 말고 한 사람의 이야기로 엮으라고 명시한다", () => {
+  it("결들을 나열하지 말고 한 사람의 이야기로 엮으라고 명시한다", () => {
     const prompt = profileSynthesisPrompt(base, "다인");
     expect(prompt).toContain("나열하지 말고 한 사람의 이야기로 엮어");
   });

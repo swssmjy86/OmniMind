@@ -8,9 +8,7 @@ import { unlockMatchDeep } from "@/lib/readings/actions";
 import type { InterpretationSection } from "@/lib/interpret/types";
 import ReviewPrompt from "@/components/reviews/ReviewPrompt";
 
-// 엔진 import 금지(번들 보호) — 축·혈액형·모드는 로컬 상수. 슬러그는 서버에서 검증·변환된다.
-const AXES: [string, string][] = [["E", "I"], ["S", "N"], ["T", "F"], ["J", "P"]];
-const BLOODS = ["A", "B", "O", "AB"] as const;
+// 엔진 import 금지(번들 보호) — 모드는 로컬 상수. 슬러그는 서버에서 검증·변환된다.
 const MODES = [
   { slug: "lover", label: "연인" }, { slug: "friend", label: "친구" }, { slug: "coworker", label: "동료" },
 ] as const;
@@ -26,8 +24,6 @@ export default function MatchDeepForm({
   const [birthDate, setBirthDate] = useState("");
   const [birthTime, setBirthTime] = useState("");
   const [timeUnknown, setTimeUnknown] = useState(false);
-  const [axes, setAxes] = useState<(string | null)[]>([null, null, null, null]);
-  const [blood, setBlood] = useState<string | null>(null);
   const [mode, setMode] = useState<string | null>(null);
   const [result, setResult] = useState<
     { sections: InterpretationSection[]; readingId: string | null } | null
@@ -67,18 +63,16 @@ export default function MatchDeepForm({
     );
   }
 
-  const mbti = axes.every(Boolean) ? axes.join("") : null;
   const canSubmit =
     /^\d{4}-\d{2}-\d{2}$/.test(birthDate) &&
     (timeUnknown || /^\d{2}:\d{2}$/.test(birthTime)) &&
-    mbti !== null && blood !== null && mode !== null && !pending;
+    mode !== null && !pending;
 
   const open = () => {
     setError(false);
     startTransition(async () => {
       const r = await unlockMatchDeep({
-        birthDate, birthTime: timeUnknown ? "" : birthTime, timeUnknown,
-        mbti, bloodType: blood, mode,
+        birthDate, birthTime: timeUnknown ? "" : birthTime, timeUnknown, mode,
       });
       if (r.ok) setResult({ sections: r.sections, readingId: r.readingId });
       else setError(true);
@@ -104,29 +98,6 @@ export default function MatchDeepForm({
         <Choice small selected={timeUnknown} onClick={() => setTimeUnknown(!timeUnknown)} unselectedBg="bg-warm-base">
           시간을 몰라요
         </Choice>
-      </div>
-
-      <span className="mt-4 block text-sm text-text-soft">상대의 MBTI</span>
-      <div className="mt-1 grid grid-cols-4 gap-2">
-        {AXES.map(([a, b], i) => (
-          <div key={a} className="grid gap-2">
-            {[a, b].map((v) => (
-              <Choice key={v} small selected={axes[i] === v} unselectedBg="bg-warm-base"
-                onClick={() => setAxes(axes.map((x, j) => (j === i ? v : x)))}>
-                {v}
-              </Choice>
-            ))}
-          </div>
-        ))}
-      </div>
-
-      <span className="mt-4 block text-sm text-text-soft">상대의 혈액형</span>
-      <div className="mt-1 grid grid-cols-4 gap-2">
-        {BLOODS.map((b) => (
-          <Choice key={b} small selected={blood === b} onClick={() => setBlood(b)} unselectedBg="bg-warm-base">
-            {b}
-          </Choice>
-        ))}
       </div>
 
       <span className="mt-4 block text-sm text-text-soft">우리는 어떤 사이인가요?</span>

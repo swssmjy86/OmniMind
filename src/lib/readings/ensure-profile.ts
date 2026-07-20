@@ -11,8 +11,6 @@ export function engineInputFromProfile(row: ProfileRow): EngineInput {
     birthDate: row.birth_date,
     birthTime: row.time_unknown ? null : (row.birth_time ? row.birth_time.slice(0, 5) : null),
     timeUnknown: row.time_unknown,
-    bloodType: row.blood_type,
-    mbti: row.mbti as EngineInput["mbti"],
     gender:
       row.gender === "male" || row.gender === "female" ? row.gender : undefined,
   };
