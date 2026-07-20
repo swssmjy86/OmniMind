@@ -38,6 +38,20 @@ describe("computeProfile — 통합·계약", () => {
     expect(p.patterns).toEqual(detectPatterns(p.tenGods));
   });
 
+  it("십이신살이 일지 기준 네 기둥에 함께 담긴다", () => {
+    const p = computeProfile(base);
+    expect(p.sinsal.year).toBeDefined();
+    expect(p.sinsal.month).toBeDefined();
+    expect(p.sinsal.day).toBeDefined();
+    // 일지 자기 자신은 생지·왕지·고지에 따라 지살·장성살·화개살 중 하나여야 한다
+    expect(["지살", "장성살", "화개살"]).toContain(p.sinsal.day);
+  });
+
+  it("timeUnknown이면 sinsal.hour는 null", () => {
+    const p = computeProfile({ ...base, birthTime: null, timeUnknown: true });
+    expect(p.sinsal.hour).toBeNull();
+  });
+
   it("출력은 JSON 직렬화 가능(순수 데이터)", () => {
     const p = computeProfile(base);
     expect(() => JSON.parse(JSON.stringify(p))).not.toThrow();

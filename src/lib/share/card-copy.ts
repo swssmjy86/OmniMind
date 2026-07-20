@@ -105,7 +105,7 @@ export function parseCardParams(sp: URLSearchParams): CardParams | null {
 // ── 오늘의 나 카드 — 데일리 가이드 전체 문구(§P4-보강: 티저가 아니라 그날의 이야기를 담는다) ──
 
 /** 필드별 최대 길이 — 정상 문구 길이보다 넉넉히, 쿼리 남용(과도한 폰트 서브셋 요청) 방지용. */
-const DAILY_FIELD_MAX = { headline: 120, mind: 160, personal: 220, color: 20, keyword: 20, lucky: 30 };
+const DAILY_FIELD_MAX = { headline: 120, mind: 160, personal: 220, color: 20, keyword: 20, lucky: 30, sky: 160 };
 
 export interface DailyCardParams {
   dm: string; // 일간 천간 — 카드 장식 심볼용
@@ -116,6 +116,9 @@ export interface DailyCardParams {
   color: string;
   keyword: string;
   lucky: string;
+  /** 월령·출몰시각(달 위상 + 해 뜨고 짐) 한 줄 — 태양고도는 카드에 담기엔 너무 기술적이라 뺀다.
+   *  이 필드가 생기기 전에 공유된 카드 링크도 계속 렌더되어야 해 선택으로 둔다. */
+  sky: string | null;
 }
 
 export interface DailyCardCopy {
@@ -126,6 +129,7 @@ export interface DailyCardCopy {
   color: string;
   keyword: string;
   lucky: string;
+  sky: string | null;
   cta: string;
   slogan: string;
 }
@@ -140,6 +144,7 @@ export function dailyCardParams(ctx: ProfileContext, guide: DailyGuide): DailyCa
     color: guide.color,
     keyword: guide.keyword,
     lucky: guide.lucky,
+    sky: `${guide.skyLines.moon} ${guide.skyLines.riseSet}`,
   };
 }
 
@@ -152,6 +157,7 @@ export function dailyCopyFromParams(p: DailyCardParams): DailyCardCopy {
     color: p.color,
     keyword: p.keyword,
     lucky: p.lucky,
+    sky: p.sky,
     cta: "오늘의 이야기 더 보기 →",
     slogan: "나보다 나를 더 잘 아는, 옴니마인드",
   };
@@ -170,6 +176,7 @@ export function dailyCardQuery(ctx: ProfileContext, guide: DailyGuide): string {
     keyword: p.keyword,
     lucky: p.lucky,
   });
+  if (p.sky) sp.set("sky", p.sky);
   if (p.personal) sp.set("personal", p.personal);
   return sp.toString();
 }
@@ -183,6 +190,8 @@ export function parseDailyCardParams(sp: URLSearchParams): DailyCardParams | nul
   const color = sp.get("color") ?? "";
   const keyword = sp.get("keyword") ?? "";
   const lucky = sp.get("lucky") ?? "";
+  // sky는 이 필드가 생기기 전에 공유된 링크에는 없을 수 있어 선택 취급(personal과 동일 패턴).
+  const sky = sp.get("sky");
   const personal = sp.get("personal");
 
   if (!validDmEl(dm, el)) return null;
@@ -193,12 +202,13 @@ export function parseDailyCardParams(sp: URLSearchParams): DailyCardParams | nul
     color.length > DAILY_FIELD_MAX.color ||
     keyword.length > DAILY_FIELD_MAX.keyword ||
     lucky.length > DAILY_FIELD_MAX.lucky ||
+    (sky && sky.length > DAILY_FIELD_MAX.sky) ||
     (personal && personal.length > DAILY_FIELD_MAX.personal)
   ) {
     return null;
   }
 
-  return { dm, el, headline, mind, personal, color, keyword, lucky };
+  return { dm, el, headline, mind, personal, color, keyword, lucky, sky };
 }
 
 // ── 나의 조각 카드 — "온전한 나" 프로필 전체 섹션(§P4-보강: 조각들을 전부 이미지로) ──

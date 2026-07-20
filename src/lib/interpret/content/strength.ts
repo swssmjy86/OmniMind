@@ -1,4 +1,7 @@
 import type { DayMasterStrength, GyeokPattern } from "@/lib/engine/strength";
+import type { HiddenStemLayer } from "@/lib/engine/sarang";
+import type { Gyeok, GyeokCandidate } from "@/lib/engine/gyeok";
+import { HEAVENLY_STEMS, ELEMENTS, stemElement } from "@/lib/engine/constants";
 
 // 신강/신약·격국 패턴을 문장으로 — §5.4 문체(비단정·비명령·공감형). "~구조가 보여요"처럼
 // 관찰형으로 끝내 단정하지 않는다.
@@ -28,4 +31,38 @@ export function patternText(p: GyeokPattern): string {
 export function patternsText(patterns: GyeokPattern[]): string | null {
   if (!patterns.length) return null;
   return patterns.map(patternText).join(" ");
+}
+
+// 사령(월률분야) — 겉으로 드러난 월지와 별개로, 태어난 순간 실제 힘을 쥔 속의 기운.
+const LAYER_TEXT: Record<HiddenStemLayer, string> = {
+  여기: "지난 계절의 여운이 아직 남아 있는",
+  중기: "다음 계절로 넘어가는 길목에 잠시 스치는",
+  정기: "이 계절에 온전히 자리 잡은",
+};
+
+/** 사령(월지 지장간 중 실권을 쥔 층)을 '겉과 속' 한 문장으로. */
+export function sarangText(sarang: { layer: HiddenStemLayer; stem: string }): string {
+  const i = HEAVENLY_STEMS.indexOf(sarang.stem as (typeof HEAVENLY_STEMS)[number]);
+  const element = ELEMENTS[stemElement(i)];
+  return `겉으로 드러난 달의 결과 별개로, 태어난 그 순간 속에서는 ${LAYER_TEXT[sarang.layer]} ${element}의 기운이 실제로 힘을 쓰고 있었어요.`;
+}
+
+// 격국(정격 8격 + 건록·월겁·양인) — 사주의 뼈대가 되는 구조 한 갈래.
+const GYEOK_TEXT: Record<Gyeok, string> = {
+  식신격: "먹고 사는 재주(식신)가 또렷한 격이에요. 여유롭게 몰입해 만들어내는 데서 결실이 따라와요.",
+  상관격: "재기와 표현(상관)이 두드러진 격이에요. 틀에 매이지 않는 발상이 강점이 되는 결이죠.",
+  정재격: "성실히 쌓는 재물(정재)이 중심인 격이에요. 꾸준함이 그대로 결실로 이어지는 결이죠.",
+  편재격: "기회를 넓게 보는 재물(편재)이 중심인 격이에요. 통 크게 벌이는 데서 힘이 나는 결이죠.",
+  정관격: "질서와 책임(정관)이 중심인 격이에요. 원칙을 지킬 때 오히려 마음이 편안해지는 결이죠.",
+  편관격: "위기에서 오히려 강해지는 결단력(편관)이 중심인 격이에요. 맞서야 할 때 진가가 드러나는 결이죠.",
+  정인격: "배움과 받아들임(정인)이 중심인 격이에요. 채우고 익히는 시간이 곧 힘이 되는 결이죠.",
+  편인격: "낯선 배움(편인)에 끌리는 격이에요. 남과 다른 길에서 오히려 자기다움을 찾는 결이죠.",
+  건록격: "스스로 일으켜 세우는 힘(건록)이 중심인 격이에요. 자기 힘으로 자리를 다지는 결이죠.",
+  월겁격: "동료와 함께(혹은 경쟁하며) 자라는 힘(월겁)이 중심인 격이에요. 부딪히는 과정에서 단단해지는 결이죠.",
+  양인격: "날카롭게 벼려진 힘(양인)이 중심인 격이에요. 강한 결단이 필요한 자리에서 빛나는 결이죠.",
+};
+
+/** 격국 후보를 한 문단으로. 겸격(후보 2개 이상)이면 문장을 이어붙인다(단정 대신 있는 그대로). */
+export function gyeokText(candidates: GyeokCandidate[]): string {
+  return candidates.map((c) => GYEOK_TEXT[c.gyeok]).join(" ");
 }
