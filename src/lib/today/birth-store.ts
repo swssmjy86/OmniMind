@@ -2,6 +2,7 @@
 // 파싱·검증은 순수 함수로 분리해 테스트한다. localStorage 접근은 클라이언트 컴포넌트 몫.
 
 export interface TodayBirth {
+  birthDate: string;                 // "YYYY-MM-DD"
   gender: "male" | "female" | null;  // 선택
 }
 
@@ -12,8 +13,9 @@ export function parseTodayBirth(raw: string | null): TodayBirth | null {
   if (!raw) return null;
   try {
     const d = JSON.parse(raw) as Partial<TodayBirth>;
+    if (typeof d.birthDate !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(d.birthDate)) return null;
     if (d.gender != null && d.gender !== "male" && d.gender !== "female") return null;
-    return { gender: d.gender ?? null };
+    return { birthDate: d.birthDate, gender: d.gender ?? null };
   } catch {
     return null;
   }

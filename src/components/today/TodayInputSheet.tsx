@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createPortal } from "react-dom";
+import PickerInput from "@/components/ui/PickerInput";
 import Choice from "@/components/ui/Choice";
 import { TODAY_BIRTH_KEY, type TodayBirth } from "@/lib/today/birth-store";
 
@@ -18,10 +19,13 @@ export default function TodayInputSheet({
 }: {
   onSaved: (b: TodayBirth) => void;
 }) {
+  const [birthDate, setBirthDate] = useState("");
   const [gender, setGender] = useState<"male" | "female" | null>(null);
 
+  const canSubmit = /^\d{4}-\d{2}-\d{2}$/.test(birthDate);
+
   const submit = () => {
-    const b: TodayBirth = { gender };
+    const b: TodayBirth = { birthDate, gender };
     try {
       window.localStorage.setItem(TODAY_BIRTH_KEY, JSON.stringify(b));
     } catch {
@@ -35,7 +39,7 @@ export default function TodayInputSheet({
       {/* 딤 배경 — 닫기 없음(입력해야 진행되는 첫 관문). today-input-sheet-overlay 클래스는
           globals.css의 :has() 훅 — 이 관문이 떠 있는 동안 ThemeToggle을 완전히 숨긴다. */}
       <div aria-hidden className="absolute inset-0 bg-black/50" />
-      <div className="fade-rise relative max-h-[85dvh] w-full max-w-[var(--shell-width)] overflow-y-auto rounded-t-[28px] bg-warm-base p-6 pb-8 lg:max-w-[var(--shell-width-lg)]">
+      <div className="fade-rise relative max-h-[85dvh] w-full max-w-[var(--shell-width)] overflow-y-auto rounded-t-[28px] bg-warm-base p-6 pb-[calc(2rem+env(safe-area-inset-bottom))] lg:max-w-[var(--shell-width-lg)]">
         <p className="text-xs text-text-soft">
           <span aria-hidden>🏮</span> 달지기 · 오늘의운세
         </p>
@@ -46,7 +50,12 @@ export default function TodayInputSheet({
           오늘의 기운을 당신에게 맞춰 보여드릴게요. 입력한 정보는 이 기기에만 저장돼요.
         </p>
 
-        <label className="mt-5 block text-sm text-text-soft">성별 (선택)</label>
+        <label className="mt-5 block text-sm text-text-soft">태어난 날</label>
+        <div className="mt-1">
+          <PickerInput type="date" value={birthDate} onChange={setBirthDate} placeholder="생년월일을 선택해 주세요" />
+        </div>
+
+        <label className="mt-4 block text-sm text-text-soft">성별 (선택)</label>
         <div className="mt-1 flex gap-2">
           <Choice small className="flex-1" selected={gender === "male"} onClick={() => setGender(gender === "male" ? null : "male")}>
             남성
@@ -58,8 +67,9 @@ export default function TodayInputSheet({
 
         <button
           type="button"
+          disabled={!canSubmit}
           onClick={submit}
-          className="press mt-6 w-full rounded-card bg-accent-coral py-3.5 font-medium text-white"
+          className="press mt-6 w-full rounded-card bg-accent-coral py-3.5 font-medium text-white disabled:opacity-40"
         >
           오늘의 기운 보기
         </button>
