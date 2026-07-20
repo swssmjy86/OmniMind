@@ -30,28 +30,64 @@
   /* 모션 토큰 — 이 파일의 모든 애니메이션이 공유하는 이징(모션 재설계 제안, 2026-07-17). */
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+
+  /* 다크 팔레트 값 — 시스템 모드/수동 선택 두 곳(아래)에서 재사용한다. 값을 여기 한 번만
+     정의해 두 경로가 서로 다른 다크 색으로 갈라지는 일을 막는다.
+     P9 "밤의 따뜻함"(설계서 §4) — 검정이 아닌 깊은 밤 네이비. 채도를 낮추고 따뜻한
+     쪽으로 기울인 값이라 브랜드 가이드의 '차가운 블루톤 지양'과 충돌하지 않는다. */
+  --dark-warm-base: #0e1626;
+  --dark-warm-surface: #1a2740;
+  --dark-accent-coral: #e8927c;
+  /* 제목·강조가 쓰는 primary-green은 다크에서 달빛 골드로 — 밤 네이비 위의 온기. */
+  --dark-primary-green: #f0c96a;
+  --dark-text-main: #f0ebe2;
+  --dark-text-soft: #a8b0c0;
+  --dark-on-primary: #0e1626; /* 골드가 된 primary 위에는 밤 네이비 글자 */
+  --dark-selected: #f0c96a; /* 선택됨 = 달빛 골드(§4.2). 컴포넌트 수정 0으로 전환된다. */
+  --dark-on-selected: #0e1626;
+  --dark-moon-gold: #f0c96a;
+  /* 밤 네이비 위 카드 부양감 — 검정 그림자 대신 달빛의 옅은 번짐. */
+  --dark-shell-tint-amount: 22%;
+  --dark-shell-shadow: 0 0 80px rgba(240, 201, 106, 0.06);
 }
 
+/* 다크 팔레트 적용 — 두 경로. ① data-theme이 없을 때("시스템" 모드): prefers-color-scheme을
+   따른다. ② data-theme="dark"(수동 선택)일 때: 시스템 설정과 무관하게 무조건 적용한다.
+   ThemeToggle이 <html>에 data-theme을 쓰고, layout.tsx의 인라인 스크립트가 첫 페인트
+   전에 미리 반영해 깜빡임을 막는다. 두 블록 다 위 --dark-* 값을 참조만 하므로 값 자체가
+   어긋날 일은 없다. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]):not([data-theme="dark"]) {
     color-scheme: dark;
-    /* P9 "밤의 따뜻함"(설계서 §4) — 검정이 아닌 깊은 밤 네이비. 채도를 낮추고 따뜻한
-       쪽으로 기울인 값이라 브랜드 가이드의 '차가운 블루톤 지양'과 충돌하지 않는다. */
-    --warm-base: #0e1626;
-    --warm-surface: #1a2740;
-    --accent-coral: #e8927c;
-    /* 제목·강조가 쓰는 primary-green은 다크에서 달빛 골드로 — 밤 네이비 위의 온기. */
-    --primary-green: #f0c96a;
-    --text-main: #f0ebe2;
-    --text-soft: #a8b0c0;
-    --on-primary: #0e1626; /* 골드가 된 primary 위에는 밤 네이비 글자 */
-    --selected: #f0c96a; /* 선택됨 = 달빛 골드(§4.2). 컴포넌트 수정 0으로 전환된다. */
-    --on-selected: #0e1626;
-    --moon-gold: #f0c96a;
-    /* 밤 네이비 위 카드 부양감 — 검정 그림자 대신 달빛의 옅은 번짐. */
-    --shell-tint-amount: 22%;
-    --shell-shadow: 0 0 80px rgba(240, 201, 106, 0.06);
+    --warm-base: var(--dark-warm-base);
+    --warm-surface: var(--dark-warm-surface);
+    --accent-coral: var(--dark-accent-coral);
+    --primary-green: var(--dark-primary-green);
+    --text-main: var(--dark-text-main);
+    --text-soft: var(--dark-text-soft);
+    --on-primary: var(--dark-on-primary);
+    --selected: var(--dark-selected);
+    --on-selected: var(--dark-on-selected);
+    --moon-gold: var(--dark-moon-gold);
+    --shell-tint-amount: var(--dark-shell-tint-amount);
+    --shell-shadow: var(--dark-shell-shadow);
   }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --warm-base: var(--dark-warm-base);
+  --warm-surface: var(--dark-warm-surface);
+  --accent-coral: var(--dark-accent-coral);
+  --primary-green: var(--dark-primary-green);
+  --text-main: var(--dark-text-main);
+  --text-soft: var(--dark-text-soft);
+  --on-primary: var(--dark-on-primary);
+  --selected: var(--dark-selected);
+  --on-selected: var(--dark-on-selected);
+  --moon-gold: var(--dark-moon-gold);
+  --shell-tint-amount: var(--dark-shell-tint-amount);
+  --shell-shadow: var(--dark-shell-shadow);
 }
 
 @theme inline {

@@ -18,8 +18,9 @@ describe("오늘의운세 입력 시트 (스펙 §3 팝업)", () => {
 
   it("날짜 + 시간 몰라요면 제출 가능해지고, 저장 후 콜백·localStorage에 남는다", () => {
     const onSaved = vi.fn();
-    const { container } = render(<TodayInputSheet onSaved={onSaved} />);
-    const dateInput = container.querySelector('input[type="date"]')!;
+    render(<TodayInputSheet onSaved={onSaved} />);
+    // document.body로 포탈 렌더링되므로 RTL container가 아닌 document 전체에서 찾는다.
+    const dateInput = document.querySelector('input[type="date"]')!;
     fireEvent.change(dateInput, { target: { value: "1990-06-15" } });
     fireEvent.click(screen.getByRole("button", { name: "시간을 몰라요" }));
     const submit = screen.getByRole("button", { name: "오늘의 기운 보기" });

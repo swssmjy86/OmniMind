@@ -4,7 +4,7 @@ export default function TabsLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <div className="pb-20">
+    <div className="pb-20 pt-14">
       {children}
       <BottomNav />
     </div>

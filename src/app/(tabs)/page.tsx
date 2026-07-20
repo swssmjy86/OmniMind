@@ -97,7 +97,7 @@ export default async function HomePage() {
             )}
           </p>
           <Link
-            href="/onboarding"
+            href="/today"
             className="press mt-4 block w-full rounded-card bg-accent-coral py-3.5 text-center font-medium text-white"
           >
             나를 알아보기 ✨

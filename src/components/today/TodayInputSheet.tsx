@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import PickerInput from "@/components/ui/PickerInput";
 import Choice from "@/components/ui/Choice";
 import { TODAY_BIRTH_KEY, type TodayBirth } from "@/lib/today/birth-store";
@@ -8,6 +9,10 @@ import { TODAY_BIRTH_KEY, type TodayBirth } from "@/lib/today/birth-store";
 /**
  * 오늘의운세 입력 팝업(스펙 §3) — 새창이 아닌 바텀시트. 입력은 localStorage에만 저장한다.
  * 시간 미상(timeUnknown)·성별 미선택을 허용한다 — 온보딩과 같은 결.
+ * document.body로 포탈 렌더링한다 — 조상 &lt;main&gt;의 .fade-rise 진입 애니메이션이 끝난 뒤에도
+ * transform: translateY(0)이 계산 스타일에 남아 position:fixed의 containing block이 되어
+ * 버린다(뷰포트가 아닌 &lt;main&gt; 기준으로 배치돼, 본문이 길어지는 좁은(모바일) 화면일수록
+ * 시트가 화면 밖 아래로 밀려나는 버그였다). 포탈로 body 바로 아래 렌더링하면 이 문제와 무관해진다.
  */
 export default function TodayInputSheet({
   onSaved,
@@ -36,11 +41,11 @@ export default function TodayInputSheet({
     onSaved(b);
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-end justify-center">
       {/* 딤 배경 — 닫기 없음(입력해야 진행되는 첫 관문) */}
       <div aria-hidden className="absolute inset-0 bg-black/50" />
-      <div className="fade-rise relative w-full max-w-[var(--shell-width)] rounded-t-[28px] bg-warm-base p-6 pb-8 lg:max-w-[var(--shell-width-lg)]">
+      <div className="fade-rise relative max-h-[85dvh] w-full max-w-[var(--shell-width)] overflow-y-auto rounded-t-[28px] bg-warm-base p-6 pb-8 lg:max-w-[var(--shell-width-lg)]">
         <p className="text-xs text-text-soft">
           <span aria-hidden>🏮</span> 달지기 · 오늘의운세
         </p>
@@ -91,6 +96,7 @@ export default function TodayInputSheet({
           오늘의 기운 보기
         </button>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
