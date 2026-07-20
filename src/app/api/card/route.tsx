@@ -1,5 +1,5 @@
 // P4-1 공유 카드 이미지 — GET /api/card?dm=갑&el=목&zo=사자자리&strength=신강&category=재성 (유형 조합 티저)
-// 또는 GET /api/card?mode=daily&dm=갑&el=목&headline=…&mind=…&color=…&keyword=…&lucky=… (오늘의 나, 전체 문구)
+// 또는 GET /api/card?mode=daily&dm=갑&el=목&headline=…&mind=…&color=…&keyword=…&lucky=…&sky=… (오늘의 나, 전체 문구)
 // 또는 GET /api/card?mode=profile&dm=갑&el=목&nickname=…&sections=[…] (나의 조각, 프로필 전체 섹션)
 // 너비는 항상 1080, 높이는 모드별 콘텐츠 분량에 맞춘다(각 render* 함수가 함께 정한다).
 // ?ratio=1은 정방형(1080×1080)을 강제 — 단 mode=profile은 섹션 전체를 담아야 해 항상
@@ -151,12 +151,12 @@ function renderDaily(searchParams: URLSearchParams, square: boolean) {
   if (!p) return null;
   const d = dailyCopyFromParams(p);
   const fontText =
-    d.headline + d.mind + (d.personal ?? "") + d.color + d.keyword + d.lucky +
+    d.headline + d.mind + (d.personal ?? "") + d.color + d.keyword + d.lucky + (d.sky ?? "") +
     d.cta + d.slogan + d.hanja + "OmniMind오늘의 나오늘의 색 · 🍀 행운 포인트 — ";
 
   const s = square
-    ? { hanja: 420, headline: 40, mind: 26, personal: 24, chip: 20, lucky: 22, cta: 28, slogan: 20 }
-    : { hanja: 560, headline: 46, mind: 32, personal: 28, chip: 24, lucky: 26, cta: 32, slogan: 24 };
+    ? { hanja: 420, headline: 40, mind: 26, personal: 24, chip: 20, lucky: 22, sky: 20, cta: 28, slogan: 20 }
+    : { hanja: 560, headline: 46, mind: 32, personal: 28, chip: 24, lucky: 26, sky: 22, cta: 32, slogan: 24 };
 
   const node = (
     <CardFrame square={square} hanjaSize={s.hanja} hanja={d.hanja} eyebrow="오늘의 나">
@@ -229,6 +229,11 @@ function renderDaily(searchParams: URLSearchParams, square: boolean) {
         <div style={{ display: "flex", fontSize: s.lucky, marginTop: 20, color: C.softText }}>
           🍀 행운 포인트 — {d.lucky}
         </div>
+        {d.sky && (
+          <div style={{ display: "flex", fontSize: s.sky, marginTop: 12, color: C.softText }}>
+            🌙 {d.sky}
+          </div>
+        )}
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
