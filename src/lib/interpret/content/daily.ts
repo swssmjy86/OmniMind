@@ -1,5 +1,6 @@
 import type { DailyContext, DailyRelation } from "@/lib/engine/daily";
 import type { TenGod } from "@/lib/engine/ten-gods";
+import type { MoonPhaseName } from "@/lib/engine/sky";
 import type { InterpretationSection } from "../types";
 
 // 천간 10종 그날의 무드 — 같은 오행이라도 음양(갑/을, 병/정…)에 따라 결이 다르다.
@@ -40,6 +41,32 @@ const RELATION_TEXT: Record<DailyRelation, string> = {
   단련: "살짝 마음을 다잡게 하는 기운이에요. 무리하지 말고 천천히 가도 괜찮아요.",
 };
 
+// 달의 위상 8단 무드 — 서울 기준 astronomy-engine 계산(src/lib/engine/sky.ts)에 얹는 문구.
+const MOON_PHASE_MOOD: Record<MoonPhaseName, string> = {
+  삭: "오늘 밤하늘엔 달이 숨어 있어요. 무언가를 새로 시작하기 좋은, 조용한 씨앗의 날이에요.",
+  초승달: "가늘게 뜬 초승달처럼, 이제 막 움트기 시작한 마음을 조심스레 키워가 보아요.",
+  상현: "반달이 차오르는 상현이에요. 시작한 일에 힘을 조금 더 실어도 좋은 때예요.",
+  보름달로가는달: "보름을 향해 차오르는 달처럼, 마음속 기대도 함께 부풀어가는 날이에요.",
+  보름: "가장 환하게 차오른 보름달의 밤이에요. 그동안 쌓아온 마음을 나누기 좋은 날이에요.",
+  그믐으로가는달: "달이 서서히 이지러지듯, 애쓴 마음을 조금씩 내려놓아도 괜찮은 때예요.",
+  하현: "반달이 기우는 하현이에요. 정리하고 갈무리하기 좋은 시간이에요.",
+  그믐달: "달이 가늘어지는 그믐 무렵이에요. 조용히 쉬며 다음을 준비해도 좋은 날이에요.",
+};
+
+/** 월령·출몰시각·태양고도(sky)를 감성 문구 3줄로 — 프로필 유무와 무관하게 항상 있다. */
+function skyLines(sky: DailyContext["sky"]): DailyGuide["skyLines"] {
+  const { moon, riseSet, altitude } = sky;
+  const riseSetLine =
+    riseSet.sunriseKst && riseSet.sunsetKst
+      ? `오늘 서울은 ${riseSet.sunriseKst}에 해가 떠서 ${riseSet.sunsetKst}에 저물어요.`
+      : "오늘은 해가 뜨고 지는 시각이 뚜렷하지 않은 날이에요.";
+  return {
+    moon: MOON_PHASE_MOOD[moon.phaseName],
+    riseSet: riseSetLine,
+    altitude: `해가 가장 높이 뜨는 시각은 ${altitude.noonKst}, 그 높이는 하늘 위로 약 ${Math.round(altitude.altitudeDeg)}도예요.`,
+  };
+}
+
 export interface DailyGuide {
   headline: string; // 오늘의 기운 한 줄
   mind: string; // 마음가짐
@@ -47,6 +74,7 @@ export interface DailyGuide {
   keyword: string; // 오늘의 키워드
   lucky: string; // 행운 포인트
   personal: string | null; // 프로필 있을 때 개인화 한 줄
+  skyLines: { moon: string; riseSet: string; altitude: string }; // 월령·출몰시각·태양고도, 항상 있음
 }
 
 /** 데일리 가이드 문구 조립(템플릿, 항상 동작). 무드는 일진 천간(10종) 기준. */
@@ -65,6 +93,7 @@ export function assembleDaily(daily: DailyContext, nickname?: string): DailyGuid
     keyword: mood.keyword,
     lucky: mood.lucky,
     personal,
+    skyLines: skyLines(daily.sky),
   };
 }
 
@@ -75,6 +104,7 @@ export function dailyToSections(guide: DailyGuide, llmParagraph?: string): Inter
     { title: "마음가짐", body: guide.mind },
     { title: "오늘의 색과 키워드", body: `${guide.color} · ${guide.keyword}` },
     { title: "행운 포인트", body: guide.lucky },
+    { title: "오늘의 하늘", body: [guide.skyLines.moon, guide.skyLines.riseSet, guide.skyLines.altitude].join(" ") },
     ...(guide.personal ? [{ title: "당신에게", body: guide.personal }] : []),
     ...(llmParagraph ? [{ title: "오늘, 당신만을 위한 이야기", body: llmParagraph }] : []),
   ];

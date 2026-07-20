@@ -3,6 +3,7 @@ import { dayPillar } from "./pillars";
 import { tenGodOf, type TenGod } from "./ten-gods";
 import { HEAVENLY_STEMS, EARTHLY_BRANCHES, ELEMENTS, stemElement } from "./constants";
 import { kstPartsToInstant } from "./kst";
+import { moonPhaseOf, riseSetOf, sunAltitudeOf, type MoonPhaseInfo, type RiseSetInfo, type SunAltitudeInfo } from "./sky";
 
 // 오늘의 기운이 '나'와 맺는 관계(오행 생극). 프로필이 있을 때만 산출.
 export type DailyRelation = "동행" | "채움" | "발산" | "결실" | "단련";
@@ -15,6 +16,8 @@ export interface DailyContext {
   relation: DailyRelation | null; // 내 일간 오행과 오늘 오행의 관계
   /** 내 일간 기준 오늘 천간의 십성(음양까지 반영한 세밀한 개인화). 내 일간 미상이면 null */
   tenGod: TenGod | null;
+  /** 월령·출몰시각·태양고도(서울 기준). 프로필 유무와 무관하게 항상 계산된다 */
+  sky: { moon: MoonPhaseInfo; riseSet: RiseSetInfo; altitude: SunAltitudeInfo };
 }
 
 /** 내 오행(mine)과 오늘 오행(today)의 관계. today 기준으로 판정. */
@@ -60,5 +63,10 @@ export function computeDaily(
     elementIndex,
     relation,
     tenGod,
+    sky: {
+      moon: moonPhaseOf(today),
+      riseSet: riseSetOf(today),
+      altitude: sunAltitudeOf(today),
+    },
   };
 }

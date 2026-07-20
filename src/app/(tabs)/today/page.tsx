@@ -12,6 +12,7 @@ import DailyRecorder from "@/components/DailyRecorder";
 import ShareSheet from "@/components/share/ShareSheet";
 import TodayFreeFlow from "@/components/today/TodayFreeFlow";
 import { dailyCardQuery } from "@/lib/share/card-copy";
+import { getTodayAstroEvents } from "@/lib/kasi/astro-events-cache";
 import type { ProfileRow, InterpretationRow } from "@/lib/db/types";
 
 export const metadata: Metadata = {
@@ -32,6 +33,8 @@ export default async function TodayPage() {
 
   const todayKst = toKstParts(new Date());
   const todayDateStr = `${todayKst.y}-${String(todayKst.mo).padStart(2, "0")}-${String(todayKst.d).padStart(2, "0")}`;
+  // best-effort(사용자 무관, 날짜당 전역 캐시) — 실패해도 이 섹션만 조용히 생략된다.
+  const astroEvents = await getTodayAstroEvents(todayKst);
 
   let profile: ProfileRow | null = null;
   let cachedDaily: InterpretationRow | null = null;
@@ -110,6 +113,22 @@ export default async function TodayPage() {
             </span>
           </div>
           <p className="mt-4 text-sm text-text-soft">🍀 행운 포인트 — {guide.lucky}</p>
+          <div className="mt-4 rounded-card bg-warm-base p-3 text-xs leading-relaxed text-text-soft">
+            <p>🌙 {guide.skyLines.moon}</p>
+            <p className="mt-1">☀️ {guide.skyLines.riseSet}</p>
+            <p className="mt-1">{guide.skyLines.altitude}</p>
+          </div>
+          {astroEvents && astroEvents.length > 0 && (
+            <div className="mt-3 rounded-card bg-warm-base p-3 text-xs leading-relaxed text-text-soft">
+              <p className="text-text-main">✨ 오늘의 천문현상</p>
+              {astroEvents.map((e, i) => (
+                <p key={i} className="mt-1">
+                  {e.title}
+                  {e.time ? ` (${e.time})` : ""}
+                </p>
+              ))}
+            </div>
+          )}
 
           <details className="mt-4 text-xs text-text-soft">
             <summary className="cursor-pointer">이 풀이의 근거</summary>
@@ -163,6 +182,8 @@ export default async function TodayPage() {
         color={guide.color}
         keyword={guide.keyword}
         lucky={guide.lucky}
+        sky={guide.skyLines}
+        astroEvents={astroEvents}
       />
     </main>
   );

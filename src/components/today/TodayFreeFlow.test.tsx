@@ -6,7 +6,14 @@ import { computeGuestDailyPersonal } from "@/lib/today/actions";
 
 vi.mock("@/lib/today/actions", () => ({ computeGuestDailyPersonal: vi.fn() }));
 
-const props = { headline: "헤드라인", mind: "마음가짐", color: "코랄", keyword: "성장", lucky: "산책" };
+const props = {
+  headline: "헤드라인",
+  mind: "마음가짐",
+  color: "코랄",
+  keyword: "성장",
+  lucky: "산책",
+  sky: { moon: "달 문구", riseSet: "출몰 문구", altitude: "고도 문구" },
+};
 
 describe("TodayFreeFlow — 비로그인 오늘의운세 개인화", () => {
   beforeEach(() => {
