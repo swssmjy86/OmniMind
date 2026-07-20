@@ -21,6 +21,11 @@ const daily = (relation: DailyRelation | null): DailyContext => ({
   elementIndex: 0,
   relation,
   tenGod: null,
+  sky: {
+    moon: { ageDays: 0, phaseAngle: 0, phaseName: "삭", illumination: 0 },
+    riseSet: { sunriseKst: "06:00", sunsetKst: "18:00", moonriseKst: null, moonsetKst: null },
+    altitude: { noonKst: "12:30", altitudeDeg: 50 },
+  },
 });
 
 describe("고민 조언 조립 (P6)", () => {

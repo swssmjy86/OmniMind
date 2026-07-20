@@ -45,4 +45,10 @@ describe("computeDaily", () => {
     const b = computeDaily({ y: 2026, mo: 7, d: 14 });
     expect(a).toEqual(b);
   });
+  it("sky(월령·출몰시각·태양고도)는 프로필 유무와 무관하게 항상 채워진다", () => {
+    const d = computeDaily({ y: 2026, mo: 7, d: 14 });
+    expect(d.sky.moon.phaseAngle).toBeGreaterThanOrEqual(0);
+    expect(d.sky.altitude.altitudeDeg).toBeGreaterThan(0);
+    expect(d.sky.riseSet.sunriseKst).not.toBeNull();
+  });
 });

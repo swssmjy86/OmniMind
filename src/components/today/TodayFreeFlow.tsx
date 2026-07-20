@@ -5,6 +5,7 @@ import TodayInputSheet from "./TodayInputSheet";
 import TodayTeaser from "./TodayTeaser";
 import { TODAY_BIRTH_KEY, parseTodayBirth, type TodayBirth } from "@/lib/today/birth-store";
 import { computeGuestDailyPersonal } from "@/lib/today/actions";
+import type { AstroEvent } from "@/lib/kasi/astro-events";
 
 /**
  * 비로그인 오늘의운세 흐름(스펙 §3): 저장된 입력이 없으면 바텀시트가 뜨고,
@@ -21,12 +22,16 @@ export default function TodayFreeFlow({
   color,
   keyword,
   lucky,
+  sky,
+  astroEvents,
 }: {
   headline: string;
   mind: string;
   color: string;
   keyword: string;
   lucky: string;
+  sky: { moon: string; riseSet: string; altitude: string };
+  astroEvents?: AstroEvent[] | null;
 }) {
   const [ready, setReady] = useState(false);
   const [birth, setBirth] = useState<TodayBirth | null>(null);
@@ -76,6 +81,22 @@ export default function TodayFreeFlow({
           <span className="rounded-full bg-warm-base px-3 py-1.5 text-sm text-text-soft">{keyword}</span>
         </div>
         <p className="mt-4 text-sm text-text-soft">🍀 행운 포인트 — {lucky}</p>
+        <div className="mt-4 rounded-card bg-warm-base p-3 text-xs leading-relaxed text-text-soft">
+          <p>🌙 {sky.moon}</p>
+          <p className="mt-1">☀️ {sky.riseSet}</p>
+          <p className="mt-1">{sky.altitude}</p>
+        </div>
+        {astroEvents && astroEvents.length > 0 && (
+          <div className="mt-3 rounded-card bg-warm-base p-3 text-xs leading-relaxed text-text-soft">
+            <p className="text-text-main">✨ 오늘의 천문현상</p>
+            {astroEvents.map((e, i) => (
+              <p key={i} className="mt-1">
+                {e.title}
+                {e.time ? ` (${e.time})` : ""}
+              </p>
+            ))}
+          </div>
+        )}
       </section>
 
       <TodayTeaser />

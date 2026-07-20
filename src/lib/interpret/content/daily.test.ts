@@ -55,21 +55,28 @@ describe("assembleDaily", () => {
     expect(seen.size).toBe(10);
   });
 
-  it("dailyToSections는 personal 유무에 따라 4~5섹션", () => {
+  it("dailyToSections는 personal 유무에 따라 5~6섹션(오늘의 하늘 포함 항상 5)", () => {
     const withP = assembleDaily(computeDaily({ y: 2000, mo: 1, d: 7 }, "수"));
     const noP = assembleDaily(computeDaily({ y: 2000, mo: 1, d: 7 }));
-    expect(dailyToSections(withP)).toHaveLength(5);
-    expect(dailyToSections(noP)).toHaveLength(4);
+    expect(dailyToSections(withP)).toHaveLength(6);
+    expect(dailyToSections(noP)).toHaveLength(5);
+    expect(dailyToSections(noP).map((s) => s.title)).toContain("오늘의 하늘");
   });
 
   it("P8 — llmParagraph를 주면 로그인 전용 개인화 섹션이 한 칸 더 붙는다", () => {
     const g = assembleDaily(computeDaily({ y: 2000, mo: 1, d: 7 }, "수"));
     const withLlm = dailyToSections(g, "오늘은 유난히 마음이 맑은 날이에요.");
-    expect(withLlm).toHaveLength(6);
+    expect(withLlm).toHaveLength(7);
     expect(withLlm.at(-1)).toEqual({
       title: "오늘, 당신만을 위한 이야기",
       body: "오늘은 유난히 마음이 맑은 날이에요.",
     });
+  });
+
+  it("skyLines(월령·출몰시각·태양고도) 문구는 항상 있고 톤 통과", () => {
+    const g = assembleDaily(computeDaily({ y: 2026, mo: 7, d: 14 }));
+    for (const t of [g.skyLines.moon, g.skyLines.riseSet, g.skyLines.altitude])
+      expect(checkTone(t)).toHaveLength(0);
   });
 
   it("dailyPrompt는 템플릿 마음가짐을 반복하지 말라고 명시한다", () => {
