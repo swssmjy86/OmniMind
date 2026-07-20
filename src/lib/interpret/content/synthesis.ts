@@ -5,6 +5,7 @@ import { dominantCategory, tenGodTheme, type TenGodCategory } from "./ten-gods";
 import { DAY_MASTER_TEXT } from "./day-master";
 import { ELEMENT_BALANCE_TEXT } from "./elements";
 import { ZODIAC_TEXT } from "./zodiac";
+import { pillarPalaceSummary } from "./pillars";
 
 // '종합' 교차 해석 — 십성(재능의 갈래)과 신강/신약(그 힘의 크기)이 서로를 비추는 지점을 읽는다.
 // 둘 다 같은 사주 한 장에서 나오는 결이라, MBTI 같은 외부 체계 없이도 "조각이 만나는 자리"를
@@ -70,6 +71,7 @@ export function profileSynthesisPrompt(ctx: ProfileContext, nickname: string): s
     `타고난 재능(십성): ${talent}`,
     `힘의 크기(신강/신약): ${ctx.strength}`,
     ...(patterns.length ? [`구조(격국): ${patterns.join(" ")}`] : []),
+    `네 기둥(근묘화실): ${pillarPalaceSummary(ctx)}`,
     `별자리(${ctx.zodiac}): ${zodiac}`,
     `${nickname}님을 위해, 위 결들을 각각 나열하지 말고 한 사람의 이야기로 엮어서,`,
     "시스템 프롬프트가 지시한 형식(성격과 취향·당신의 색·지금과 앞으로·연애운·사업운·커리어·",
