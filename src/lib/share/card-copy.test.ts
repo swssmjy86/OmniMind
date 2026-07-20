@@ -101,6 +101,7 @@ describe("오늘의 나 카드 — dailyCardQuery ↔ parseDailyCardParams", () 
       color: guide.color,
       keyword: guide.keyword,
       lucky: guide.lucky,
+      sky: `${guide.skyLines.moon} ${guide.skyLines.riseSet}`,
     });
   });
 
@@ -116,6 +117,15 @@ describe("오늘의 나 카드 — dailyCardQuery ↔ parseDailyCardParams", () 
     const noPersonal = { ...guide, personal: null };
     const p = parseDailyCardParams(new URLSearchParams(dailyCardQuery(ctx, noPersonal)));
     expect(p?.personal).toBeNull();
+  });
+
+  it("sky 필드가 생기기 전에 공유된 링크(쿼리에 sky 없음)도 그대로 파싱된다", () => {
+    const sp = new URLSearchParams(dailyCardQuery(ctx, guide));
+    sp.delete("sky");
+    const p = parseDailyCardParams(sp);
+    expect(p).not.toBeNull();
+    expect(p?.sky).toBeNull();
+    expect(dailyCopyFromParams(p!).sky).toBeNull();
   });
 
   it("필드 하나라도 비면 null", () => {
