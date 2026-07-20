@@ -32,26 +32,48 @@
   --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
 }
 
+/* 다크 팔레트 — 두 경로로 적용된다.
+   ① data-theme이 없을 때("시스템" 모드): prefers-color-scheme을 따른다.
+   ② data-theme="dark"(수동 선택)일 때: 시스템 설정과 무관하게 무조건 적용한다.
+   ThemeToggle이 <html>에 data-theme을 쓰고, layout.tsx의 인라인 스크립트가 첫 페인트
+   전에 미리 반영해 깜빡임을 막는다. 두 블록은 같은 값을 의도적으로 중복 정의한다 —
+   하나를 @media 안에, 하나를 밖에 각각 둬야 하므로 선택자로 합칠 수 없다. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]):not([data-theme="dark"]) {
     color-scheme: dark;
-    /* P9 "밤의 따뜻함"(설계서 §4) — 검정이 아닌 깊은 밤 네이비. 채도를 낮추고 따뜻한
-       쪽으로 기울인 값이라 브랜드 가이드의 '차가운 블루톤 지양'과 충돌하지 않는다. */
     --warm-base: #0e1626;
     --warm-surface: #1a2740;
     --accent-coral: #e8927c;
-    /* 제목·강조가 쓰는 primary-green은 다크에서 달빛 골드로 — 밤 네이비 위의 온기. */
     --primary-green: #f0c96a;
     --text-main: #f0ebe2;
     --text-soft: #a8b0c0;
-    --on-primary: #0e1626; /* 골드가 된 primary 위에는 밤 네이비 글자 */
-    --selected: #f0c96a; /* 선택됨 = 달빛 골드(§4.2). 컴포넌트 수정 0으로 전환된다. */
+    --on-primary: #0e1626;
+    --selected: #f0c96a;
     --on-selected: #0e1626;
     --moon-gold: #f0c96a;
-    /* 밤 네이비 위 카드 부양감 — 검정 그림자 대신 달빛의 옅은 번짐. */
     --shell-tint-amount: 22%;
     --shell-shadow: 0 0 80px rgba(240, 201, 106, 0.06);
   }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  /* P9 "밤의 따뜻함"(설계서 §4) — 검정이 아닌 깊은 밤 네이비. 채도를 낮추고 따뜻한
+     쪽으로 기울인 값이라 브랜드 가이드의 '차가운 블루톤 지양'과 충돌하지 않는다. */
+  --warm-base: #0e1626;
+  --warm-surface: #1a2740;
+  --accent-coral: #e8927c;
+  /* 제목·강조가 쓰는 primary-green은 다크에서 달빛 골드로 — 밤 네이비 위의 온기. */
+  --primary-green: #f0c96a;
+  --text-main: #f0ebe2;
+  --text-soft: #a8b0c0;
+  --on-primary: #0e1626; /* 골드가 된 primary 위에는 밤 네이비 글자 */
+  --selected: #f0c96a; /* 선택됨 = 달빛 골드(§4.2). 컴포넌트 수정 0으로 전환된다. */
+  --on-selected: #0e1626;
+  --moon-gold: #f0c96a;
+  /* 밤 네이비 위 카드 부양감 — 검정 그림자 대신 달빛의 옅은 번짐. */
+  --shell-tint-amount: 22%;
+  --shell-shadow: 0 0 80px rgba(240, 201, 106, 0.06);
 }
 
 @theme inline {
