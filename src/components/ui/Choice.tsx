@@ -3,7 +3,7 @@
 // 온보딩(혈액형·MBTI)과 우리의 조합(상대 MBTI)이 함께 쓰는 선택형 알약 버튼.
 // 네이티브 <select>는 OS별로 브랜드 톤과 어긋나게 렌더링돼(§5.3 큰 라운드·부드러운 결) 쓰지 않는다.
 export default function Choice({
-  children, selected, onClick, small, unselectedBg = "bg-warm-surface",
+  children, selected, onClick, small, unselectedBg = "bg-warm-surface", className = "",
 }: {
   children: React.ReactNode;
   selected: boolean;
@@ -11,6 +11,8 @@ export default function Choice({
   small?: boolean;
   /** 부모 배경이 이미 warm-surface인 곳(예: 카드 안)에서는 "bg-warm-base"로 대비를 준다. */
   unselectedBg?: string;
+  /** flex 행에서 나란히 쓸 때 flex-1처럼 레이아웃 클래스를 얹기 위한 훅. */
+  className?: string;
 }) {
   return (
     <button
@@ -21,7 +23,7 @@ export default function Choice({
         selected
           ? "border-selected bg-selected text-on-selected"
           : `border-text-soft/30 ${unselectedBg} text-text-main`
-      }`}
+      } ${className}`}
     >
       {children}
     </button>

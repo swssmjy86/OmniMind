@@ -165,14 +165,16 @@ export default function OnboardingPage() {
             <label className="mt-5 mb-2 block text-sm text-text-soft">
               성별 (알려주시면 10년 단위 운의 흐름까지 읽어드려요)
             </label>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="flex gap-3">
               <Choice
+                className="flex-1"
                 selected={draft.gender === "male"}
                 onClick={() => set({ gender: draft.gender === "male" ? null : "male" })}
               >
                 남성
               </Choice>
               <Choice
+                className="flex-1"
                 selected={draft.gender === "female"}
                 onClick={() => set({ gender: draft.gender === "female" ? null : "female" })}
               >

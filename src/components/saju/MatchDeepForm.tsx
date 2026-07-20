@@ -100,7 +100,7 @@ export default function MatchDeepForm({
           <PickerInput type="time" value={birthTime} onChange={setBirthTime} placeholder="태어난 시각을 선택해 주세요" disabled={timeUnknown} bg="bg-warm-base" />
         </div>
       </label>
-      <div className="mt-2 grid grid-cols-1">
+      <div className="mt-2">
         <Choice small selected={timeUnknown} onClick={() => setTimeUnknown(!timeUnknown)} unselectedBg="bg-warm-base">
           시간을 몰라요
         </Choice>

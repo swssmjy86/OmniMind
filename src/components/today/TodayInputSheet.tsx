@@ -72,18 +72,18 @@ export default function TodayInputSheet({
             disabled={timeUnknown}
           />
         </div>
-        <div className="mt-2 grid grid-cols-1">
+        <div className="mt-2">
           <Choice small selected={timeUnknown} onClick={() => setTimeUnknown(!timeUnknown)}>
             시간을 몰라요
           </Choice>
         </div>
 
         <label className="mt-4 block text-sm text-text-soft">성별 (선택)</label>
-        <div className="mt-1 grid grid-cols-2 gap-2">
-          <Choice small selected={gender === "male"} onClick={() => setGender(gender === "male" ? null : "male")}>
+        <div className="mt-1 flex gap-2">
+          <Choice small className="flex-1" selected={gender === "male"} onClick={() => setGender(gender === "male" ? null : "male")}>
             남성
           </Choice>
-          <Choice small selected={gender === "female"} onClick={() => setGender(gender === "female" ? null : "female")}>
+          <Choice small className="flex-1" selected={gender === "female"} onClick={() => setGender(gender === "female" ? null : "female")}>
             여성
           </Choice>
         </div>
