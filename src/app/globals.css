@@ -134,6 +134,17 @@ body {
   }
 }
 
+/* Tailwind preflight가 <button>에 남겨 두는 appearance: button(iOS 네이티브 '푸시 버튼'
+   크롬)을 지운다. 이 네이티브 크롬은 우리가 직접 그리는 알약 버튼(Choice 등)의 border-box
+   width:100%를 데스크톱에서는 그대로 따르지만, iOS Safari 실기기에서는 자체 인셋을 얹어
+   같은 grid 안의 다른 형제(예: PickerInput의 픽커 입력창)보다 눈에 띄게 좁게 그린다 —
+   같은 이유로 PickerInput 주석의 네이티브 <select> 회피 원칙을 버튼에도 적용한다. */
+@layer base {
+  button {
+    appearance: none;
+  }
+}
+
 /* 페이지 콘텐츠가 부드럽게 스며드는 전환 (§5.3 무드 — 로그인 전후 화면 전환 등) */
 @keyframes fade-rise {
   from {
