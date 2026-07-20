@@ -36,6 +36,15 @@ function hhmmClockToMinutes(clock: string): number {
   return h * 60 + m;
 }
 
+/** KASI 태양고도 응답은 "29˚ 23´" 같은 도분(DMS) 문자열 — 십진도로 변환. 형식이 아니면 null. */
+function parseDms(raw: unknown): number | null {
+  const m = /^(-?\d+)\D+(\d+)/.exec(String(raw ?? "").trim());
+  if (!m) return null;
+  const deg = Number(m[1]);
+  const min = Number(m[2]);
+  return deg < 0 ? deg - min / 60 : deg + min / 60;
+}
+
 async function fetchJson(url: string): Promise<unknown | null> {
   for (let attempt = 1; attempt <= 4; attempt++) {
     try {
@@ -145,15 +154,13 @@ async function main() {
 
     await sleep(300);
     const alt = await fetchAltitude(locdate, key);
-    if (alt && typeof alt.altitude_meridian !== "undefined") {
+    const kasiAltitude = alt ? parseDms(alt.altitudeMeridian) : null;
+    if (kasiAltitude !== null) {
       altitudeChecked++;
       const mine = sunAltitudeOf(date).altitudeDeg;
-      const kasi = Number(alt.altitude_meridian);
-      if (Number.isFinite(kasi)) {
-        const diff = Math.abs(mine - kasi);
-        if (diff > ALTITUDE_THRESHOLD_DEG) {
-          suspects.push(`${label} 남중고도: 엔진 ${mine.toFixed(2)}도 vs KASI ${kasi}도 (${diff.toFixed(2)}도 차)`);
-        }
+      const diff = Math.abs(mine - kasiAltitude);
+      if (diff > ALTITUDE_THRESHOLD_DEG) {
+        suspects.push(`${label} 남중고도: 엔진 ${mine.toFixed(2)}도 vs KASI ${kasiAltitude.toFixed(2)}도 (${diff.toFixed(2)}도 차)`);
       }
     } else {
       console.log(`${label}: 태양고도 조회 불가 — 건너뜀`);
