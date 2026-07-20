@@ -107,8 +107,11 @@ export default async function MePage() {
             운의 계절
           </h2>
           <p className="mt-2 leading-relaxed text-text-main">
-            당신의 첫 대운은 {ctx.daeun.startAge}세에 시작돼요. 아직은 타고난 결이 자라나는
-            계절이에요.
+            당신의 첫 대운은{" "}
+            {ctx.daeun.startAgePrecise.months > 0
+              ? `${ctx.daeun.startAgePrecise.years}세 ${ctx.daeun.startAgePrecise.months}개월`
+              : `${ctx.daeun.startAgePrecise.years}세`}{" "}
+            무렵부터 시작돼요. 아직은 타고난 결이 자라나는 계절이에요.
           </p>
         </section>
       )}

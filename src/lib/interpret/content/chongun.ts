@@ -16,7 +16,9 @@ export function daeunSeasonBody(ctx: ProfileContext, age: number | null): string
   }
   const season = age !== null ? currentDaeun(ctx.daeun, age) : null;
   if (!season) {
-    return `당신의 첫 대운은 ${ctx.daeun.startAge}세에 시작돼요. 아직은 타고난 결이 자라나는 계절이에요.`;
+    const { years, months } = ctx.daeun.startAgePrecise;
+    const when = months > 0 ? `${years}세 ${months}개월` : `${years}세`;
+    return `당신의 첫 대운은 ${when} 무렵부터 시작돼요. 아직은 타고난 결이 자라나는 계절이에요.`;
   }
   return `지금 당신은 ${season.ganzhi} 대운을 지나고 있어요 — ${season.fromAge}세부터 ${season.toAge}세까지, 10년의 큰 계절이에요. ${daeunSeasonText(season.ganzhi)}`;
 }

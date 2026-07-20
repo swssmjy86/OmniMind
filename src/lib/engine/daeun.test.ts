@@ -2,6 +2,17 @@ import { describe, expect, it } from "vitest";
 import { computeDaeun, currentDaeun, type Daeun } from "./daeun";
 import { computePillars } from "./pillars";
 import { kstStringToInstant } from "./kst";
+import { adjacentMonthNodes } from "./solar-terms";
+
+const DAY_MS = 86_400_000;
+
+/** daeun.ts의 preciseStartAge와 독립적으로 같은 공식(3일=1년, 나머지×4=개월)을 감사한다. */
+function auditPreciseStartAge(days: number): { years: number; months: number } {
+  const years = Math.floor(days / 3);
+  const remDays = days - years * 3;
+  const months = Math.round(remDays * 4);
+  return months === 12 ? { years: years + 1, months: 0 } : { years, months };
+}
 
 // 1990-03-15 08:30 — 경오년(양간)·기묘월
 const birth = kstStringToInstant("1990-03-15T08:30");
@@ -51,10 +62,30 @@ describe("computeDaeun — 대운 방향·대운수·간지 흐름", () => {
   it("결정적 — 같은 입력이면 같은 결과", () => {
     expect(computeDaeun(birth, fp, "male")).toEqual(computeDaeun(birth, fp, "male"));
   });
+
+  it("startAgePrecise(년+개월)는 독립 공식으로 감사해도 같은 값 — 순행", () => {
+    const { next } = adjacentMonthNodes(birth);
+    const days = (next.getTime() - birth.getTime()) / DAY_MS;
+    expect(computeDaeun(birth, fp, "male").startAgePrecise).toEqual(auditPreciseStartAge(days));
+  });
+
+  it("startAgePrecise(년+개월)는 독립 공식으로 감사해도 같은 값 — 역행", () => {
+    const { prev } = adjacentMonthNodes(birth);
+    const days = (birth.getTime() - prev.getTime()) / DAY_MS;
+    expect(computeDaeun(birth, fp, "female").startAgePrecise).toEqual(auditPreciseStartAge(days));
+  });
+
+  it("startAgePrecise의 개월은 0~11 범위", () => {
+    for (const g of ["male", "female"] as const) {
+      const { months } = computeDaeun(birth, fp, g).startAgePrecise;
+      expect(months).toBeGreaterThanOrEqual(0);
+      expect(months).toBeLessThanOrEqual(11);
+    }
+  });
 });
 
 describe("currentDaeun — 나이로 현재 대운 찾기", () => {
-  const d: Daeun = { direction: "순행", startAge: 7, pillars: [
+  const d: Daeun = { direction: "순행", startAge: 7, startAgePrecise: { years: 7, months: 0 }, pillars: [
     "경진","신사","임오","계미","갑신","을유","병술","정해","무자","기축",
   ] };
 
