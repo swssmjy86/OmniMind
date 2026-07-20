@@ -5,13 +5,14 @@ import { ELEMENT_BALANCE_TEXT } from "./content/elements";
 import { tenGodTheme } from "./content/ten-gods";
 import { synthesisText } from "./content/synthesis";
 import { ZODIAC_TEXT } from "./content/zodiac";
-import { strengthText, patternsText } from "./content/strength";
+import { strengthText, patternsText, sarangText, gyeokText } from "./content/strength";
+import { sinsalText } from "./content/sinsal";
 
 /**
  * "온전한 나" 프로필을 결정론적으로 조립한다(템플릿 0단계, 항상 동작·0원).
- * 6섹션: 인사 → 타고난 결(일간) → 마음의 균형(오행) → 타고난 재능(십성)
+ * 7섹션: 인사 → 타고난 결(일간) → 사주의 뼈대(격국) → 마음의 균형(오행) → 타고난 재능(십성)
  *        → 조각이 만나는 자리(십성×신강신약 교차) → 맺음.
- * 실제 계산된 사주(일간·오행 분포·십성·신강신약·격국)를 반영해 깊이를 더한다.
+ * 실제 계산된 사주(일간·오행 분포·십성·신강신약·격국·사령·십이신살)를 반영해 깊이를 더한다.
  * 어떤 조합이 와도 누락·빈 문구 없이 완성된다.
  */
 export function assembleProfile(
@@ -22,6 +23,7 @@ export function assembleProfile(
   const balance = ELEMENT_BALANCE_TEXT(ctx.elements);
   const talent = tenGodTheme(ctx.tenGods);
   const zodiac = ZODIAC_TEXT[ctx.zodiac];
+  const talentExtra = [patternsText(ctx.patterns), sinsalText(ctx.sinsal)].filter(Boolean).join(" ");
 
   return [
     {
@@ -30,7 +32,11 @@ export function assembleProfile(
     },
     {
       title: "타고난 결",
-      body: `사주의 중심이 되는 일간은 '${ctx.dayMaster.stem}', ${ctx.dayMaster.element}의 기운을 타고났어요. ${dm.body} ${strengthText(ctx.strength)}`,
+      body: `사주의 중심이 되는 일간은 '${ctx.dayMaster.stem}', ${ctx.dayMaster.element}의 기운을 타고났어요. ${dm.body} ${strengthText(ctx.strength)} ${sarangText(ctx.sarang)}`,
+    },
+    {
+      title: "사주의 뼈대",
+      body: gyeokText(ctx.gyeok),
     },
     {
       title: "마음의 균형",
@@ -38,7 +44,7 @@ export function assembleProfile(
     },
     {
       title: "타고난 재능과 관계",
-      body: patternsText(ctx.patterns) ? `${talent} ${patternsText(ctx.patterns)}` : talent,
+      body: talentExtra ? `${talent} ${talentExtra}` : talent,
     },
     {
       title: "조각이 만나는 자리",
