@@ -13,9 +13,10 @@ import { PERSONAS } from "@/lib/persona/personas";
  *
  * premium: true면 P8 상담 크레딧을 소비하는 자리(마음 챗·고민 상담) — 무료 티어보다 더 깊고
  * 구체적으로, 그래도 대화 길이(4~7문장)는 지킨다.
- * longForm: true면 크레딧 풀이(직업/연애/재물/결혼·궁합) 전용 — 대화가 아니라 "각 운을 풍성한
- * 서술형 한 페이지 분량으로" 요청이라, 이 길이 지시는 프롬프트 쪽(creditReadingPrompt)에
- * 이미 구체적으로 있으므로 여기선 premium의 "4~7문장" 상한을 걸지 않는다.
+ * longForm: true면 크레딧 풀이(직업/연애/재물/결혼·궁합) 전용 — 대화가 아니라 "결을 풍성한
+ * 서술형으로 풀어쓰기" 요청이라, 이 길이 지시는 프롬프트 쪽(creditReadingPrompt)에 이미
+ * 구체적으로 있으므로 여기선 premium의 "4~7문장" 상한을 걸지 않는다. premium 없이 단독으로도
+ * 쓴다(무료 모델 그대로 — openrouter-provider.ts가 무료 모델 속도에 맞춰 예산을 조절한다).
  * report: true면 P8 로그인 전용 심층 리포트(다중 섹션 구조화 응답) — 채팅형 길이 규칙 대신
  * parseReportSections()가 기대하는 형식을 지시한다.
  */

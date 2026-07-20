@@ -156,8 +156,25 @@ describe("OpenRouterProvider", () => {
     });
   });
 
-  describe("longForm 옵션 (크레딧 풀이 — 각 운을 풍성한 서술형 한 페이지로)", () => {
-    it("premium과 함께 켜면 유료 모델은 그대로 쓰되 응답 예산을 훨씬 크게 잡는다", async () => {
+  describe("longForm 옵션 (크레딧 풀이 — 각 운을 풍성한 서술형으로)", () => {
+    it("단독으로 켜면 무료 모델 그대로 쓰되(월 고정비 0원), 무료 모델 속도에 맞춘 보수적 예산", async () => {
+      vi.stubEnv("OPENROUTER_API_KEY", "test-key");
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ choices: [{ message: { content: "긴 풀이 응답." } }] }),
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      await new OpenRouterProvider({ longForm: true }).chat(input);
+      const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+      expect(body.model).toBe("google/gemma-4-26b-a4b-it:free");
+      expect(body.max_tokens).toBe(800);
+      expect(body.temperature).toBe(0.8);
+      // 마음 챗 premium의 "4~7문장" 상한이 아니라 사용자 메시지의 길이 지시를 따르라고 한다.
+      expect(body.messages[0].content).not.toContain("4~7문장");
+    });
+
+    it("premium과 함께 켜면(유효한 유료 모델 설정 시) 유료 모델·훨씬 큰 예산을 쓴다", async () => {
       vi.stubEnv("OPENROUTER_API_KEY", "test-key");
       const fetchMock = vi.fn().mockResolvedValue({
         ok: true,
@@ -167,11 +184,9 @@ describe("OpenRouterProvider", () => {
 
       await new OpenRouterProvider({ premium: true, longForm: true }).chat(input);
       const body = JSON.parse(fetchMock.mock.calls[0][1].body);
-      expect(body.model).toBe("anthropic/claude-3.5-haiku"); // longForm도 premium 모델을 그대로 씀
+      expect(body.model).toBe("anthropic/claude-3.5-haiku");
       expect(body.max_tokens).toBe(1800);
       expect(body.temperature).toBe(0.8);
-      // 마음 챗 premium의 "4~7문장" 상한이 아니라 사용자 메시지의 길이 지시를 따르라고 한다.
-      expect(body.messages[0].content).not.toContain("4~7문장");
     });
   });
 });

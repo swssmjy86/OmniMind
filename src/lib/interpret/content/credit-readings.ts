@@ -126,10 +126,13 @@ export function assembleCreditReading(
 }
 
 /**
- * 유료 LLM 개인화 요청문 — 템플릿 결론 위에서 길게 풀어쓰기만, 새 단정 금지(§5.4).
- * "각 운을 풍성한 서술형으로" 요청에 맞춰 짧은 조언 한 문단이 아니라, 여러 문단으로 이뤄진
- * 넉넉한 분량(원고지 1페이지 안팎)을 요청한다 — max_tokens는 openrouter-provider.ts의
- * premium 모드에서 함께 늘려뒀다(참고: 무료 티어가 아니라 상담 크레딧을 쓰는 자리).
+ * LLM 개인화 요청문 — 템플릿 결론 위에서 길게 풀어쓰기만, 새 단정 금지(§5.4).
+ * "각 운을 풍성한 서술형으로" 요청에 맞춰 짧은 조언 한 문단이 아니라, 여러 문단으로 풀어쓴
+ * 넉넉한 분량을 요청한다. 길이는 무료 모델 실측(2026-07-20: gemma-4-26b-a4b-it:free 기준
+ * 초당 ~33~36토큰, 공용 무료 풀이라 가변적) 기준으로 잡았다 — openrouter-provider.ts의 25초
+ * 내부 타임아웃 안에 안전하게 끝나는 선. 유효한 유료 모델을 설정하면(OPENROUTER_PREMIUM_MODEL)
+ * 더 큰 예산(longForm+premium)을 쓰지만, 이 프롬프트 문구는 손대지 않았다 — 유료 모델은 보통
+ * 더 빨라 이 분량은 여유 있게 채우고, 무료 모델은 이 분량이 안전 상한에 가깝다.
  */
 export function creditReadingPrompt(
   product: CreditReadingProduct,
@@ -137,13 +140,13 @@ export function creditReadingPrompt(
   sections: InterpretationSection[],
 ): string {
   return [
-    `[${PRODUCT_LABEL[product]} 풀이 · 유료 개인화 · 긴 서술형]`,
+    `[${PRODUCT_LABEL[product]} 풀이 · 개인화 · 긴 서술형]`,
     ...sections.map((s) => `${s.title}: ${s.body}`),
     `위 ${PRODUCT_LABEL[product]} 풀이의 결(십성·오행·신강신약·운의 계절) 위에서, 이 사람만을 위한`,
-    `${PRODUCT_LABEL[product]} 이야기를 800~1200자 분량으로 넉넉하게 들려줘요. 3~5개 문단으로 나눠서,`,
+    `${PRODUCT_LABEL[product]} 이야기를 500~700자 분량으로 넉넉하게 들려줘요. 2~3개 문단으로 나눠서,`,
     "①지금 이 결이 어떤 모습으로 드러나는지 구체적인 장면처럼 풀어쓰고, ②그 결이 실생활에서",
     "어떻게 나타날 수 있는지 예시를 들어 짚어주고, ③지금·이번 계절에 해볼 만한 구체적인 제안",
-    "한두 가지로 마무리해요. 위 문장을 그대로 반복하지 말고, 새로운 단정(예언)을 만들지 말고,",
+    "한 가지로 마무리해요. 위 문장을 그대로 반복하지 말고, 새로운 단정(예언)을 만들지 말고,",
     "이미 나온 결을 더 깊고 구체적으로 풀어써요. 문단 사이는 빈 줄로 구분해요.",
   ].join("\n");
 }
