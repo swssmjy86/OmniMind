@@ -16,6 +16,7 @@ import { matchDeepPrompt } from "@/lib/interpret/content/match-deep";
 import { respond } from "@/lib/interpret/interpret";
 import { OpenRouterProvider } from "@/lib/interpret/openrouter-provider";
 import { recordEvent } from "@/lib/metrics/events";
+import { PRODUCT_PERSONA } from "@/lib/persona/products";
 import { currentDaeun } from "@/lib/engine/daeun";
 import { toKstParts } from "@/lib/engine/kst";
 import { computeProfile, PROFILE_CONTEXT_VERSION } from "@/lib/engine/index";
@@ -86,6 +87,7 @@ export async function unlockReading(productRaw: string): Promise<UnlockResult> {
       {
         profile: ctx, nickname: profile.nickname, history: [],
         message: creditReadingPrompt(product, ctx, sections),
+        personaId: PRODUCT_PERSONA[product],
       },
       { template: { chat: async () => "" }, llm: new OpenRouterProvider({ premium: true }) },
     );
@@ -177,7 +179,10 @@ export async function unlockMatchDeep(raw: unknown): Promise<UnlockResult> {
 
     // 유료 LLM 개인화 — 실패하면 아래 폴백으로
     const r = await respond(
-      { profile: ctx, nickname: profile.nickname, history: [], message: matchDeepPrompt(sections) },
+      {
+        profile: ctx, nickname: profile.nickname, history: [], message: matchDeepPrompt(sections),
+        personaId: PRODUCT_PERSONA.match,
+      },
       { template: { chat: async () => "" }, llm: new OpenRouterProvider({ premium: true }) },
     );
 

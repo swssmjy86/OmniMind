@@ -5,6 +5,7 @@ import { computeDaily } from "@/lib/engine/daily";
 import { assembleDaily, dailyToSections, dailyPrompt } from "@/lib/interpret/content/daily";
 import { respond } from "@/lib/interpret/interpret";
 import { toKstParts } from "@/lib/engine/kst";
+import { PRODUCT_PERSONA } from "@/lib/persona/products";
 import type { ProfileRow } from "@/lib/db/types";
 
 /**
@@ -46,6 +47,7 @@ export async function recordTodayDaily(): Promise<void> {
         nickname: profile.nickname,
         history: [],
         message: dailyPrompt(daily, guide),
+        personaId: PRODUCT_PERSONA.today,
       },
       { template: { chat: async () => "" } },
     );

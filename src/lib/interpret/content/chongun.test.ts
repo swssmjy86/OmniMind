@@ -29,6 +29,13 @@ describe("총운 조립 (2단계 스펙 §4)", () => {
     expect(out[out.length - 1].body).toContain("첫 대운");
   });
 
+  it("첫 대운 이전 — 정밀 나이(년+개월)로 안내한다", () => {
+    const { years, months } = ctx.daeun!.startAgePrecise;
+    const out = assembleChongun(ctx, "새벽", 0);
+    const when = months > 0 ? `${years}세 ${months}개월` : `${years}세`;
+    expect(out[out.length - 1].body).toContain(`${when} 무렵부터`);
+  });
+
   it("성별 미상(daeun 없음) — 온보딩 안내 문구로 완전 동작(폴백 §3.2)", () => {
     const out = assembleChongun(noGenderCtx, "새벽", 36);
     expect(out[out.length - 1].title).toBe(SEASON_TITLE);

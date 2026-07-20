@@ -61,3 +61,9 @@ export const ACCESS_LABEL: Record<ProductAccess, string> = {
   login: "로그인하면 무료",
   credit: "크레딧",
 };
+
+/** 상품 ID → 페르소나. LLM 시스템 프롬프트(chat-prompt.ts)가 상품별 말투를 고를 때 쓴다 —
+ *  PRODUCTS의 personaId를 다시 옮겨 적지 않도록 한 번만 파생시킨다. */
+export const PRODUCT_PERSONA: Record<ProductId, PersonaId> = Object.fromEntries(
+  PRODUCTS.map((p) => [p.id, p.personaId]),
+) as Record<ProductId, PersonaId>;

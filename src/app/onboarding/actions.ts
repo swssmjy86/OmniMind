@@ -8,6 +8,7 @@ import { respond } from "@/lib/interpret/interpret";
 import { OpenRouterProvider } from "@/lib/interpret/openrouter-provider";
 import { assertTone } from "@/lib/interpret/tone-guard";
 import { recordEvent } from "@/lib/metrics/events";
+import { PRODUCT_PERSONA } from "@/lib/persona/products";
 import type { BloodType, Mbti } from "@/lib/engine/types";
 
 export interface CreateProfileInput {
@@ -77,6 +78,7 @@ export async function saveProfile(
         nickname: input.nickname,
         history: [],
         message: profileSynthesisPrompt(context, input.nickname),
+        personaId: PRODUCT_PERSONA.chongun,
       },
       { llm: new OpenRouterProvider({ report: true }), template: { chat: async () => "" } },
     );
