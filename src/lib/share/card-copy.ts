@@ -140,7 +140,9 @@ export function dailyCardParams(ctx: ProfileContext, guide: DailyGuide): DailyCa
     el: ctx.dayMaster.element,
     headline: guide.headline,
     mind: guide.mind,
-    personal: guide.personal,
+    // 궁 캡션(형충회합)은 별도 필드를 늘리지 않고 personal에 이어붙인다 — 카드도 오늘의운세와
+    // 같은 개인화 문장을 담아야 하므로(§동기화 원칙).
+    personal: [guide.personal, guide.palace].filter(Boolean).join(" ") || null,
     color: guide.color,
     keyword: guide.keyword,
     lucky: guide.lucky,

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { computeDaily } from "@/lib/engine/daily";
 import { assembleDaily, dailyToSections, dailyPrompt } from "./daily";
 import { checkTone } from "../tone-guard";
+import type { ProfileContext } from "@/lib/engine";
 
 describe("assembleDaily", () => {
   it("5개 오행 전부에서 무드 문구가 존재하고 톤 통과", () => {
@@ -77,6 +78,33 @@ describe("assembleDaily", () => {
     const g = assembleDaily(computeDaily({ y: 2026, mo: 7, d: 14 }));
     for (const t of [g.skyLines.moon, g.skyLines.riseSet, g.skyLines.altitude])
       expect(checkTone(t)).toHaveLength(0);
+  });
+
+  it("pillars 없이 부르면 palace는 null(하위 호환)", () => {
+    const g = assembleDaily(computeDaily({ y: 2000, mo: 1, d: 7 }, "수"), "다인");
+    expect(g.palace).toBeNull();
+  });
+
+  it("pillars를 주고 궁 하나가 오늘과 형충회합이면 palace 캡션이 붙고 톤 통과", () => {
+    // 2000-01-07 = 갑자일(자, branch 0). 일주 지지를 오(자오충)로 맞춘 궁을 준다.
+    const pillars: ProfileContext["pillars"] = {
+      year: "갑자", month: "을사", day: "병오", hour: "정해",
+    };
+    const g = assembleDaily(computeDaily({ y: 2000, mo: 1, d: 7 }), "다인", pillars);
+    expect(g.palace).not.toBeNull();
+    expect(g.palace).toContain("나와 배우자의 궁");
+    expect(checkTone(g.palace!)).toHaveLength(0);
+  });
+
+  it("palace가 있으면 dailyToSections의 '당신에게' 섹션에 함께 담긴다", () => {
+    const pillars: ProfileContext["pillars"] = {
+      year: "갑자", month: "을사", day: "병오", hour: "정해",
+    };
+    const g = assembleDaily(computeDaily({ y: 2000, mo: 1, d: 7 }, "수"), "다인", pillars);
+    const you = dailyToSections(g).find((s) => s.title === "당신에게");
+    expect(you).toBeDefined();
+    expect(you!.body).toContain(g.personal);
+    expect(you!.body).toContain(g.palace);
   });
 
   it("dailyPrompt는 템플릿 마음가짐을 반복하지 말라고 명시한다", () => {

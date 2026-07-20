@@ -1,7 +1,9 @@
 import type { DailyContext, DailyRelation } from "@/lib/engine/daily";
 import type { TenGod } from "@/lib/engine/ten-gods";
 import type { MoonPhaseName } from "@/lib/engine/sky";
+import type { ProfileContext } from "@/lib/engine";
 import type { InterpretationSection } from "../types";
+import { palaceRelationCaption } from "./palace-relation";
 
 // 천간 10종 그날의 무드 — 같은 오행이라도 음양(갑/을, 병/정…)에 따라 결이 다르다.
 // 오행 5종만 쓰면 이틀 연속 같은 문구가 반복되므로, 물상(物象)을 살려 10종으로 나눈다. §5.4 문체.
@@ -74,11 +76,20 @@ export interface DailyGuide {
   keyword: string; // 오늘의 키워드
   lucky: string; // 행운 포인트
   personal: string | null; // 프로필 있을 때 개인화 한 줄
+  /** 형충회합 궁 캡션(근묘화실 — 월/일/시주 vs 오늘 일진) — 프로필 네 기둥 있을 때만 */
+  palace: string | null;
   skyLines: { moon: string; riseSet: string; altitude: string }; // 월령·출몰시각·태양고도, 항상 있음
 }
 
-/** 데일리 가이드 문구 조립(템플릿, 항상 동작). 무드는 일진 천간(10종) 기준. */
-export function assembleDaily(daily: DailyContext, nickname?: string): DailyGuide {
+/**
+ * 데일리 가이드 문구 조립(템플릿, 항상 동작). 무드는 일진 천간(10종) 기준.
+ * pillars(프로필 네 기둥)를 주면 형충회합 궁 캡션까지 더한다 — 없어도 나머지는 그대로 동작.
+ */
+export function assembleDaily(
+  daily: DailyContext,
+  nickname?: string,
+  pillars?: ProfileContext["pillars"],
+): DailyGuide {
   const mood = STEM_MOOD[daily.dayGanzhi[0]];
   const who = nickname ? `${nickname}님, ` : "";
   const personal = daily.tenGod
@@ -93,19 +104,21 @@ export function assembleDaily(daily: DailyContext, nickname?: string): DailyGuid
     keyword: mood.keyword,
     lucky: mood.lucky,
     personal,
+    palace: pillars ? palaceRelationCaption(daily.dayGanzhi, pillars) : null,
     skyLines: skyLines(daily.sky),
   };
 }
 
 /** interpretations 캐시용 섹션 형태. llmParagraph가 있으면 P8 로그인 전용 개인화 문단을 더한다. */
 export function dailyToSections(guide: DailyGuide, llmParagraph?: string): InterpretationSection[] {
+  const personalBody = [guide.personal, guide.palace].filter(Boolean).join(" ");
   return [
     { title: "오늘의 기운", body: guide.headline },
     { title: "마음가짐", body: guide.mind },
     { title: "오늘의 색과 키워드", body: `${guide.color} · ${guide.keyword}` },
     { title: "행운 포인트", body: guide.lucky },
     { title: "오늘의 하늘", body: [guide.skyLines.moon, guide.skyLines.riseSet, guide.skyLines.altitude].join(" ") },
-    ...(guide.personal ? [{ title: "당신에게", body: guide.personal }] : []),
+    ...(personalBody ? [{ title: "당신에게", body: personalBody }] : []),
     ...(llmParagraph ? [{ title: "오늘, 당신만을 위한 이야기", body: llmParagraph }] : []),
   ];
 }

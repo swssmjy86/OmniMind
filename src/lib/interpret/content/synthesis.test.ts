@@ -58,6 +58,13 @@ describe("profileSynthesisPrompt — P8 로그인 전용 심층 리포트(사주
     const prompt = profileSynthesisPrompt(base, "다인");
     expect(prompt).toContain("나열하지 말고 한 사람의 이야기로 엮어");
   });
+
+  it("월주(본바탕)→활동→일주(결정 방식)→대운(생애 흐름) 4단 서사 순서를 실제 월주 간지로 명시한다", () => {
+    const prompt = profileSynthesisPrompt(base, "다인");
+    expect(prompt).toContain(`월주(${base.pillars.month}, 자라온 환경 속 본바탕)`);
+    expect(prompt).toContain("일주(당신 자신이 마음을 정하는 방식)");
+    expect(prompt).toContain("대운의 방향(생애 흐름)");
+  });
 });
 
 describe("chatSystemPrompt report 모드 — 성격·색·현재/미래·4대운 구조 지시", () => {

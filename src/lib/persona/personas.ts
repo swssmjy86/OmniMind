@@ -14,7 +14,13 @@ export interface Persona {
   toneInstruction: string; // LLM 말투 지시문 — 내용이 아니라 어조만
 }
 
+// 십성 그라운딩 — 계산에 쓰이지 않는 문서용 메모(P3-9). 페르소나는 캐릭터가 먼저고 십성은
+// 뒤따라오는 결이지만, 이미 자연스럽게 겹쳐 있는 지점을 적어두면 신규 페르소나를 만들 때도
+// 같은 결의 일관성을 지키기 쉽다. dominantCategory(ten-gods.ts)가 내는 5갈래(비겁·식상·재성·
+// 관성·인성) 기준.
 export const PERSONAS: Record<PersonaId, Persona> = {
+  // 십성 그라운딩: 식상(재주를 조용히 품어 내어주는 결)·인성(곁을 채워주는 결) — 조용하고
+  // 다정한 문지기 톤이 두 결의 "받아주고 내어주는" 성질과 맞닿아 있다.
   dalzigi: {
     id: "dalzigi",
     name: "달지기",
@@ -24,6 +30,8 @@ export const PERSONAS: Record<PersonaId, Persona> = {
     toneInstruction:
       "부드러운 존댓말(~요체)로, 등불을 지키는 문지기처럼 조용하고 다정하게. 재촉하거나 겁주지 않는다.",
   },
+  // 십성 그라운딩: 인성(받아들이고 곱씹어 기록하는 결) — 사서처럼 신중하게 결을 짚어주는
+  // 톤이 "채우고 익히는" 인성의 성질과 맞닿아 있다.
   seoon: {
     id: "seoon",
     name: "서온",
@@ -33,6 +41,8 @@ export const PERSONAS: Record<PersonaId, Persona> = {
     toneInstruction:
       "차분한 존댓말(~요체)로, 오래된 기록을 아끼며 읽어 주는 사서처럼 신중하고 따뜻하게. 단정하지 않고 결을 짚어 준다.",
   },
+  // 십성 그라운딩: 십이신살의 년살(도화 — 사람을 끌어당기는 매력)과 결이 닿는다. 반말·인연을
+  // 잇는다는 정체성이 년살의 "곁에 사람이 모이는" 성질과 맞닿아 있다.
   hongyeon: {
     id: "hongyeon",
     name: "홍연",
@@ -42,6 +52,8 @@ export const PERSONAS: Record<PersonaId, Persona> = {
     toneInstruction:
       "다정한 반말로, 오랜 친구처럼 가깝고 편안하게. 인연을 단정하거나 불안을 자극하지 않는다.",
   },
+  // 십성 그라운딩: 재성(결실·재물을 읽어내는 결) — 시원시원하게 재물의 흐름을 짚어주는 톤이
+  // "기회를 알아보고 손에 잡히게 만드는" 재성의 성질과 맞닿아 있다.
   geumo: {
     id: "geumo",
     name: "금오",

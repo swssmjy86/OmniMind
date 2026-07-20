@@ -2,6 +2,7 @@ import type { ProfileContext } from "@/lib/engine";
 import type { DailyContext, DailyRelation } from "@/lib/engine/daily";
 import type { InterpretationSection } from "../types";
 import { dominantCategory, tenGodStrength, type TenGodCategory } from "./ten-gods";
+import { palaceRelationCaption } from "./palace-relation";
 
 // P6 의사결정 도우미 — 고민 카테고리별 조언 조립(템플릿, 항상 동작). §5.4 문체.
 
@@ -75,12 +76,13 @@ export function assembleConcern(input: ConcernInput): InterpretationSection[] {
   const relationLine = daily.relation
     ? RELATION_HINT[daily.relation]
     : "오늘의 기운을 가만히 느끼며, 마음의 속도에 맞춰 가요.";
+  const palace = palaceRelationCaption(daily.dayGanzhi, profile.pillars);
 
   return [
     { title: "마음 읽기", body: `${nickname}님, ${OPENER[category]}` },
     {
       title: "지금의 기운",
-      body: `오늘은 ${daily.element}(${daily.dayGanzhi})의 기운이 흐르는 날이에요. ${relationLine}`,
+      body: `오늘은 ${daily.element}(${daily.dayGanzhi})의 기운이 흐르는 날이에요. ${relationLine}${palace ? ` ${palace}` : ""}`,
     },
     {
       title: "당신이 지닌 힘",
