@@ -38,24 +38,44 @@ interface ProfileContext {
 const gz = (p: { stem: number; branch: number }) =>
   HEAVENLY_STEMS[p.stem] + EARTHLY_BRANCHES[p.branch];
 
-/** 입력 문자열 → KST 절대 instant. 검증 포함. */
-function parseKstInstant(input: EngineInput): Date {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(input.birthDate);
-  if (!m) throw new Error(`birthDate 형식 오류: ${input.birthDate}`);
+/** 생년월일시 문자열 → KST 절대 instant. 검증 포함. */
+function parseKstBirthInstant(birthDate: string, birthTime: string | null, timeUnknown: boolean): Date {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(birthDate);
+  if (!m) throw new Error(`birthDate 형식 오류: ${birthDate}`);
   const y = Number(m[1]);
   if (y < YEAR_MIN || y > YEAR_MAX)
     throw new RangeError(`지원 연도 범위(${YEAR_MIN}~${YEAR_MAX}) 밖: ${y}`);
 
   let hhmm = "00:00";
-  if (!input.timeUnknown) {
-    if (!input.birthTime) throw new Error("birthTime 필요(timeUnknown=false)");
+  if (!timeUnknown) {
+    if (!birthTime) throw new Error("birthTime 필요(timeUnknown=false)");
     // 형식만 보면 "99:99"도 통과해 Invalid Date가 되므로 값 범위까지 확인한다.
-    const t = /^(\d{2}):(\d{2})$/.exec(input.birthTime);
+    const t = /^(\d{2}):(\d{2})$/.exec(birthTime);
     if (!t || Number(t[1]) > 23 || Number(t[2]) > 59)
-      throw new Error(`birthTime 형식 오류: ${input.birthTime}`);
-    hhmm = input.birthTime;
+      throw new Error(`birthTime 형식 오류: ${birthTime}`);
+    hhmm = birthTime;
   }
-  return kstStringToInstant(`${input.birthDate}T${hhmm}`);
+  return kstStringToInstant(`${birthDate}T${hhmm}`);
+}
+
+function parseKstInstant(input: EngineInput): Date {
+  return parseKstBirthInstant(input.birthDate, input.birthTime, input.timeUnknown);
+}
+
+/**
+ * 일간(日干)만 가볍게 구한다 — MBTI·혈액형 없이도 데일리 개인화(오늘의운세 무료 뷰 등)에
+ * 필요한 최소 계산만 하고 싶을 때 쓴다. computeProfile과 달리 오행 분포·십성표·대운은 계산하지
+ * 않는다.
+ */
+export function dayMasterOf(
+  birthDate: string,
+  birthTime: string | null,
+  timeUnknown: boolean,
+): { stem: string; element: string } {
+  const rawInstant = parseKstBirthInstant(birthDate, birthTime, timeUnknown);
+  const fp = computePillars(rawInstant, { timeUnknown });
+  const dm = fp.day.stem;
+  return { stem: HEAVENLY_STEMS[dm], element: ELEMENTS[stemElement(dm)] };
 }
 
 export function computeProfile(input: EngineInput): ProfileContext {

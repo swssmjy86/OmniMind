@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeProfile, PROFILE_CONTEXT_VERSION } from "./index";
+import { computeProfile, dayMasterOf, PROFILE_CONTEXT_VERSION } from "./index";
 import { CASES } from "./fixtures/manseryeok-cases";
 
 describe("computeProfile — 만세력 대조 코퍼스", () => {
@@ -56,5 +56,31 @@ describe("computeProfile — 통합·계약", () => {
 
   it("대조 코퍼스를 최소 20건 보유(년주·오호둔·오서둔 감사 + 앵커 외부확정)", () => {
     expect(CASES.length).toBeGreaterThanOrEqual(20);
+  });
+});
+
+describe("dayMasterOf — MBTI·혈액형 없이 일간만 가볍게 계산", () => {
+  it("computeProfile의 dayMaster와 동일한 값을 낸다(시간 앎)", () => {
+    const p = computeProfile({
+      birthDate: "1995-08-20", birthTime: "14:30", timeUnknown: false,
+      bloodType: "A", mbti: "ENFP",
+    });
+    const dm = dayMasterOf("1995-08-20", "14:30", false);
+    expect(dm.stem).toBe(p.dayMaster.stem);
+    expect(dm.element).toBe(p.dayMaster.element);
+  });
+
+  it("computeProfile의 dayMaster와 동일한 값을 낸다(시간 모름)", () => {
+    const p = computeProfile({
+      birthDate: "1995-08-20", birthTime: null, timeUnknown: true,
+      bloodType: "A", mbti: "ENFP",
+    });
+    const dm = dayMasterOf("1995-08-20", null, true);
+    expect(dm.stem).toBe(p.dayMaster.stem);
+    expect(dm.element).toBe(p.dayMaster.element);
+  });
+
+  it("잘못된 birthDate는 거부한다", () => {
+    expect(() => dayMasterOf("1995/08/20", null, true)).toThrow();
   });
 });

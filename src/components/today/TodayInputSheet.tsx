@@ -20,12 +20,13 @@ export default function TodayInputSheet({
   onSaved: (b: TodayBirth) => void;
 }) {
   const [birthDate, setBirthDate] = useState("");
+  const [birthTime, setBirthTime] = useState("");
   const [gender, setGender] = useState<"male" | "female" | null>(null);
 
   const canSubmit = /^\d{4}-\d{2}-\d{2}$/.test(birthDate);
 
   const submit = () => {
-    const b: TodayBirth = { birthDate, gender };
+    const b: TodayBirth = { birthDate, birthTime, gender };
     try {
       window.localStorage.setItem(TODAY_BIRTH_KEY, JSON.stringify(b));
     } catch {
@@ -53,6 +54,11 @@ export default function TodayInputSheet({
         <label className="mt-5 block text-sm text-text-soft">태어난 날</label>
         <div className="mt-1">
           <PickerInput type="date" value={birthDate} onChange={setBirthDate} placeholder="생년월일을 선택해 주세요" />
+        </div>
+
+        <label className="mt-4 block text-sm text-text-soft">태어난 시간 (선택)</label>
+        <div className="mt-1">
+          <PickerInput type="time" value={birthTime} onChange={setBirthTime} placeholder="알면 더 정확해져요" />
         </div>
 
         <label className="mt-4 block text-sm text-text-soft">성별 (선택)</label>

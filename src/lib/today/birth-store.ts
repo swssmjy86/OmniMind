@@ -3,6 +3,7 @@
 
 export interface TodayBirth {
   birthDate: string;                 // "YYYY-MM-DD"
+  birthTime: string;                 // "HH:MM" — 모르면 "" (선택 입력, 있으면 일주 정확도↑)
   gender: "male" | "female" | null;  // 선택
 }
 
@@ -14,8 +15,9 @@ export function parseTodayBirth(raw: string | null): TodayBirth | null {
   try {
     const d = JSON.parse(raw) as Partial<TodayBirth>;
     if (typeof d.birthDate !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(d.birthDate)) return null;
+    if (d.birthTime != null && d.birthTime !== "" && !/^\d{2}:\d{2}$/.test(d.birthTime)) return null;
     if (d.gender != null && d.gender !== "male" && d.gender !== "female") return null;
-    return { birthDate: d.birthDate, gender: d.gender ?? null };
+    return { birthDate: d.birthDate, birthTime: d.birthTime ?? "", gender: d.gender ?? null };
   } catch {
     return null;
   }
