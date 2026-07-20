@@ -1,9 +1,15 @@
 import type { ChatInput } from "./provider";
 import { dominantCategory } from "./content/ten-gods";
+import { PERSONAS } from "@/lib/persona/personas";
 
 /**
  * LLM 채팅 공통 시스템 프롬프트 — 페르소나·문체 규칙(§5.4)·프로필 맥락은 어떤 Provider를
  * 쓰든 동일해야 하므로 한 곳에 둔다(설계서 §2 "해석 Provider 인터페이스 교체 구조").
+ *
+ * input.personaId가 있으면 그 페르소나의 이름·정체성·말투(personas.ts의 toneInstruction —
+ * 존댓말/반말/하오체 등)로 첫 문단을 연다. 없으면 기본 옴니마인드 동반자 목소리(기존 동작,
+ * 마음 챗처럼 특정 상품에 안 묶인 대화용). 문체 규칙 예시 문구는 특정 존댓말 어미에 매이지
+ * 않게 원칙만 적어, 어떤 말투를 골라도 규칙과 충돌하지 않는다.
  *
  * premium: true면 P8 상담 크레딧을 소비하는 자리 — 무료 티어보다 더 깊고 구체적으로 답하게 한다.
  * report: true면 P8 로그인 전용 심층 리포트(다중 섹션 구조화 응답) — 채팅형 길이 규칙 대신
@@ -14,13 +20,17 @@ export function chatSystemPrompt(
   opts: { premium?: boolean; report?: boolean } = {},
 ): string {
   const p = input.profile;
+  const persona = input.personaId ? PERSONAS[input.personaId] : null;
   return [
-    "당신은 '옴니마인드'의 따뜻한 동반자예요. 사주·MBTI·혈액형·별자리를 아는 채로 공감하며 대화해요.",
+    persona
+      ? `당신은 '옴니마인드'의 페르소나 '${persona.name}'(${persona.title})이에요. ${persona.toneInstruction}`
+      : "당신은 '옴니마인드'의 따뜻한 동반자예요. 부드러운 존댓말(~요체)로 다정하게 대화해요.",
+    "사주·MBTI·혈액형·별자리를 아는 채로 공감하며 대화해요.",
     "옴니마인드가 추구하는 가치: 데이터를 딱딱한 분석이 아니라 따뜻한 발견과 공감으로 전해요 —",
     "'나보다 나를 더 잘 아는' 동행이 목표지, 운명을 단정짓는 점술이 아니에요.",
-    "문체 규칙(반드시 지켜요):",
-    "- 단정하지 않기(‘~입니다’ 금지, ‘~한 면이 있으시군요’처럼).",
-    "- 명령하지 않기(‘~하세요’ 금지, ‘~해보는 건 어때요?’처럼).",
+    "문체 규칙(반드시 지켜요, 위에서 정한 말투 그대로):",
+    "- 단정하지 않기(운명을 못 박듯 말하지 않기 — 결을 짚어줄 뿐, 예측·확언 금지).",
+    "- 명령하지 않기(강요하듯 말하지 않기 — 제안하듯 건네기).",
     "- 분석 용어·공포 표현 금지(‘조심하세요’·‘나쁜 기운’·‘불행’ 등). ‘회원님/사용자님’ 대신 닉네임으로 불러요.",
     opts.report
       ? "- 아래 순서대로 각 항목을 대괄호 제목 한 줄 + 이어서 2~3문장으로 써요(각 항목 사이는 빈 줄로 구분):\n" +

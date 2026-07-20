@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { checkTone, checkToneWarnings } from "@/lib/interpret/tone-guard";
 import { PERSONAS } from "./personas";
-import { ACCESS_LABEL, PRODUCTS } from "./products";
+import { ACCESS_LABEL, PRODUCT_PERSONA, PRODUCTS } from "./products";
 
 describe("상품 카탈로그 v2 (4탭 IA 스펙 §4)", () => {
   it("7종 — today + 총운/직업/연애/재물/궁합/결혼", () => {
@@ -34,6 +34,11 @@ describe("상품 카탈로그 v2 (4탭 IA 스펙 §4)", () => {
       career: "live:/saju/career", love: "live:/saju/love",
       wealth: "live:/saju/wealth", marriage: "live:/saju/marriage",
     });
+  });
+
+  it("PRODUCT_PERSONA는 PRODUCTS의 personaId와 1:1로 파생된다(LLM 시스템 프롬프트가 참조)", () => {
+    for (const p of PRODUCTS) expect(PRODUCT_PERSONA[p.id]).toBe(p.personaId);
+    expect(Object.keys(PRODUCT_PERSONA)).toHaveLength(PRODUCTS.length);
   });
 
   it("카피가 톤 가드를 통과한다", () => {
