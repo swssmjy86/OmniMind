@@ -35,7 +35,7 @@ export default function PickerInput({
         onChange={(e) => onChange(e.target.value)}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
-        className={`min-h-14 w-full rounded-card border border-text-soft/30 ${bg} px-4 py-3.5 text-lg outline-none focus:border-primary-green disabled:opacity-40 ${
+        className={`w-full rounded-card border border-text-soft/30 ${bg} px-4 py-3 text-lg outline-none focus:border-primary-green disabled:opacity-40 ${
           showPlaceholder ? "text-transparent" : ""
         }`}
       />
