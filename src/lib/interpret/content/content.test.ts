@@ -2,9 +2,13 @@ import { describe, expect, it } from "vitest";
 import { DAY_MASTER_TEXT } from "./day-master";
 import { ZODIAC_TEXT } from "./zodiac";
 import { ELEMENT_BALANCE_TEXT } from "./elements";
-import { tenGodTheme, tenGodStrength, dominantCategory } from "./ten-gods";
+import { tenGodTheme, tenGodStrength, tenGodNuance, dominantCategory, dominantGod } from "./ten-gods";
 import { checkTone, checkToneWarnings } from "../tone-guard";
-import type { TenGodChart } from "@/lib/engine/ten-gods";
+import type { TenGod, TenGodChart } from "@/lib/engine/ten-gods";
+
+const ALL_GODS: readonly TenGod[] = [
+  "비견", "겁재", "식신", "상관", "편재", "정재", "편관", "정관", "편인", "정인",
+];
 
 const STEMS = ["갑","을","병","정","무","기","경","신","임","계"];
 const ZODIACS = ["양자리","황소자리","쌍둥이자리","게자리","사자자리","처녀자리",
@@ -37,6 +41,20 @@ describe("콘텐츠 톤 준수 (§5.4)", () => {
     expect(checkTone(withLack)).toHaveLength(0);
     expect(checkTone(full)).toHaveLength(0);
     expect(withLack).toContain("목의 기운이 3개");
+  });
+
+  it("오행 계절 서사(봄~겨울)가 지배 오행 5종 전부에서 문장에 실리고 톤 통과", () => {
+    const SEASONS = [
+      ["목", "봄"], ["화", "여름"], ["토", "환절기"], ["금", "가을"], ["수", "겨울"],
+    ] as const;
+    for (const [dominant, season] of SEASONS) {
+      const t = ELEMENT_BALANCE_TEXT({
+        counts: { 목: 0, 화: 0, 토: 0, 금: 0, 수: 0, [dominant]: 3 },
+        dominant, lacking: [],
+      });
+      expect(t).toContain(season);
+      expect(checkTone(t)).toHaveLength(0);
+    }
   });
 
   it("오행 동률이면 '나란히' 서술로 분기 — 한쪽을 단정하지 않는다", () => {
@@ -79,5 +97,22 @@ describe("콘텐츠 톤 준수 (§5.4)", () => {
       expect(s.startsWith("당신")).toBe(false); // "님에게는 당신…" 비문 방지
       expect(checkTone(s)).toHaveLength(0);
     }
+  });
+
+  it("십성 10갈래(음양까지) 무늬가 전부 존재·서로 다르며 톤 통과", () => {
+    const seen = new Set<string>();
+    for (const g of ALL_GODS) {
+      const chart: TenGodChart = {
+        yearStem: g, monthStem: g, hourStem: g,
+        yearBranch: g, monthBranch: g, dayBranch: g, hourBranch: g,
+      };
+      expect(dominantGod(chart)).toBe(g);
+      const nuance = tenGodNuance(chart);
+      expect(nuance.length).toBeGreaterThan(0);
+      expect(checkTone(nuance)).toHaveLength(0);
+      expect(checkToneWarnings(nuance)).toHaveLength(0);
+      seen.add(nuance);
+    }
+    expect(seen.size).toBe(10);
   });
 });

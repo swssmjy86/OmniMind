@@ -59,3 +59,38 @@ export function tenGodTheme(chart: TenGodChart): string {
 export function tenGodStrength(chart: TenGodChart): string {
   return STRENGTH[dominantCategory(chart)];
 }
+
+// 십성 10갈래 개별 결 — 같은 갈래(비겁·식상 등)라도 음양이 다르면(비견≠겁재) 결이 다르다.
+// dominantCategory보다 한 단계 더 세밀한 무늬만 더한다(교안 6·7강) — 5갈래 THEME을 대체하지
+// 않고 그 위에 "그중에서도" 한 문장을 얹는다.
+const NUANCE: Record<TenGod, string> = {
+  비견: "그중에서도 비견의 결이 강해요 — 나와 닮은 이들과 나란히 설 때 오히려 힘이 나는 쪽이죠.",
+  겁재: "그중에서도 겁재의 결이 강해요 — 경쟁하는 자리일수록 승부욕이 살아나는 쪽이죠.",
+  식신: "그중에서도 식신의 결이 강해요 — 여유롭게 즐기며 재주를 펼칠 때 가장 편안한 쪽이죠.",
+  상관: "그중에서도 상관의 결이 강해요 — 날카로운 재치로 반짝일 때가 많은 쪽이죠.",
+  편재: "그중에서도 편재의 결이 강해요 — 기회를 넓게 벌리는 통 큰 쪽이죠.",
+  정재: "그중에서도 정재의 결이 강해요 — 성실하게 차곡차곡 쌓아가는 쪽이죠.",
+  편관: "그중에서도 편관의 결이 강해요 — 위기 앞에서 오히려 담담해지는 쪽이죠.",
+  정관: "그중에서도 정관의 결이 강해요 — 원칙과 질서 안에서 마음이 편안한 쪽이죠.",
+  편인: "그중에서도 편인의 결이 강해요 — 낯설고 독특한 배움에 끌리는 쪽이죠.",
+  정인: "그중에서도 정인의 결이 강해요 — 배우고 받아들이며 천천히 채워지는 쪽이죠.",
+};
+
+/** 사주 차트에서 가장 많이 나타난 십성(10갈래, 음양까지 구분). */
+export function dominantGod(chart: TenGodChart): TenGod {
+  const counts: Partial<Record<TenGod, number>> = {};
+  const gods = [
+    chart.yearStem, chart.monthStem, chart.hourStem,
+    chart.yearBranch, chart.monthBranch, chart.dayBranch, chart.hourBranch,
+  ].filter((g): g is TenGod => g !== null);
+  if (chart.monthStem) gods.push(chart.monthStem);
+  if (chart.monthBranch) gods.push(chart.monthBranch);
+  for (const g of gods) counts[g] = (counts[g] ?? 0) + 1;
+  return (Object.entries(counts) as [TenGod, number][])
+    .reduce((a, b) => (b[1] > a[1] ? b : a))[0];
+}
+
+/** '타고난 재능과 관계' 섹션에 얹는 한 단계 더 세밀한 무늬(10갈래). */
+export function tenGodNuance(chart: TenGodChart): string {
+  return NUANCE[dominantGod(chart)];
+}
