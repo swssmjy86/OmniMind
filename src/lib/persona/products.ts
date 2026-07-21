@@ -27,32 +27,32 @@ export const PRODUCTS: Product[] = [
   {
     id: "chongun", title: "총운", personaId: "seoon",
     tagline: "여덟 글자에 담긴 인생 전반의 흐름",
-    access: "login", href: "/saju/chongun", status: "live",
+    access: "free", href: "/saju/chongun", status: "live",
   },
   {
     id: "career", title: "직업운", personaId: "seoon",
     tagline: "일과 재능의 결이 흐르는 방향",
-    access: "credit", href: "/saju/career", status: "live",
+    access: "free", href: "/saju/career", status: "live",
   },
   {
     id: "love", title: "연애운", personaId: "hongyeon",
     tagline: "다가오는 인연과 마음의 흐름",
-    access: "credit", href: "/saju/love", status: "live",
+    access: "free", href: "/saju/love", status: "live",
   },
   {
     id: "wealth", title: "재물운", personaId: "geumo",
     tagline: "재물의 물길이 흐르는 방향",
-    access: "credit", href: "/saju/wealth", status: "live",
+    access: "free", href: "/saju/wealth", status: "live",
   },
   {
     id: "match", title: "궁합", personaId: "hongyeon",
     tagline: "두 사람의 기운이 만나는 자리",
-    access: "credit", href: "/saju/match-deep", status: "live",
+    access: "free", href: "/saju/match-deep", status: "live",
   },
   {
     id: "marriage", title: "결혼운", personaId: "hongyeon",
     tagline: "함께 걷는 길의 때와 결",
-    access: "credit", href: "/saju/marriage", status: "live",
+    access: "free", href: "/saju/marriage", status: "live",
   },
 ];
 

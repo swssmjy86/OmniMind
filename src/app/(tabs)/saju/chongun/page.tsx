@@ -1,7 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { createServerSupabase } from "@/lib/supabase/server";
-import { readingAccess } from "@/lib/consult/quota";
 import { readingInputHash } from "@/lib/readings/hash";
 import { ensureCurrentProfile } from "@/lib/readings/ensure-profile";
 import { assembleChongun } from "@/lib/interpret/content/chongun";
@@ -10,7 +9,7 @@ import { currentDaeun } from "@/lib/engine/daeun";
 import { toKstParts } from "@/lib/engine/kst";
 import { PERSONAS } from "@/lib/persona/personas";
 import SajuChart from "@/components/profile/SajuChart";
-import ChongunPeek from "@/components/saju/ChongunPeek";
+import GuestReadingView from "@/components/saju/GuestReadingView";
 import ShareSheet from "@/components/share/ShareSheet";
 import ReviewPrompt from "@/components/reviews/ReviewPrompt";
 import ReviewHighlights from "@/components/reviews/ReviewHighlights";
@@ -21,15 +20,16 @@ import type { InterpretationSection } from "@/lib/interpret/types";
 
 export const metadata: Metadata = {
   title: "총운 — 옴니마인드",
-  description: "여덟 글자에 담긴 인생 전반의 흐름 — 로그인하면 무료.",
+  description: "여덟 글자에 담긴 인생 전반의 흐름 — 누구나 무료.",
 };
 
 export const dynamic = "force-dynamic";
 
 /**
- * 총운 풀이(2단계 스펙 §5) — 무료 상품으로 열람·캐싱·잠금 파이프라인을 검증한다.
- * 비로그인: 엿보기(본문 비노출) / 로그인·프로필 없음: 온보딩 유도 /
- * 로그인+프로필: readings 캐시 경유(같은 입력이면 재생성 없음 — P9 §6.2).
+ * 총운 풀이 — 로그인 여부와 무관하게 누구나 무료(2026-07-21 게스트 개방).
+ * 비로그인: 온보딩 draft(로컬)로 매번 새로 계산해 보여줌(GuestReadingView, LLM 없음) /
+ * 로그인·프로필 없음: 온보딩 유도 /
+ * 로그인+프로필: readings 캐시 경유(같은 입력이면 재생성 없음 — P9 §6.2), LLM 없이도 동일.
  */
 export default async function ChongunPage() {
   const supabase = await createServerSupabase();
@@ -47,19 +47,13 @@ export default async function ChongunPage() {
     </>
   );
 
-  const access = readingAccess("chongun", {
-    loggedIn: Boolean(user),
-    credits: 0, // 총운 판정에는 쓰이지 않는다 — 크레딧 상품은 3단계에서 실제 값 전달
-    premiumUntil: null,
-    now: new Date(),
-  });
-
-  if (!access.allowed) {
-    // lockReason === "login" — 엿보기 + 로그인 CTA(본문은 이 응답에 없다)
+  if (!user) {
+    // 게스트 — DB 프로필이 아니라 온보딩 draft(로컬)로 매번 새로 계산해 보여준다.
+    // LLM 개인화는 없다(guest-actions.ts) — 로그인하면 받는 보너스로 남겨둔다.
     return (
       <main className="fade-rise p-6">
         {header}
-        <ChongunPeek />
+        <GuestReadingView product="chongun" title="총운" />
       </main>
     );
   }

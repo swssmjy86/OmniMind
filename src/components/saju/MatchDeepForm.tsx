@@ -5,6 +5,8 @@ import Link from "next/link";
 import PickerInput from "@/components/ui/PickerInput";
 import Choice from "@/components/ui/Choice";
 import { unlockMatchDeep } from "@/lib/readings/actions";
+import { computeGuestMatchDeep } from "@/lib/readings/guest-actions";
+import type { Draft } from "@/app/onboarding/draft";
 import type { InterpretationSection } from "@/lib/interpret/types";
 import ReviewPrompt from "@/components/reviews/ReviewPrompt";
 
@@ -13,13 +15,19 @@ const MODES = [
   { slug: "lover", label: "연인" }, { slug: "friend", label: "친구" }, { slug: "coworker", label: "동료" },
 ] as const;
 
-/** 궁합 심층 — 상대 전체 입력 → 크레딧 열기 → 결과 렌더(3단계 스펙 §5). */
+/**
+ * 궁합 심층 — 상대 전체 입력 → 열기 → 결과 렌더(3단계 스펙 §5).
+ * myDraft가 있으면 게스트(로그인 없음) — computeGuestMatchDeep으로 저장·크레딧 없이 매번
+ * 새로 계산한다(guest-actions.ts, LLM 없음). 없으면 기존 로그인 경로(unlockMatchDeep) 그대로.
+ */
 export default function MatchDeepForm({
   remaining,
   unlimited,
+  myDraft,
 }: {
   remaining: number;
   unlimited: boolean;
+  myDraft?: Draft | null;
 }) {
   const [birthDate, setBirthDate] = useState("");
   const [birthTime, setBirthTime] = useState("");
@@ -30,6 +38,8 @@ export default function MatchDeepForm({
   >(null);
   const [error, setError] = useState(false);
   const [pending, startTransition] = useTransition();
+  // 게스트는 크레딧 개념이 없다 — 부모가 unlimited를 안 넘겨도 여기서 스스로 방어한다.
+  const effectiveUnlimited = unlimited || Boolean(myDraft);
 
   if (result) {
     return (
@@ -47,7 +57,7 @@ export default function MatchDeepForm({
     );
   }
 
-  if (!unlimited && remaining <= 0) {
+  if (!effectiveUnlimited && remaining <= 0) {
     return (
       <div className="mt-5 rounded-card bg-warm-surface p-5 text-center">
         <p className="text-sm text-text-soft">
@@ -71,9 +81,10 @@ export default function MatchDeepForm({
   const open = () => {
     setError(false);
     startTransition(async () => {
-      const r = await unlockMatchDeep({
-        birthDate, birthTime: timeUnknown ? "" : birthTime, timeUnknown, mode,
-      });
+      const partner = { birthDate, birthTime: timeUnknown ? "" : birthTime, timeUnknown, mode };
+      const r = myDraft
+        ? await computeGuestMatchDeep(myDraft, partner)
+        : await unlockMatchDeep(partner);
       if (r.ok) setResult({ sections: r.sections, readingId: r.readingId });
       else setError(true);
     });
@@ -115,9 +126,9 @@ export default function MatchDeepForm({
         onClick={open}
         className="press mt-6 w-full rounded-card bg-accent-coral py-3.5 font-medium text-white disabled:opacity-40"
       >
-        {pending ? "풀이를 준비하는 중…" : unlimited ? "지금 열어보기 ✨" : "크레딧 1개로 열기 ✨"}
+        {pending ? "풀이를 준비하는 중…" : effectiveUnlimited ? "지금 열어보기 ✨" : "크레딧 1개로 열기 ✨"}
       </button>
-      {!unlimited && (
+      {!effectiveUnlimited && (
         <p className="mt-2 text-center text-xs text-text-soft">
           남은 크레딧 {remaining}개 · 같은 상대는 다시 볼 때 무료예요.
         </p>

@@ -13,6 +13,7 @@ import { currentDaeun } from "@/lib/engine/daeun";
 import { toKstParts } from "@/lib/engine/kst";
 import { PRODUCTS } from "@/lib/persona/products";
 import { PERSONAS } from "@/lib/persona/personas";
+import GuestReadingView from "@/components/saju/GuestReadingView";
 import ReadingPeek from "@/components/saju/ReadingPeek";
 import UnlockReading from "@/components/saju/UnlockReading";
 import ShareSheet from "@/components/share/ShareSheet";
@@ -52,18 +53,13 @@ export default async function CreditReadingPage({
     </>
   );
 
-  // 비로그인 — 엿보기 + 로그인 CTA(본문은 이 응답에 없다)
+  // 게스트 — DB 프로필이 아니라 온보딩 draft(로컬)로 매번 새로 계산해 보여준다.
+  // LLM 개인화는 없다(guest-actions.ts) — 로그인하면 받는 보너스로 남겨둔다.
   if (!user) {
     return (
       <main className="fade-rise p-6">
         {header}
-        <ReadingPeek titles={titles} />
-        <Link
-          href="/login"
-          className="press mt-4 block w-full rounded-card bg-accent-coral py-3.5 text-center font-medium text-white"
-        >
-          로그인하고 시작하기 ✨
-        </Link>
+        <GuestReadingView product={product} title={meta.title} />
       </main>
     );
   }
