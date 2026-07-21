@@ -3,6 +3,7 @@ import { computeProfile } from "@/lib/engine";
 import { checkTone } from "@/lib/interpret/tone-guard";
 import { computeDaily } from "@/lib/engine/daily";
 import { assembleDaily } from "@/lib/interpret/content/daily";
+import type { ProfileContext } from "@/lib/engine";
 import { dominantCategory } from "@/lib/interpret/content/ten-gods";
 import {
   COMBO_COUNT,
@@ -102,6 +103,7 @@ describe("오늘의 나 카드 — dailyCardQuery ↔ parseDailyCardParams", () 
       keyword: guide.keyword,
       lucky: guide.lucky,
       sky: `${guide.skyLines.moon} ${guide.skyLines.riseSet}`,
+      zodiac: null,
     });
   });
 
@@ -126,6 +128,33 @@ describe("오늘의 나 카드 — dailyCardQuery ↔ parseDailyCardParams", () 
     expect(p).not.toBeNull();
     expect(p?.sky).toBeNull();
     expect(dailyCopyFromParams(p!).sky).toBeNull();
+  });
+
+  it("띠(zodiacSign)가 있으면 오늘의운세와 같은 문구가 카드 쿼리·파싱·카피에 그대로 실린다", () => {
+    const pillars: ProfileContext["pillars"] = {
+      year: ctx.pillars.year, month: ctx.pillars.month, day: ctx.pillars.day, hour: ctx.pillars.hour,
+    };
+    const withZodiac = assembleDaily(
+      computeDaily({ y: 2026, mo: 7, d: 16 }, ctx.dayMaster.element, ctx.dayMaster.stem),
+      "달빛",
+      pillars,
+    );
+    expect(withZodiac.zodiacSign).not.toBeNull();
+    const q = dailyCardQuery(ctx, withZodiac);
+    const p = parseDailyCardParams(new URLSearchParams(q));
+    expect(p?.zodiac).toBe(
+      `${withZodiac.zodiacSign!.animal}띠인 당신에게 — ${withZodiac.zodiacSign!.line}`,
+    );
+    expect(dailyCopyFromParams(p!).zodiac).toBe(p?.zodiac);
+  });
+
+  it("zodiac 필드가 생기기 전에 공유된 링크(쿼리에 zodiac 없음)도 그대로 파싱된다", () => {
+    const sp = new URLSearchParams(dailyCardQuery(ctx, guide));
+    sp.delete("zodiac");
+    const p = parseDailyCardParams(sp);
+    expect(p).not.toBeNull();
+    expect(p?.zodiac).toBeNull();
+    expect(dailyCopyFromParams(p!).zodiac).toBeNull();
   });
 
   it("필드 하나라도 비면 null", () => {

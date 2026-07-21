@@ -4,9 +4,6 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import { computeDaily } from "@/lib/engine/daily";
 import { assembleDaily } from "@/lib/interpret/content/daily";
 import { toKstParts } from "@/lib/engine/kst";
-import { EARTHLY_BRANCHES } from "@/lib/engine/constants";
-import { ZODIAC_ANIMALS, branchRelation } from "@/lib/engine/year-sign";
-import { relationLine } from "@/lib/interpret/content/year-sign";
 import { PERSONAS } from "@/lib/persona/personas";
 import DailyRecorder from "@/components/DailyRecorder";
 import ShareSheet from "@/components/share/ShareSheet";
@@ -60,16 +57,6 @@ export default async function TodayPage() {
     const llmParagraph =
       cachedDaily?.body.find((s) => s.title === "오늘, 당신만을 위한 이야기")?.body ?? null;
 
-    // 띠 관계 — 프로필 년주(pillars.year = "경오" 등)의 지지 × 오늘 일진 지지
-    const yearBranch = EARTHLY_BRANCHES.indexOf(
-      profile.profile_context.pillars.year[1] as (typeof EARTHLY_BRANCHES)[number],
-    );
-    const todayBranch = EARTHLY_BRANCHES.indexOf(
-      daily.dayGanzhi[1] as (typeof EARTHLY_BRANCHES)[number],
-    );
-    const signLine =
-      yearBranch >= 0 ? relationLine(branchRelation(yearBranch, todayBranch)) : null;
-
     return (
       <main className="fade-rise p-6">
         <h1 className="font-[family-name:var(--font-serif-kr)] text-2xl text-primary-green">
@@ -91,12 +78,12 @@ export default async function TodayPage() {
               {guide.personal}
             </p>
           )}
-          {signLine && (
+          {guide.zodiacSign && (
             <p className="mt-3 rounded-card bg-warm-base p-3 text-sm leading-relaxed text-text-main">
               <span className="text-text-soft">
-                {ZODIAC_ANIMALS[yearBranch]}띠인 당신에게 —{" "}
+                {guide.zodiacSign.animal}띠인 당신에게 —{" "}
               </span>
-              {signLine}
+              {guide.zodiacSign.line}
             </p>
           )}
           {llmParagraph && (
