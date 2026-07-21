@@ -152,11 +152,11 @@ function renderDaily(searchParams: URLSearchParams, square: boolean) {
   const d = dailyCopyFromParams(p);
   const fontText =
     d.headline + d.mind + (d.personal ?? "") + d.color + d.keyword + d.lucky + (d.sky ?? "") +
-    d.cta + d.slogan + d.hanja + "OmniMind오늘의 나오늘의 색 · 🍀 행운 포인트 — ";
+    (d.zodiac ?? "") + d.cta + d.slogan + d.hanja + "OmniMind오늘의 나오늘의 색 · 🍀 행운 포인트 — ";
 
   const s = square
-    ? { hanja: 420, headline: 40, mind: 26, personal: 24, chip: 20, lucky: 22, sky: 20, cta: 28, slogan: 20 }
-    : { hanja: 560, headline: 46, mind: 32, personal: 28, chip: 24, lucky: 26, sky: 22, cta: 32, slogan: 24 };
+    ? { hanja: 420, headline: 40, mind: 26, personal: 24, chip: 20, lucky: 22, sky: 20, zodiac: 20, cta: 28, slogan: 20 }
+    : { hanja: 560, headline: 46, mind: 32, personal: 28, chip: 24, lucky: 26, sky: 22, zodiac: 22, cta: 32, slogan: 24 };
 
   const node = (
     <CardFrame square={square} hanjaSize={s.hanja} hanja={d.hanja} eyebrow="오늘의 나">
@@ -232,6 +232,11 @@ function renderDaily(searchParams: URLSearchParams, square: boolean) {
         {d.sky && (
           <div style={{ display: "flex", fontSize: s.sky, marginTop: 12, color: C.softText }}>
             🌙 {d.sky}
+          </div>
+        )}
+        {d.zodiac && (
+          <div style={{ display: "flex", fontSize: s.zodiac, marginTop: 12, color: C.softText }}>
+            🐾 {d.zodiac}
           </div>
         )}
       </div>

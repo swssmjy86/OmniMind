@@ -2,18 +2,20 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { createServerSupabase } from "@/lib/supabase/server";
-import { isPremium, UNLIMITED, FREE_FOR_ALL } from "@/lib/consult/quota";
+import { isPremium, UNLIMITED, FREE_FOR_ALL, GUEST_READING_ACCESS } from "@/lib/consult/quota";
 import { readingInputHash } from "@/lib/readings/hash";
 import { ensureCurrentProfile } from "@/lib/readings/ensure-profile";
 import {
   isCreditReadingProduct, readingSectionTitles,
 } from "@/lib/interpret/content/credit-readings";
+import { unlockReading } from "@/lib/readings/actions";
 import { PROFILE_CONTEXT_VERSION } from "@/lib/engine/index";
 import { currentDaeun } from "@/lib/engine/daeun";
 import { toKstParts } from "@/lib/engine/kst";
 import { PRODUCTS } from "@/lib/persona/products";
 import { PERSONAS } from "@/lib/persona/personas";
 import GuestReadingView from "@/components/saju/GuestReadingView";
+import LoginRequiredNotice from "@/components/saju/LoginRequiredNotice";
 import ReadingPeek from "@/components/saju/ReadingPeek";
 import UnlockReading from "@/components/saju/UnlockReading";
 import ShareSheet from "@/components/share/ShareSheet";
@@ -22,6 +24,7 @@ import ReviewHighlights from "@/components/reviews/ReviewHighlights";
 import { productReviewSummary } from "@/lib/reviews/summary";
 import { profileCardQuery } from "@/lib/share/card-copy";
 import type { ProfileRow, ReadingRow } from "@/lib/db/types";
+import type { InterpretationSection } from "@/lib/interpret/types";
 
 export const metadata: Metadata = { title: "사주 풀이 — 옴니마인드" };
 export const dynamic = "force-dynamic";
@@ -53,13 +56,19 @@ export default async function CreditReadingPage({
     </>
   );
 
-  // 게스트 — DB 프로필이 아니라 온보딩 draft(로컬)로 매번 새로 계산해 보여준다.
-  // LLM 개인화는 없다(guest-actions.ts) — 로그인하면 받는 보너스로 남겨둔다.
   if (!user) {
+    if (GUEST_READING_ACCESS) {
+      return (
+        <main className="fade-rise p-6">
+          {header}
+          <GuestReadingView product={product} title={meta.title} />
+        </main>
+      );
+    }
     return (
       <main className="fade-rise p-6">
         {header}
-        <GuestReadingView product={product} title={meta.title} />
+        <LoginRequiredNotice message="이 풀이를 보려면" />
       </main>
     );
   }
@@ -100,11 +109,29 @@ export default async function CreditReadingPage({
     .gte("context_version", PROFILE_CONTEXT_VERSION)
     .maybeSingle<ReadingRow>();
 
+  let sections: InterpretationSection[] | null = null;
+  let readingId: string | null = null;
   if (cached) {
-    // 내 후기(있으면 표시 전용) + 상품 후기 요약 — 둘 다 실패해도 화면은 그대로(P9 §12)
+    sections = cached.sections;
+    readingId = cached.id;
+  } else if (FREE_FOR_ALL) {
+    // 무료 전환이면 블러+클릭 잠금 없이 곧바로 계산해 보여준다(§블러 기능 삭제 결정,
+    // 2026-07-21). ReadingPeek/UnlockReading은 지우지 않고 아래 폴백으로 남겨둔다 —
+    // 유료 전환 시 이 분기만 걷어내면 그대로 되돌아간다.
+    const r = await unlockReading(product);
+    if (r.ok) {
+      sections = r.sections;
+      readingId = r.readingId;
+    }
+  }
+
+  if (sections) {
+    // 내 후기(readingId 있을 때만) + 상품 후기 요약 — 둘 다 실패해도 화면은 그대로(P9 §12)
     const [{ data: myReview }, productSummary] = await Promise.all([
-      supabase.from("reading_reviews").select("rating, comment")
-        .eq("reading_id", cached.id).maybeSingle<{ rating: number; comment: string | null }>(),
+      readingId
+        ? supabase.from("reading_reviews").select("rating, comment")
+            .eq("reading_id", readingId).maybeSingle<{ rating: number; comment: string | null }>()
+        : Promise.resolve({ data: null }),
       productReviewSummary(product),
     ]);
 
@@ -112,7 +139,7 @@ export default async function CreditReadingPage({
       <main className="fade-rise p-6">
         {header}
         <div className="mt-6 space-y-4">
-          {cached.sections.map((s, i) => (
+          {sections.map((s, i) => (
             <section key={`${i}-${s.title}`} className="rounded-card bg-warm-surface p-5">
               <h2 className="font-[family-name:var(--font-serif-kr)] text-lg text-primary-green">
                 {s.title}
@@ -122,11 +149,11 @@ export default async function CreditReadingPage({
           ))}
         </div>
         <ShareSheet
-          query={profileCardQuery(ctx, `${profile.nickname}님의 ${meta.title}`.slice(0, 20), cached.sections)}
+          query={profileCardQuery(ctx, `${profile.nickname}님의 ${meta.title}`.slice(0, 20), sections)}
           via="reading"
           label="풀이 카드"
         />
-        <ReviewPrompt readingId={cached.id} initial={myReview ?? null} />
+        {readingId && <ReviewPrompt readingId={readingId} initial={myReview ?? null} />}
         <ReviewHighlights summary={productSummary} heading="이 풀이의 후기" />
         <Link href="/saju" className="mt-6 block text-center text-sm text-text-soft underline">
           다른 풀이 보러 가기
@@ -135,8 +162,7 @@ export default async function CreditReadingPage({
     );
   }
 
-  // FREE_FOR_ALL(무료 전환)이면 화면도 무제한으로 보여준다 — readingAccess가 실제로
-  // 그렇게 판정하므로, 여기서 어긋나면 "잠긴 것처럼 보이는데 실제로는 열리는" 불일치가 생긴다.
+  // FREE_FOR_ALL이 꺼져 있거나(유료 전환 후) 위 즉시 계산이 실패했을 때만 도달하는 폴백.
   const premium = isPremium(profile.premium_until, now) || FREE_FOR_ALL;
   const credits = profile.consult_credits ?? 0;
 

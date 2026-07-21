@@ -4,6 +4,9 @@ import type { MoonPhaseName } from "@/lib/engine/sky";
 import type { ProfileContext } from "@/lib/engine";
 import type { InterpretationSection } from "../types";
 import { palaceRelationCaption } from "./palace-relation";
+import { EARTHLY_BRANCHES } from "@/lib/engine/constants";
+import { ZODIAC_ANIMALS, branchRelation } from "@/lib/engine/year-sign";
+import { relationLine } from "./year-sign";
 
 // 천간 10종 그날의 무드 — 같은 오행이라도 음양(갑/을, 병/정…)에 따라 결이 다르다.
 // 오행 5종만 쓰면 이틀 연속 같은 문구가 반복되므로, 물상(物象)을 살려 10종으로 나눈다. §5.4 문체.
@@ -69,6 +72,14 @@ function skyLines(sky: DailyContext["sky"]): DailyGuide["skyLines"] {
   };
 }
 
+/** 년지(띠) × 오늘 일진 지지의 관계 — 있을 때만(년주 있음) 동물 이름과 문장을 함께 낸다. */
+function zodiacSignOf(yearGanzhi: string, todayGanzhi: string): { animal: string; line: string } | null {
+  const yearBranch = EARTHLY_BRANCHES.indexOf(yearGanzhi[1] as (typeof EARTHLY_BRANCHES)[number]);
+  const todayBranch = EARTHLY_BRANCHES.indexOf(todayGanzhi[1] as (typeof EARTHLY_BRANCHES)[number]);
+  if (yearBranch < 0 || todayBranch < 0) return null;
+  return { animal: ZODIAC_ANIMALS[yearBranch], line: relationLine(branchRelation(yearBranch, todayBranch)) };
+}
+
 export interface DailyGuide {
   headline: string; // 오늘의 기운 한 줄
   mind: string; // 마음가짐
@@ -78,6 +89,8 @@ export interface DailyGuide {
   personal: string | null; // 프로필 있을 때 개인화 한 줄
   /** 형충회합 궁 캡션(근묘화실 — 월/일/시주 vs 오늘 일진) — 프로필 네 기둥 있을 때만 */
   palace: string | null;
+  /** 띠(년지) × 오늘 일진 관계 — 프로필 네 기둥 있을 때만 */
+  zodiacSign: { animal: string; line: string } | null;
   skyLines: { moon: string; riseSet: string; altitude: string }; // 월령·출몰시각·태양고도, 항상 있음
 }
 
@@ -105,6 +118,7 @@ export function assembleDaily(
     lucky: mood.lucky,
     personal,
     palace: pillars ? palaceRelationCaption(daily.dayGanzhi, pillars) : null,
+    zodiacSign: pillars ? zodiacSignOf(pillars.year, daily.dayGanzhi) : null,
     skyLines: skyLines(daily.sky),
   };
 }
@@ -119,6 +133,9 @@ export function dailyToSections(guide: DailyGuide, llmParagraph?: string): Inter
     { title: "행운 포인트", body: guide.lucky },
     { title: "오늘의 하늘", body: [guide.skyLines.moon, guide.skyLines.riseSet, guide.skyLines.altitude].join(" ") },
     ...(personalBody ? [{ title: "당신에게", body: personalBody }] : []),
+    ...(guide.zodiacSign
+      ? [{ title: "띠 일진", body: `${guide.zodiacSign.animal}띠인 당신에게 — ${guide.zodiacSign.line}` }]
+      : []),
     ...(llmParagraph ? [{ title: "오늘, 당신만을 위한 이야기", body: llmParagraph }] : []),
   ];
 }

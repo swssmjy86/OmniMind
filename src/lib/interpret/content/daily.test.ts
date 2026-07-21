@@ -107,6 +107,34 @@ describe("assembleDaily", () => {
     expect(you!.body).toContain(g.palace);
   });
 
+  it("pillars 없이 부르면 zodiacSign은 null(하위 호환)", () => {
+    const g = assembleDaily(computeDaily({ y: 2000, mo: 1, d: 7 }, "수"), "다인");
+    expect(g.zodiacSign).toBeNull();
+  });
+
+  it("pillars를 주면 띠 동물과 오늘 일진 관계 문구가 붙고 톤 통과", () => {
+    // 2000-01-07 = 갑자일(자, branch 0). 년지를 오(자오충)로 맞춘 프로필을 준다.
+    const pillars: ProfileContext["pillars"] = {
+      year: "무오", month: "을사", day: "병인", hour: "정해",
+    };
+    const g = assembleDaily(computeDaily({ y: 2000, mo: 1, d: 7 }), "다인", pillars);
+    expect(g.zodiacSign).not.toBeNull();
+    expect(g.zodiacSign!.animal).toBe("말");
+    expect(g.zodiacSign!.line.length).toBeGreaterThan(0);
+    expect(checkTone(g.zodiacSign!.line)).toHaveLength(0);
+  });
+
+  it("zodiacSign이 있으면 dailyToSections에 '띠 일진' 섹션이 더해진다", () => {
+    const pillars: ProfileContext["pillars"] = {
+      year: "무오", month: "을사", day: "병인", hour: "정해",
+    };
+    const g = assembleDaily(computeDaily({ y: 2000, mo: 1, d: 7 }), "다인", pillars);
+    const zodiac = dailyToSections(g).find((s) => s.title === "띠 일진");
+    expect(zodiac).toBeDefined();
+    expect(zodiac!.body).toContain("말띠인 당신에게");
+    expect(zodiac!.body).toContain(g.zodiacSign!.line);
+  });
+
   it("dailyPrompt는 템플릿 마음가짐을 반복하지 말라고 명시한다", () => {
     const daily = computeDaily({ y: 2000, mo: 1, d: 7 }, "수");
     const g = assembleDaily(daily, "다인");

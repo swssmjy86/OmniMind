@@ -1,9 +1,10 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { createServerSupabase } from "@/lib/supabase/server";
-import { isPremium, FREE_FOR_ALL } from "@/lib/consult/quota";
+import { isPremium, FREE_FOR_ALL, GUEST_READING_ACCESS } from "@/lib/consult/quota";
 import { PERSONAS } from "@/lib/persona/personas";
 import GuestMatchDeepGate from "@/components/saju/GuestMatchDeepGate";
+import LoginRequiredNotice from "@/components/saju/LoginRequiredNotice";
 import MatchDeepForm from "@/components/saju/MatchDeepForm";
 import ReviewPrompt from "@/components/reviews/ReviewPrompt";
 import ReviewHighlights from "@/components/reviews/ReviewHighlights";
@@ -34,12 +35,19 @@ export default async function MatchDeepPage() {
     </>
   );
 
-  // 게스트 — 온보딩 draft(로컬)가 있으면 그 자리에서 궁합을 계산한다(LLM 없음, guest-actions.ts).
   if (!user) {
+    if (GUEST_READING_ACCESS) {
+      return (
+        <main className="fade-rise p-6">
+          {header}
+          <GuestMatchDeepGate />
+        </main>
+      );
+    }
     return (
       <main className="fade-rise p-6">
         {header}
-        <GuestMatchDeepGate />
+        <LoginRequiredNotice message="궁합을 보려면" />
       </main>
     );
   }
