@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { createServerSupabase } from "@/lib/supabase/server";
 import ArchiveView, { type ArchiveEntry } from "@/components/archive/ArchiveView";
 import type { InterpretationRow } from "@/lib/db/types";
@@ -9,6 +10,13 @@ export const dynamic = "force-dynamic";
 export default async function ArchivePage() {
   const supabase = await createServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
+
+  async function signOut() {
+    "use server";
+    const supabase = await createServerSupabase();
+    await supabase.auth.signOut();
+    redirect("/");
+  }
 
   let entries: ArchiveEntry[] = [];
   if (user) {
@@ -30,6 +38,13 @@ export default async function ArchivePage() {
         보관함
       </h1>
       <ArchiveView loggedIn={Boolean(user)} entries={entries} />
+      {user && (
+        <form action={signOut} className="mt-8 text-center">
+          <button className="press text-sm text-text-soft underline">
+            잠시 떠나기 (로그아웃)
+          </button>
+        </form>
+      )}
     </main>
   );
 }
