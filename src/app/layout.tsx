@@ -9,8 +9,10 @@ import { THEME_KEY } from "@/lib/theme/store";
 import "./globals.css";
 
 // 첫 페인트 전에 저장된 화면 모드를 <html>에 반영 — React 하이드레이션을 기다리면
-// 라이트로 한 프레임 그렸다가 다크로 바뀌는 깜빡임이 생긴다.
-const THEME_INIT_SCRIPT = `try{var t=localStorage.getItem(${JSON.stringify(THEME_KEY)});if(t==="light"||t==="dark"){document.documentElement.setAttribute("data-theme",t);}}catch(e){}`;
+// 잘못된 모드로 한 프레임 그렸다가 바뀌는 깜빡임이 생긴다.
+// 기본 모드는 다크 — 저장된 값이 없거나 "dark"면 다크, "light"면 라이트, "system"이면
+// data-theme을 비워 globals.css의 prefers-color-scheme(기기 설정) 분기를 따른다.
+const THEME_INIT_SCRIPT = `try{var t=localStorage.getItem(${JSON.stringify(THEME_KEY)});if(t==="light"){document.documentElement.setAttribute("data-theme","light");}else if(t!=="system"){document.documentElement.setAttribute("data-theme","dark");}}catch(e){}`;
 
 const notoSerifKr = Noto_Serif_KR({
   weight: ["400", "600"],
