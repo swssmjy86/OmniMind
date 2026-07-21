@@ -47,6 +47,11 @@ export default function SourcesPage() {
           문장은 옴니마인드가 써요. 특정 고전 문헌을 문장별 전거로 표기하지 않아요 —
           그렇게 보이도록 지어낸 인용은 이 페이지의 존재 이유를 무너뜨리니까요.
         </p>
+        <p className="mt-3 text-sm leading-relaxed text-text-main">
+          다만 이 체계 자체가 어디서 왔는지는 알려드릴 수 있어요. 오행·음양 사상은
+          여씨춘추(呂氏春秋)·회남자(淮南子) 같은 고전에 뿌리를 둔, 이천 년 넘게 이어온
+          동양 철학이에요. 그 위에서 옴니마인드가 오늘의 언어로 새로 옮겨 쓴 것뿐이에요.
+        </p>
       </section>
 
       <section className="mt-4 rounded-card bg-warm-surface p-5">

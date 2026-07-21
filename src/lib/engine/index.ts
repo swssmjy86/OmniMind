@@ -9,6 +9,7 @@ import { zodiacSign, type ZodiacSign } from "./zodiac";
 import { computeSinsal, type FourPillarSinsal } from "./twelve-sinsal";
 import { sarangOf, type HiddenStemLayer } from "./sarang";
 import { detectGyeok, type GyeokCandidate } from "./gyeok";
+import { branchStageOf, type BranchStage } from "./branch-stage";
 import { YEAR_MIN, YEAR_MAX } from "./solar-terms";
 import { kstStringToInstant } from "./kst";
 
@@ -24,8 +25,9 @@ export type { ProfileContext };
  *   4 → 5 (2026-07-21): 십이신살(sinsal) 추가 — 일지 기준 네 기둥의 신살 갈래.
  *   5 → 6 (2026-07-21): 사령(sarang) 추가 — 월지 지장간 중 절입 경과일 기준 실권 층.
  *   6 → 7 (2026-07-21): 격국(gyeok) 추가 — 월지 지장간 투출 기준 정격/변격/겸격.
+ *   7 → 8 (2026-07-21): 사생지/사왕지/사고지(stage) 추가 — 일지 기준 나 자신의 리듬.
  */
-export const PROFILE_CONTEXT_VERSION = 7;
+export const PROFILE_CONTEXT_VERSION = 8;
 
 interface ProfileContext {
   version: number;
@@ -43,6 +45,8 @@ interface ProfileContext {
   sarang: { layer: HiddenStemLayer; stem: string };
   /** 격국 — 월지 지장간 투출 기준 후보(정기 우선, 겸격이면 2개 이상) */
   gyeok: GyeokCandidate[];
+  /** 사생지/사왕지/사고지 — 일지(나 자신) 기준 리듬. 십이신살과 달리 기준점 없는 절대 분류 */
+  stage: BranchStage;
   zodiac: ZodiacSign;
   /** 성별을 알 때만 — 10년 단위 운의 흐름(대운) */
   daeun?: Daeun;
@@ -124,6 +128,7 @@ export function computeProfile(input: EngineInput): ProfileContext {
     sinsal: computeSinsal(fp),
     sarang: { layer: sarang.layer, stem: HEAVENLY_STEMS[sarang.stem] },
     gyeok: detectGyeok(fp),
+    stage: branchStageOf(fp.day.branch),
     zodiac: zodiacSign(mo, d),
     // 성별을 알면 대운까지 — 시 미상이어도 그날 정오 기준 근사(대운수 오차 미미)
     ...(input.gender

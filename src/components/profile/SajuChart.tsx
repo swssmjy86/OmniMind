@@ -4,9 +4,10 @@ import {
   stemElement, branchElement, branchHiddenStems,
 } from "@/lib/engine/constants";
 import { twelveStageByChar } from "@/lib/engine/twelve-stages";
+import StemCombineDiagram from "./StemCombineDiagram";
 
 // 한자 표기 — 전통 명식표 느낌.
-const STEM_HANJA: Record<string, string> = {
+export const STEM_HANJA: Record<string, string> = {
   갑: "甲", 을: "乙", 병: "丙", 정: "丁", 무: "戊", 기: "己", 경: "庚", 신: "辛", 임: "壬", 계: "癸",
 };
 const BRANCH_HANJA: Record<string, string> = {
@@ -59,6 +60,7 @@ export default function SajuChart({ ctx }: { ctx: ProfileContext }) {
   ];
 
   return (
+    <>
     <div className="rounded-card bg-warm-surface p-4">
       <p className="mb-3 text-sm text-text-soft">사주 명식</p>
 
@@ -141,5 +143,7 @@ export default function SajuChart({ ctx }: { ctx: ProfileContext }) {
         })}
       </div>
     </div>
+    <StemCombineDiagram ctx={ctx} />
+    </>
   );
 }

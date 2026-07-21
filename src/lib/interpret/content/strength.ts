@@ -1,6 +1,7 @@
 import type { DayMasterStrength, GyeokPattern } from "@/lib/engine/strength";
 import type { HiddenStemLayer } from "@/lib/engine/sarang";
 import type { Gyeok, GyeokCandidate } from "@/lib/engine/gyeok";
+import type { BranchStage } from "@/lib/engine/branch-stage";
 import { HEAVENLY_STEMS, ELEMENTS, stemElement } from "@/lib/engine/constants";
 
 // 신강/신약·격국 패턴을 문장으로 — §5.4 문체(비단정·비명령·공감형). "~구조가 보여요"처럼
@@ -65,4 +66,17 @@ const GYEOK_TEXT: Record<Gyeok, string> = {
 /** 격국 후보를 한 문단으로. 겸격(후보 2개 이상)이면 문장을 이어붙인다(단정 대신 있는 그대로). */
 export function gyeokText(candidates: GyeokCandidate[]): string {
   return candidates.map((c) => GYEOK_TEXT[c.gyeok]).join(" ");
+}
+
+// 사생지/사왕지/사고지 — 일지(나 자신) 기준 리듬. 기준점 없는 절대 분류라 신강/신약·사령과
+// 같은 축(자기 자신을 다루는 정보)으로 "타고난 결" 섹션에 얹는다.
+const STAGE_TEXT: Record<BranchStage, string> = {
+  생지: "거기에 더해, 새로운 것을 벌이고 뻗어나갈 때 생기가 도는 생지의 리듬을 타고났어요.",
+  왕지: "거기에 더해, 정점에서 중심을 잃지 않고 굳건히 버티는 왕지의 리듬을 타고났어요.",
+  고지: "거기에 더해, 벌인 것을 갈무리하고 안으로 다지는 고지의 리듬을 타고났어요.",
+};
+
+/** 사생지/사왕지/사고지(일지 기준 리듬) 한 문장. */
+export function stageText(stage: BranchStage): string {
+  return STAGE_TEXT[stage];
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { checkTone, checkToneWarnings } from "../tone-guard";
-import { strengthText, patternText, patternsText, sarangText, gyeokText } from "./strength";
+import { strengthText, patternText, patternsText, sarangText, gyeokText, stageText } from "./strength";
 import { HEAVENLY_STEMS } from "@/lib/engine/constants";
 
 const STRENGTHS = ["신강", "신약", "중화"] as const;
@@ -10,6 +10,7 @@ const GYEOKS = [
   "식신격", "상관격", "정재격", "편재격", "정관격", "편관격",
   "정인격", "편인격", "건록격", "월겁격", "양인격",
 ] as const;
+const STAGES = ["생지", "왕지", "고지"] as const;
 
 describe("strengthText — 신강/신약/중화 3종 전부 존재 + 톤 통과", () => {
   it("3종 전부 문구가 있고 톤 가드를 통과한다", () => {
@@ -85,5 +86,21 @@ describe("gyeokText — 격국 11종 전부 톤 통과", () => {
     ]);
     expect(t).toContain(gyeokText([{ gyeok: "정관격", basis: "정기" }]));
     expect(t).toContain(gyeokText([{ gyeok: "식신격", basis: "중기" }]));
+  });
+});
+
+describe("stageText — 사생지/사왕지/사고지 3종 전부 톤 통과", () => {
+  it("3종 전부 문구가 있고 톤 가드를 통과한다", () => {
+    for (const s of STAGES) {
+      const t = stageText(s);
+      expect(t.length).toBeGreaterThan(0);
+      expect(checkTone(t)).toEqual([]);
+      expect(checkToneWarnings(t)).toEqual([]);
+    }
+  });
+
+  it("3종이 서로 다른 문구를 낸다", () => {
+    const texts = STAGES.map(stageText);
+    expect(new Set(texts).size).toBe(3);
   });
 });

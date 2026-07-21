@@ -59,6 +59,17 @@ const KEY_TEXT: Record<CreditReadingProduct, Record<TenGodCategory, string>> = {
   },
 };
 
+// ①-보강 직업적성 예시(career 전용) — 십성 5갈래별 구체적인 분야·역할 2~3개. 단정("이 직업이
+// 맞아요")이 아니라 KEY_TEXT 문장 끝에 "예를 들면 …" 형태로 이어붙여, 있는 결을 구체화하는
+// 용도로만 쓴다. "분석"·"진단" 등 tone-guard가 막는 낱말은 피한다.
+const CAREER_EXAMPLES: Record<TenGodCategory, string[]> = {
+  비겁: ["창업", "프리랜서", "1인 사업"],
+  식상: ["콘텐츠 제작", "공연·전시", "마케팅"],
+  재성: ["영업", "유통", "자산 관리"],
+  관성: ["조직 운영", "행정", "관리자 역할"],
+  인성: ["교육", "연구", "기획"],
+};
+
 // ③ 운의 계절 도입 한 줄(상품 맥락) — 대운 본문(daeunSeasonBody) 앞에 붙는다.
 const FLOW_INTRO: Record<CreditReadingProduct, string> = {
   career: "일의 흐름도 계절을 타요.",
@@ -121,8 +132,11 @@ export function assembleCreditReading(
   const structure = [strengthText(ctx.strength), patternsText(ctx.patterns)]
     .filter((t): t is string => t !== null)
     .join(" ");
+  const examples = product === "career"
+    ? ` 예를 들면 ${CAREER_EXAMPLES[cat].join("·")} 같은 자리에서 결이 살아나요.`
+    : "";
   return [
-    { title: KEY_TITLE[product], body: `${nickname}님, ${KEY_TEXT[product][cat]} ${structure}` },
+    { title: KEY_TITLE[product], body: `${nickname}님, ${KEY_TEXT[product][cat]} ${structure}${examples}` },
     { title: ELEMENTS_TITLE, body: ELEMENT_BALANCE_TEXT(ctx.elements) },
     { title: SEASON_TITLE, body: `${FLOW_INTRO[product]} ${daeunSeasonBody(ctx, age)}` },
     {
@@ -165,4 +179,7 @@ export const __TEXT_FOR_TEST: string[] = [
   ...Object.values(ELEMENT_CLOSE),
   ...Object.values(FLOW_INTRO),
   ...Object.values(KEY_TITLE),
+  ...Object.values(CAREER_EXAMPLES).map(
+    (examples) => `예를 들면 ${examples.join("·")} 같은 자리에서 결이 살아나요.`,
+  ),
 ];
