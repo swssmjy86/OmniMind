@@ -50,6 +50,19 @@ describe("크레딧 풀이 조립 4종 (3단계 스펙 §3)", () => {
     }
   });
 
+  it("career 상품은 핵심 결 섹션에 직업적성 예시가 이어붙는다", () => {
+    const body = assembleCreditReading("career", ctx, "새벽", 36)[0].body;
+    expect(body).toContain("예를 들면");
+    expect(body).toContain("같은 자리에서 결이 살아나요");
+  });
+
+  it("career 외 상품(love/wealth/marriage)에는 직업적성 예시가 붙지 않는다", () => {
+    for (const p of ["love", "wealth", "marriage"] as const) {
+      const body = assembleCreditReading(p, ctx, "새벽", 36)[0].body;
+      expect(body).not.toContain("예를 들면");
+    }
+  });
+
   it("LLM 프롬프트는 상품·섹션 본문을 담고 새 결론을 금지한다", () => {
     const sections = assembleCreditReading("career", ctx, "새벽", 36);
     const prompt = creditReadingPrompt("career", ctx, sections);

@@ -25,6 +25,14 @@ describe("/sources (§7 출처)", () => {
     render(<SourcesPage />);
     expect(screen.getByText(/문장은 옴니마인드가 써요/)).toBeInTheDocument();
   });
+
+  it("명리학의 문화적 뿌리(여씨춘추·회남자)를 밝히되, 문장별 전거가 아님을 재확인한다", () => {
+    render(<SourcesPage />);
+    expect(screen.getByText(/여씨춘추/)).toBeInTheDocument();
+    expect(screen.getByText(/회남자/)).toBeInTheDocument();
+    // 문장별 전거 표기가 아니라는 기존 원칙과 같은 섹션에서 이어져야 모순되지 않는다.
+    expect(screen.getByText(/문장별 전거로 표기하지 않아요/)).toBeInTheDocument();
+  });
 });
 
 describe("/faq (§8 Q&A)", () => {
