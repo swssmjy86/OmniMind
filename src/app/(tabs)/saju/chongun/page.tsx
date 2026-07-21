@@ -22,7 +22,7 @@ import type { InterpretationSection } from "@/lib/interpret/types";
 
 export const metadata: Metadata = {
   title: "총운 — 옴니마인드",
-  description: "여덟 글자에 담긴 인생 전반의 흐름 — 로그인하면 무료.",
+  description: "여덟 글자에 담긴 인생 전반의 흐름.",
 };
 
 export const dynamic = "force-dynamic";
