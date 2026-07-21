@@ -58,7 +58,7 @@ export const PRODUCTS: Product[] = [
 
 export const ACCESS_LABEL: Record<ProductAccess, string> = {
   free: "누구나 무료",
-  login: "로그인하면 무료",
+  login: "로그인 필요",
   credit: "크레딧",
 };
 
