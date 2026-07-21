@@ -18,7 +18,7 @@ describe("PersonaCard (§4.3 CSS 모션 카드)", () => {
     expect(screen.getByText("총운")).toBeInTheDocument();
     // 멘트는 이미지가 아닌 텍스트 — 스크린리더·SEO에 잡힌다(§4.3)
     expect(screen.getByText(/서고에 이미 닿아 있어요/)).toBeInTheDocument();
-    expect(screen.getByText("누구나 무료")).toBeInTheDocument();
+    expect(screen.getByText("로그인하면 무료")).toBeInTheDocument();
   });
 
   it("soon 상품 — 링크가 없고 '곧 만나요'로 비활성 표시된다", () => {

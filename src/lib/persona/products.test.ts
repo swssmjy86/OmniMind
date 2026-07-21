@@ -10,11 +10,11 @@ describe("상품 카탈로그 v2 (4탭 IA 스펙 §4)", () => {
     ]);
   });
 
-  it("접근 등급 — 전부 무료(2026-07-21 게스트 개방, 로그인 무관)", () => {
+  it("접근 등급 — today만 게스트 무료, 나머지는 로그인 전용(2026-07-21 되돌림)", () => {
     const access = Object.fromEntries(PRODUCTS.map((p) => [p.id, p.access]));
     expect(access).toEqual({
-      today: "free", chongun: "free",
-      career: "free", love: "free", wealth: "free", match: "free", marriage: "free",
+      today: "free", chongun: "login",
+      career: "login", love: "login", wealth: "login", match: "login", marriage: "login",
     });
   });
 

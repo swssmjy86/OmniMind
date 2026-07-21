@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { createServerSupabase } from "@/lib/supabase/server";
+import { GUEST_READING_ACCESS } from "@/lib/consult/quota";
 import { readingInputHash } from "@/lib/readings/hash";
 import { ensureCurrentProfile } from "@/lib/readings/ensure-profile";
 import { assembleChongun } from "@/lib/interpret/content/chongun";
@@ -10,6 +11,7 @@ import { toKstParts } from "@/lib/engine/kst";
 import { PERSONAS } from "@/lib/persona/personas";
 import SajuChart from "@/components/profile/SajuChart";
 import GuestReadingView from "@/components/saju/GuestReadingView";
+import LoginRequiredNotice from "@/components/saju/LoginRequiredNotice";
 import ShareSheet from "@/components/share/ShareSheet";
 import ReviewPrompt from "@/components/reviews/ReviewPrompt";
 import ReviewHighlights from "@/components/reviews/ReviewHighlights";
@@ -20,16 +22,15 @@ import type { InterpretationSection } from "@/lib/interpret/types";
 
 export const metadata: Metadata = {
   title: "총운 — 옴니마인드",
-  description: "여덟 글자에 담긴 인생 전반의 흐름 — 누구나 무료.",
+  description: "여덟 글자에 담긴 인생 전반의 흐름 — 로그인하면 무료.",
 };
 
 export const dynamic = "force-dynamic";
 
 /**
- * 총운 풀이 — 로그인 여부와 무관하게 누구나 무료(2026-07-21 게스트 개방).
- * 비로그인: 온보딩 draft(로컬)로 매번 새로 계산해 보여줌(GuestReadingView, LLM 없음) /
- * 로그인·프로필 없음: 온보딩 유도 /
- * 로그인+프로필: readings 캐시 경유(같은 입력이면 재생성 없음 — P9 §6.2), LLM 없이도 동일.
+ * 총운 풀이 — 로그인 전용(GUEST_READING_ACCESS=false, 비로그인 서비스는 오늘의운세뿐).
+ * 비로그인: 로그인 안내 / 로그인·프로필 없음: 온보딩 유도 /
+ * 로그인+프로필: readings 캐시 경유(같은 입력이면 재생성 없음 — P9 §6.2).
  */
 export default async function ChongunPage() {
   const supabase = await createServerSupabase();
@@ -48,12 +49,18 @@ export default async function ChongunPage() {
   );
 
   if (!user) {
-    // 게스트 — DB 프로필이 아니라 온보딩 draft(로컬)로 매번 새로 계산해 보여준다.
-    // LLM 개인화는 없다(guest-actions.ts) — 로그인하면 받는 보너스로 남겨둔다.
+    if (GUEST_READING_ACCESS) {
+      return (
+        <main className="fade-rise p-6">
+          {header}
+          <GuestReadingView product="chongun" title="총운" />
+        </main>
+      );
+    }
     return (
       <main className="fade-rise p-6">
         {header}
-        <GuestReadingView product="chongun" title="총운" />
+        <LoginRequiredNotice message="총운을 보려면" />
       </main>
     );
   }

@@ -12,6 +12,13 @@
 // 상황(CLAUDE.md "월 고정비 0원" 위반)을 피한다.
 export const FREE_FOR_ALL = true;
 
+// 게스트(비로그인) 풀이 열람 — 총운·사주상품(직업/연애/재물/결혼)·궁합 심층을 로그인 없이도
+// 보여주는 기능을 만들었다가(2026-07-21), 같은 날 다시 로그인 전용으로 되돌렸다. 비로그인
+// 사용자에게 제공하는 서비스는 오늘의운세뿐이라는 결정에 따른 것. guest-actions.ts/
+// GuestReadingView/GuestMatchDeepGate 등 게스트 계산 코드는 지우지 않고 이 플래그로만
+// 막는다 — 나중에 다시 열 때 이 값만 true로 바꾸면 된다(FREE_FOR_ALL과 같은 패턴).
+export const GUEST_READING_ACCESS = false;
+
 /** 무제한을 뜻하는 잔여 횟수 센티널(서버 액션 직렬화 때문에 Infinity 대신 사용). */
 export const UNLIMITED = -1;
 
