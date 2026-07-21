@@ -104,6 +104,7 @@ describe("오늘의 나 카드 — dailyCardQuery ↔ parseDailyCardParams", () 
       lucky: guide.lucky,
       sky: `${guide.skyLines.moon} ${guide.skyLines.riseSet}`,
       zodiac: null,
+      llm: null,
     });
   });
 
@@ -155,6 +156,29 @@ describe("오늘의 나 카드 — dailyCardQuery ↔ parseDailyCardParams", () 
     expect(p).not.toBeNull();
     expect(p?.zodiac).toBeNull();
     expect(dailyCopyFromParams(p!).zodiac).toBeNull();
+  });
+
+  it("LLM 개인화 문단('오늘, 당신만을 위한 이야기')이 있으면 오늘의운세와 같은 문구가 카드 쿼리·파싱·카피에 그대로 실린다", () => {
+    const llmParagraph = "오늘은 특히 마음이 가는 방향으로 한 걸음 내디뎌보아요.";
+    const q = dailyCardQuery(ctx, guide, llmParagraph);
+    const p = parseDailyCardParams(new URLSearchParams(q));
+    expect(p?.llm).toBe(llmParagraph);
+    expect(dailyCopyFromParams(p!).llm).toBe(llmParagraph);
+  });
+
+  it("LLM 문단이 없으면(무료 쿼터 소진 등) 파라미터에서 생략되고 파싱 결과도 null", () => {
+    const q = dailyCardQuery(ctx, guide, null);
+    const p = parseDailyCardParams(new URLSearchParams(q));
+    expect(p?.llm).toBeNull();
+  });
+
+  it("llm 필드가 생기기 전에 공유된 링크(쿼리에 llm 없음)도 그대로 파싱된다", () => {
+    const sp = new URLSearchParams(dailyCardQuery(ctx, guide, "지난 문단"));
+    sp.delete("llm");
+    const p = parseDailyCardParams(sp);
+    expect(p).not.toBeNull();
+    expect(p?.llm).toBeNull();
+    expect(dailyCopyFromParams(p!).llm).toBeNull();
   });
 
   it("필드 하나라도 비면 null", () => {

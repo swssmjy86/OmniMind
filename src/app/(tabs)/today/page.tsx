@@ -140,7 +140,7 @@ export default async function TodayPage() {
 
         <DailyRecorder />
         <ShareSheet
-          query={dailyCardQuery(profile.profile_context, guide)}
+          query={dailyCardQuery(profile.profile_context, guide, llmParagraph)}
           via="daily"
           label="오늘의 나 카드"
         />
