@@ -2,8 +2,12 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import MatchDeepForm from "./MatchDeepForm";
 import { unlockMatchDeep } from "@/lib/readings/actions";
+import { computeGuestMatchDeep } from "@/lib/readings/guest-actions";
 
 vi.mock("@/lib/readings/actions", () => ({ unlockMatchDeep: vi.fn() }));
+vi.mock("@/lib/readings/guest-actions", () => ({ computeGuestMatchDeep: vi.fn() }));
+
+const guestDraft = { nickname: "다인", birthDate: "1995-08-20", birthTime: "14:30", timeUnknown: false };
 
 function fill() {
   fireEvent.change(screen.getByLabelText(/상대의 생년월일/), {
@@ -53,5 +57,28 @@ describe("MatchDeepForm (3단계 스펙 §5)", () => {
     fill();
     fireEvent.click(screen.getByRole("button", { name: /크레딧 1개로 열기/ }));
     expect(await screen.findByText(/지금은 풀이가 어려워요/)).toBeInTheDocument();
+  });
+
+  describe("myDraft(게스트 모드)", () => {
+    it("크레딧 0이어도 게스트면 폼을 그대로 보여준다(충전 링크 없음)", () => {
+      render(<MatchDeepForm remaining={0} unlimited={false} myDraft={guestDraft} />);
+      expect(screen.queryByRole("link", { name: /크레딧 채우기/ })).not.toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /지금 열어보기/ })).toBeInTheDocument();
+    });
+
+    it("제출하면 unlockMatchDeep이 아니라 computeGuestMatchDeep을 myDraft와 함께 부른다", async () => {
+      vi.mocked(computeGuestMatchDeep).mockResolvedValue({
+        ok: true, usedCredit: false, remaining: 0, readingId: null,
+        sections: [{ title: "우리의 온도", body: "두 분의 온도는 80°예요." }],
+      });
+      render(<MatchDeepForm remaining={0} unlimited={false} myDraft={guestDraft} />);
+      fill();
+      fireEvent.click(screen.getByRole("button", { name: /지금 열어보기/ }));
+      expect(await screen.findByText("우리의 온도")).toBeInTheDocument();
+      expect(vi.mocked(computeGuestMatchDeep)).toHaveBeenCalledWith(guestDraft, {
+        birthDate: "1992-03-10", birthTime: "", timeUnknown: true, mode: "lover",
+      });
+      expect(unlockMatchDeep).not.toHaveBeenCalled();
+    });
   });
 });
