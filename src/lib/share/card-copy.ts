@@ -107,6 +107,7 @@ export function parseCardParams(sp: URLSearchParams): CardParams | null {
 /** 필드별 최대 길이 — 정상 문구 길이보다 넉넉히, 쿼리 남용(과도한 폰트 서브셋 요청) 방지용. */
 const DAILY_FIELD_MAX = {
   headline: 120, mind: 160, personal: 220, color: 20, keyword: 20, lucky: 30, sky: 160, zodiac: 120,
+  llm: 260,
 };
 
 export interface DailyCardParams {
@@ -124,6 +125,9 @@ export interface DailyCardParams {
   /** 띠(년지) × 오늘 일진 관계 한 줄 — 오늘의운세 화면과 같은 문구. 프로필 네 기둥 있을 때만,
    *  이 필드가 생기기 전 공유 링크도 계속 렌더되어야 해 선택으로 둔다(sky와 동일 패턴). */
   zodiac: string | null;
+  /** LLM 개인화 문단("오늘, 당신만을 위한 이야기") — 오늘의운세 화면과 같은 문구. 캐시에
+   *  없거나(무료 쿼터 소진 등) 이 필드가 생기기 전 공유 링크는 없을 수 있어 선택으로 둔다. */
+  llm: string | null;
 }
 
 export interface DailyCardCopy {
@@ -136,11 +140,16 @@ export interface DailyCardCopy {
   lucky: string;
   sky: string | null;
   zodiac: string | null;
+  llm: string | null;
   cta: string;
   slogan: string;
 }
 
-export function dailyCardParams(ctx: ProfileContext, guide: DailyGuide): DailyCardParams {
+export function dailyCardParams(
+  ctx: ProfileContext,
+  guide: DailyGuide,
+  llmParagraph?: string | null,
+): DailyCardParams {
   return {
     dm: ctx.dayMaster.stem,
     el: ctx.dayMaster.element,
@@ -154,6 +163,7 @@ export function dailyCardParams(ctx: ProfileContext, guide: DailyGuide): DailyCa
     lucky: guide.lucky,
     sky: `${guide.skyLines.moon} ${guide.skyLines.riseSet}`,
     zodiac: guide.zodiacSign ? `${guide.zodiacSign.animal}띠인 당신에게 — ${guide.zodiacSign.line}` : null,
+    llm: llmParagraph ?? null,
   };
 }
 
@@ -168,14 +178,15 @@ export function dailyCopyFromParams(p: DailyCardParams): DailyCardCopy {
     lucky: p.lucky,
     sky: p.sky,
     zodiac: p.zodiac,
+    llm: p.llm,
     cta: "오늘의 이야기 더 보기 →",
     slogan: "나보다 나를 더 잘 아는, 옴니마인드",
   };
 }
 
 /** /api/card?mode=daily 쿼리 문자열. */
-export function dailyCardQuery(ctx: ProfileContext, guide: DailyGuide): string {
-  const p = dailyCardParams(ctx, guide);
+export function dailyCardQuery(ctx: ProfileContext, guide: DailyGuide, llmParagraph?: string | null): string {
+  const p = dailyCardParams(ctx, guide, llmParagraph);
   const sp = new URLSearchParams({
     mode: "daily",
     dm: p.dm,
@@ -189,6 +200,7 @@ export function dailyCardQuery(ctx: ProfileContext, guide: DailyGuide): string {
   if (p.sky) sp.set("sky", p.sky);
   if (p.personal) sp.set("personal", p.personal);
   if (p.zodiac) sp.set("zodiac", p.zodiac);
+  if (p.llm) sp.set("llm", p.llm);
   return sp.toString();
 }
 
@@ -201,10 +213,11 @@ export function parseDailyCardParams(sp: URLSearchParams): DailyCardParams | nul
   const color = sp.get("color") ?? "";
   const keyword = sp.get("keyword") ?? "";
   const lucky = sp.get("lucky") ?? "";
-  // sky·zodiac은 이 필드가 생기기 전에 공유된 링크에는 없을 수 있어 선택 취급(personal과 동일 패턴).
+  // sky·zodiac·llm은 이 필드가 생기기 전에 공유된 링크에는 없을 수 있어 선택 취급(personal과 동일 패턴).
   const sky = sp.get("sky");
   const personal = sp.get("personal");
   const zodiac = sp.get("zodiac");
+  const llm = sp.get("llm");
 
   if (!validDmEl(dm, el)) return null;
   if (!headline || !mind || !color || !keyword || !lucky) return null;
@@ -216,12 +229,13 @@ export function parseDailyCardParams(sp: URLSearchParams): DailyCardParams | nul
     lucky.length > DAILY_FIELD_MAX.lucky ||
     (sky && sky.length > DAILY_FIELD_MAX.sky) ||
     (personal && personal.length > DAILY_FIELD_MAX.personal) ||
-    (zodiac && zodiac.length > DAILY_FIELD_MAX.zodiac)
+    (zodiac && zodiac.length > DAILY_FIELD_MAX.zodiac) ||
+    (llm && llm.length > DAILY_FIELD_MAX.llm)
   ) {
     return null;
   }
 
-  return { dm, el, headline, mind, personal, color, keyword, lucky, sky, zodiac };
+  return { dm, el, headline, mind, personal, color, keyword, lucky, sky, zodiac, llm };
 }
 
 // ── 나의 조각 카드 — "온전한 나" 프로필 전체 섹션(§P4-보강: 조각들을 전부 이미지로) ──
