@@ -66,48 +66,48 @@ export default function PersonaIntro({ personaId, eyebrow, line, src }: Props) {
       onClick={close}
       // 입력 시트(z-50)보다 위 — Tailwind 임의값 클래스 대신 인라인로 확실히 얹는다.
       style={{ zIndex: 60 }}
-      className={`fixed inset-y-0 left-1/2 flex w-full max-w-[var(--shell-width)] -translate-x-1/2 items-center justify-center bg-black/70 p-6 transition-opacity duration-300 lg:max-w-[var(--shell-width-lg)] ${
+      className={`fixed inset-y-0 left-1/2 flex w-full max-w-[var(--shell-width)] -translate-x-1/2 items-center justify-center bg-black/70 p-4 transition-opacity duration-300 lg:max-w-[var(--shell-width-lg)] ${
         closing ? "opacity-0" : "opacity-100"
       }`}
     >
+      {/* 스토리 뷰 — 카드 전체가 영상이고 헤더·자막은 그라데이션 위에 겹쳐 올린다.
+          카드 폭 = 화면 폭·높이 중 작은 쪽에 9:16으로 맞춰 화면을 거의 꽉 채운다.
+          dvh를 모르는 구형 브라우저는 인라인 width를 무시하고 max-w-[32rem]로 동작한다. */}
       <div
         onClick={(e) => e.stopPropagation()}
-        // 카드 폭 = 화면 폭·높이 중 작은 쪽에 맞춤 — 세로 영상(9:16) + 헤더·자막(~160px)이
-        // 짧은 폰 화면에서도 잘리지 않고, 데스크톱 셸에서는 최대 30rem까지 크게. dvh를
-        // 모르는 구형 브라우저는 이 인라인 width를 무시하고 max-w-[30rem] 클래스로 동작한다.
-        style={{ width: "min(100%, 30rem, calc((100dvh - 160px) * 9 / 16))" }}
-        className="fade-rise w-full max-w-[30rem] overflow-hidden rounded-card bg-warm-surface shadow-xl"
+        style={{ width: "min(100%, calc((100dvh - 32px) * 9 / 16))" }}
+        className="fade-rise relative w-full max-w-[32rem] overflow-hidden rounded-card bg-warm-surface shadow-xl"
       >
-        <div className="flex items-center justify-between px-4 py-3">
-          <p className="text-xs text-text-soft">{eyebrow}</p>
+        <video
+          ref={videoRef}
+          src={src}
+          autoPlay
+          muted
+          playsInline
+          preload="auto"
+          onEnded={close}
+          onError={close}
+          className="aspect-[9/16] w-full object-cover"
+        />
+        <div className="absolute inset-x-0 top-0 flex items-center justify-between bg-gradient-to-b from-black/60 to-transparent px-4 pb-8 pt-3">
+          <p className="text-xs text-white/80">{eyebrow}</p>
           <button
             onClick={close}
-            className="press text-xs text-text-soft underline"
+            className="press text-xs text-white/80 underline"
             aria-label="인사 영상 건너뛰기"
           >
             건너뛰기
           </button>
         </div>
-        <div className="relative">
-          <video
-            ref={videoRef}
-            src={src}
-            autoPlay
-            muted
-            playsInline
-            preload="auto"
-            onEnded={close}
-            onError={close}
-            className="aspect-[9/16] w-full object-cover"
-          />
+        <div className="absolute inset-x-0 bottom-0 flex flex-col items-center gap-2 bg-gradient-to-t from-black/70 to-transparent px-4 pb-4 pt-10">
           <button
             onClick={toggleSound}
-            className="press absolute bottom-3 right-3 rounded-full bg-black/50 px-3 py-1.5 text-xs text-white"
+            className="press rounded-full bg-black/50 px-3 py-1.5 text-xs text-white"
           >
             {muted ? "🔇 소리 켜기" : "🔊 소리 끄기"}
           </button>
+          <p className="text-center text-sm leading-relaxed text-white">{line}</p>
         </div>
-        <p className="px-4 py-3 text-center text-sm leading-relaxed text-text-main">{line}</p>
       </div>
     </div>,
     document.body,
