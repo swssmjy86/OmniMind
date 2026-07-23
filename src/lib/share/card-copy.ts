@@ -106,7 +106,7 @@ export function parseCardParams(sp: URLSearchParams): CardParams | null {
 
 /** 필드별 최대 길이 — 정상 문구 길이보다 넉넉히, 쿼리 남용(과도한 폰트 서브셋 요청) 방지용. */
 const DAILY_FIELD_MAX = {
-  headline: 120, mind: 160, personal: 220, color: 20, keyword: 20, lucky: 30, sky: 160, zodiac: 120,
+  headline: 120, mind: 160, personal: 220, color: 20, keyword: 20, lucky: 30, sky: 240, zodiac: 120,
   llm: 260,
 };
 
@@ -119,8 +119,9 @@ export interface DailyCardParams {
   color: string;
   keyword: string;
   lucky: string;
-  /** 월령·출몰시각(달 위상 + 해 뜨고 짐) 한 줄 — 태양고도는 카드에 담기엔 너무 기술적이라 뺀다.
-   *  이 필드가 생기기 전에 공유된 카드 링크도 계속 렌더되어야 해 선택으로 둔다. */
+  /** 오늘의 하늘 — 월령·출몰시각·태양고도 3줄을 "\n"으로 이어 담는다(오늘의운세 화면의
+   *  하늘 박스와 동일 문구·동일 줄 구성 §동기화 원칙). "\n" 없는 옛 한 줄 값이나 이 필드가
+   *  생기기 전에 공유된 카드 링크도 계속 렌더되어야 해 선택으로 둔다. */
   sky: string | null;
   /** 띠(년지) × 오늘 일진 관계 한 줄 — 오늘의운세 화면과 같은 문구. 프로필 네 기둥 있을 때만,
    *  이 필드가 생기기 전 공유 링크도 계속 렌더되어야 해 선택으로 둔다(sky와 동일 패턴). */
@@ -161,7 +162,7 @@ export function dailyCardParams(
     color: guide.color,
     keyword: guide.keyword,
     lucky: guide.lucky,
-    sky: `${guide.skyLines.moon} ${guide.skyLines.riseSet}`,
+    sky: [guide.skyLines.moon, guide.skyLines.riseSet, guide.skyLines.altitude].join("\n"),
     zodiac: guide.zodiacSign ? `${guide.zodiacSign.animal}띠인 당신에게 — ${guide.zodiacSign.line}` : null,
     llm: llmParagraph ?? null,
   };

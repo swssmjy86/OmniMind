@@ -102,7 +102,7 @@ describe("오늘의 나 카드 — dailyCardQuery ↔ parseDailyCardParams", () 
       color: guide.color,
       keyword: guide.keyword,
       lucky: guide.lucky,
-      sky: `${guide.skyLines.moon} ${guide.skyLines.riseSet}`,
+      sky: `${guide.skyLines.moon}\n${guide.skyLines.riseSet}\n${guide.skyLines.altitude}`,
       zodiac: null,
       llm: null,
     });

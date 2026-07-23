@@ -23,6 +23,17 @@ const C = {
   softText: "#8a8178",
 };
 
+// 다크 팔레트(globals.css --dark-*) — 오늘의 나 카드는 오늘의운세 화면(다크 기본)과 같은
+// 밤 네이비 + 달빛 골드로 렌더링해 화면과 카드가 한 장처럼 보이게 한다.
+const D: typeof C = {
+  base: "#0e1626",
+  surface: "#1a2740",
+  coral: "#e8927c",
+  green: "#f0c96a", // 다크에서 primary는 달빛 골드
+  text: "#f0ebe2",
+  softText: "#a8b0c0",
+};
+
 /** Google Fonts에서 카드에 쓰일 글자만 서브셋으로 받아온다(무료, ttf). */
 async function loadNotoSerifKR(text: string): Promise<ArrayBuffer> {
   const css = await (
@@ -38,13 +49,14 @@ async function loadNotoSerifKR(text: string): Promise<ArrayBuffer> {
 }
 
 function CardFrame({
-  square, hanjaSize, hanja, eyebrow, children,
+  square, hanjaSize, hanja, eyebrow, children, colors = C,
 }: {
   square: boolean;
   hanjaSize: number;
   hanja: string;
   eyebrow: string;
   children: React.ReactNode;
+  colors?: typeof C;
 }) {
   return (
     <div
@@ -55,7 +67,7 @@ function CardFrame({
         flexDirection: "column",
         justifyContent: "space-between",
         position: "relative",
-        backgroundColor: C.base,
+        backgroundColor: colors.base,
         padding: square ? 72 : 96,
         fontFamily: "NotoSerifKR",
       }}
@@ -67,7 +79,7 @@ function CardFrame({
           top: square ? -40 : 60,
           right: -20,
           fontSize: hanjaSize,
-          color: C.green,
+          color: colors.green,
           opacity: 0.07,
           lineHeight: 1,
         }}
@@ -76,8 +88,8 @@ function CardFrame({
       </div>
 
       <div style={{ display: "flex", flexDirection: "column" }}>
-        <div style={{ fontSize: 30, letterSpacing: 6, color: C.softText }}>OmniMind</div>
-        <div style={{ fontSize: 24, marginTop: 8, color: C.softText }}>{eyebrow}</div>
+        <div style={{ fontSize: 30, letterSpacing: 6, color: colors.softText }}>OmniMind</div>
+        <div style={{ fontSize: 24, marginTop: 8, color: colors.softText }}>{eyebrow}</div>
       </div>
 
       {children}
@@ -146,6 +158,11 @@ function renderTeaser(searchParams: URLSearchParams, square: boolean) {
   return { node, fontText, height: square ? 1080 : 1920 };
 }
 
+/**
+ * 오늘의 나 카드 — 오늘의운세 화면(다크 기본)과 같은 내용·같은 순서·같은 형식으로 렌더링한다:
+ * 🏮 달지기 헤더 → 골드 헤드라인 → 마음가짐 → 개인화 박스 → 띠 박스 → LLM 박스 → 칩 →
+ * 행운 포인트 → 오늘의 하늘 박스(3줄). §동기화 원칙 — 화면과 카드가 한 장처럼 보여야 한다.
+ */
 function renderDaily(searchParams: URLSearchParams, square: boolean) {
   const p = parseDailyCardParams(searchParams);
   if (!p) return null;
@@ -153,51 +170,59 @@ function renderDaily(searchParams: URLSearchParams, square: boolean) {
   const fontText =
     d.headline + d.mind + (d.personal ?? "") + d.color + d.keyword + d.lucky + (d.sky ?? "") +
     (d.zodiac ?? "") + (d.llm ?? "") + d.cta + d.slogan + d.hanja +
-    "OmniMind오늘의 나오늘의 색 · 🍀 행운 포인트 — 🌿 ";
+    "OmniMind🏮 달지기 · 오늘의운세오늘의 색 · 🍀 행운 포인트 — 🌙 ☀️ 🌿 ";
 
   const s = square
-    ? { hanja: 420, headline: 40, mind: 26, personal: 24, chip: 20, lucky: 22, sky: 20, zodiac: 20, llm: 24, cta: 28, slogan: 20 }
-    : { hanja: 560, headline: 46, mind: 32, personal: 28, chip: 24, lucky: 26, sky: 22, zodiac: 22, llm: 28, cta: 32, slogan: 24 };
+    ? { hanja: 420, headline: 40, mind: 26, box: 24, chip: 20, lucky: 22, sky: 20, cta: 28, slogan: 20 }
+    : { hanja: 560, headline: 46, mind: 32, box: 28, chip: 24, lucky: 26, sky: 22, cta: 32, slogan: 24 };
+
+  // 띠 박스는 화면처럼 "N띠인 당신에게 — " 접두를 흐리게, 본문은 밝게 나눠 그린다.
+  const zodiacCut = d.zodiac ? d.zodiac.indexOf(" — ") : -1;
+  const zodiacPrefix = zodiacCut >= 0 ? d.zodiac!.slice(0, zodiacCut + 3) : null;
+  const zodiacRest = zodiacCut >= 0 ? d.zodiac!.slice(zodiacCut + 3) : d.zodiac;
+  // 옛 공유 링크의 sky는 "\n" 없는 한 줄 — 그대로 한 줄 박스로 렌더된다.
+  const skyLines = (d.sky ?? "").split("\n").filter(Boolean);
+  const skyIcon = ["🌙 ", "☀️ ", ""];
+
+  const boxStyle = {
+    display: "flex" as const,
+    marginTop: 24,
+    padding: 26,
+    borderRadius: 20,
+    backgroundColor: D.surface,
+    fontSize: s.box,
+    color: D.text,
+    lineHeight: 1.6,
+  };
 
   const node = (
-    <CardFrame square={square} hanjaSize={s.hanja} hanja={d.hanja} eyebrow="오늘의 나">
+    <CardFrame square={square} hanjaSize={s.hanja} hanja={d.hanja} eyebrow="🏮 달지기 · 오늘의운세" colors={D}>
       <div style={{ display: "flex", flexDirection: "column" }}>
         <div
           style={{
             fontSize: s.headline,
-            color: C.green,
+            color: D.green,
             lineHeight: 1.35,
             fontWeight: 600,
           }}
         >
           {d.headline}
         </div>
-        <div
-          style={{
-            width: 120,
-            height: 4,
-            marginTop: 28,
-            marginBottom: 28,
-            backgroundColor: C.coral,
-            opacity: 0.6,
-          }}
-        />
-        <div style={{ fontSize: s.mind, color: C.text, lineHeight: 1.6 }}>{d.mind}</div>
+        <div style={{ fontSize: s.mind, marginTop: 24, color: D.text, lineHeight: 1.6 }}>{d.mind}</div>
 
-        {d.personal && (
-          <div
-            style={{
-              display: "flex",
-              marginTop: 24,
-              padding: 26,
-              borderRadius: 20,
-              backgroundColor: C.surface,
-              fontSize: s.personal,
-              color: C.text,
-              lineHeight: 1.6,
-            }}
-          >
-            {d.personal}
+        {d.personal && <div style={boxStyle}>{d.personal}</div>}
+
+        {d.zodiac && (
+          <div style={{ ...boxStyle, flexDirection: "column" as const }}>
+            {/* OG 렌더러(satori)는 인라인 혼합 색을 지원하지 않아, 화면의 흐린 접두를 윗줄로 쌓는다 */}
+            {zodiacPrefix && <div style={{ display: "flex", color: D.softText }}>{zodiacPrefix}</div>}
+            <div style={{ display: "flex" }}>{zodiacRest}</div>
+          </div>
+        )}
+
+        {d.llm && (
+          <div style={{ ...boxStyle, border: "2px solid rgba(240, 201, 106, 0.2)" }}>
+            🌿 {d.llm}
           </div>
         )}
 
@@ -205,8 +230,8 @@ function renderDaily(searchParams: URLSearchParams, square: boolean) {
           <div
             style={{
               display: "flex",
-              backgroundColor: C.surface,
-              color: C.softText,
+              backgroundColor: D.surface,
+              color: D.softText,
               fontSize: s.chip,
               padding: "12px 22px",
               borderRadius: 999,
@@ -217,8 +242,8 @@ function renderDaily(searchParams: URLSearchParams, square: boolean) {
           <div
             style={{
               display: "flex",
-              backgroundColor: C.surface,
-              color: C.softText,
+              backgroundColor: D.surface,
+              color: D.softText,
               fontSize: s.chip,
               padding: "12px 22px",
               borderRadius: 999,
@@ -227,44 +252,27 @@ function renderDaily(searchParams: URLSearchParams, square: boolean) {
             {d.keyword}
           </div>
         </div>
-        <div style={{ display: "flex", fontSize: s.lucky, marginTop: 20, color: C.softText }}>
+        <div style={{ display: "flex", fontSize: s.lucky, marginTop: 20, color: D.softText }}>
           🍀 행운 포인트 — {d.lucky}
         </div>
-        {d.sky && (
-          <div style={{ display: "flex", fontSize: s.sky, marginTop: 12, color: C.softText }}>
-            🌙 {d.sky}
-          </div>
-        )}
-        {d.zodiac && (
-          <div style={{ display: "flex", fontSize: s.zodiac, marginTop: 12, color: C.softText }}>
-            🐾 {d.zodiac}
-          </div>
-        )}
-        {d.llm && (
-          <div
-            style={{
-              display: "flex",
-              marginTop: 24,
-              padding: 26,
-              borderRadius: 20,
-              border: "2px solid rgba(45, 90, 74, 0.2)",
-              backgroundColor: C.surface,
-              fontSize: s.llm,
-              color: C.text,
-              lineHeight: 1.6,
-            }}
-          >
-            🌿 {d.llm}
+
+        {skyLines.length > 0 && (
+          <div style={{ ...boxStyle, flexDirection: "column" as const, fontSize: s.sky, color: D.softText }}>
+            {skyLines.map((line, i) => (
+              <div key={i} style={{ display: "flex", marginTop: i === 0 ? 0 : 8 }}>
+                {skyIcon[i] ?? ""}{line}
+              </div>
+            ))}
           </div>
         )}
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", marginTop: 40 }}>
         <div
           style={{
             display: "flex",
-            backgroundColor: C.coral,
-            color: C.surface,
+            backgroundColor: D.coral,
+            color: D.base,
             fontSize: s.cta,
             padding: "18px 40px",
             borderRadius: 999,
@@ -272,13 +280,29 @@ function renderDaily(searchParams: URLSearchParams, square: boolean) {
         >
           {d.cta}
         </div>
-        <div style={{ fontSize: s.slogan, marginTop: 24, color: C.softText }}>{d.slogan}</div>
+        <div style={{ fontSize: s.slogan, marginTop: 24, color: D.softText }}>{d.slogan}</div>
       </div>
     </CardFrame>
   );
 
-  // 문구가 짧아 1080×1920(스토리) 캔버스를 쓰면 아래쪽이 크게 비므로, 더 낮은 4:5 캔버스를 쓴다.
-  return { node, fontText, height: square ? 1080 : 1350 };
+  // 세로 카드 높이는 콘텐츠 분량으로 추정한다 — 박스(개인화·띠·LLM·하늘)까지 다 실리면
+  // 4:5 고정 캔버스로는 아래가 잘리기 때문. 문구가 짧은 날은 최소 1350(4:5)을 유지한다.
+  const pad = 96;
+  const boxWidth = 1080 - pad * 2;
+  let h = pad * 2 + 30 + 8 + 24; // 상하 패딩 + 워드마크 + eyebrow
+  h += 24 + estimateLines(d.headline, s.headline, boxWidth) * s.headline * 1.35;
+  h += 24 + estimateLines(d.mind, s.mind, boxWidth) * s.mind * 1.6;
+  for (const boxText of [d.personal, d.zodiac, d.llm]) {
+    if (boxText) h += 24 + 52 + estimateLines(boxText, s.box, boxWidth - 52) * s.box * 1.6;
+  }
+  h += 28 + 24 + s.chip * 1.4; // 칩 줄
+  h += 20 + estimateLines(d.lucky, s.lucky, boxWidth) * s.lucky * 1.6;
+  if (skyLines.length) {
+    h += 24 + 52 + skyLines.reduce((a, l) => a + estimateLines(l, s.sky, boxWidth - 52) * s.sky * 1.7 + 8, 0);
+  }
+  h += 40 + 36 + s.cta * 1.4 + 24 + s.slogan * 1.4; // CTA 버튼 + 슬로건
+
+  return { node, fontText, height: square ? 1080 : Math.min(2400, Math.max(1350, Math.round(h))) };
 }
 
 // 한 줄에 들어가는 글자 수를 살짝 보수적으로(넓게) 잡아 줄 수를 과소평가하지 않는다 —
