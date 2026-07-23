@@ -29,6 +29,7 @@ export default function TodayFreeFlow({
   sky,
   astroEvents,
   intro,
+  forceInput,
 }: {
   headline: string;
   mind: string;
@@ -38,10 +39,13 @@ export default function TodayFreeFlow({
   sky: { moon: string; riseSet: string; altitude: string };
   astroEvents?: AstroEvent[] | null;
   intro?: { personaId: string; eyebrow: string; line: string; src: string };
+  /** 홈 "나를 알아보기" 경유 — 저장된 생년월일이 있어도 입력 시트를 띄운다(저장하면 닫힘). */
+  forceInput?: boolean;
 }) {
   const [ready, setReady] = useState(false);
   // 인트로가 있으면 그 오버레이가 걷힌 뒤에야 입력 시트를 띄운다.
   const [introDone, setIntroDone] = useState(!intro);
+  const [forcedOpen, setForcedOpen] = useState(Boolean(forceInput));
   const [birth, setBirth] = useState<TodayBirth | null>(null);
   const [personal, setPersonal] = useState<string | null>(null);
   useEffect(() => {
@@ -110,7 +114,14 @@ export default function TodayFreeFlow({
 
       <TodayTeaser />
 
-      {ready && introDone && !birth && <TodayInputSheet onSaved={setBirth} />}
+      {ready && introDone && (forcedOpen || !birth) && (
+        <TodayInputSheet
+          onSaved={(b) => {
+            setBirth(b);
+            setForcedOpen(false);
+          }}
+        />
+      )}
       {ready && birth && (
         <button
           type="button"

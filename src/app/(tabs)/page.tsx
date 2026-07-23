@@ -77,8 +77,9 @@ export default async function HomePage() {
               <>나의 사주로 <span className="text-text-main">더 깊은 오늘</span>을 받아볼까요?</>
             )}
           </p>
+          {/* ?input=1 — 인트로 영상이 걷힌 뒤 생년월일 팝업을 (이미 저장돼 있어도) 띄운다 */}
           <Link
-            href="/today"
+            href="/today?input=1"
             className="press mt-4 block w-full rounded-card bg-accent-coral py-3.5 text-center font-medium text-white"
           >
             나를 알아보기 ✨
@@ -117,13 +118,13 @@ export default async function HomePage() {
         sub="실제로 풀이를 열어본 분들의 이야기예요."
       />
 
-      {/* 자주묻는질문 발췌 5문항 */}
+      {/* 자주묻는질문 발췌 3문항 */}
       <section className="mt-8" aria-label="자주 묻는 질문">
         <h2 className="font-[family-name:var(--font-serif-kr)] text-lg text-primary-green">
           자주 묻는 질문
         </h2>
         <div className="mt-3 flex flex-col gap-2">
-          {FAQ_ITEMS.slice(0, 5).map((item) => (
+          {FAQ_ITEMS.slice(0, 3).map((item) => (
             <details key={item.q} className="rounded-card border border-text-soft/20 bg-warm-surface p-4">
               <summary className="cursor-pointer text-sm font-medium text-text-main">
                 {item.q}

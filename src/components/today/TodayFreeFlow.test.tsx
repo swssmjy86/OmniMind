@@ -62,6 +62,16 @@ describe("TodayFreeFlow — 비로그인 오늘의운세 개인화", () => {
     expect(await screen.findByText("태어난 날을 알려주실래요?")).toBeInTheDocument();
   });
 
+  it("forceInput이면 저장된 생년월일이 있어도 입력 시트를 띄운다", async () => {
+    window.localStorage.setItem(
+      TODAY_BIRTH_KEY,
+      JSON.stringify({ birthDate: "1990-06-15", birthTime: "", gender: null }),
+    );
+    vi.mocked(computeGuestDailyPersonal).mockResolvedValue("문장");
+    render(<TodayFreeFlow {...props} forceInput />);
+    expect(await screen.findByText("태어난 날을 알려주실래요?")).toBeInTheDocument();
+  });
+
   it("저장된 태어난 날이 있으면 개인화 문장을 받아와 보여준다", async () => {
     window.localStorage.setItem(
       TODAY_BIRTH_KEY,
