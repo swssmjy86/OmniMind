@@ -1,19 +1,56 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import PersonaIntro from "@/components/persona/PersonaIntro";
 import TodayInputSheet from "./TodayInputSheet";
-import TodayTeaser from "./TodayTeaser";
 import { TODAY_BIRTH_KEY, parseTodayBirth, type TodayBirth } from "@/lib/today/birth-store";
-import { computeGuestDailyPersonal } from "@/lib/today/actions";
+import { computeGuestDailyExtras, type GuestDailyExtras } from "@/lib/today/actions";
 import type { AstroEvent } from "@/lib/kasi/astro-events";
 
+/** 개인화 결과 하루 캐시 — LLM(무료 쿼터)을 기기당 하루 1회로 줄인다(2026-07-24 블러 해제). */
+const EXTRAS_KEY = "om-today-extras";
+
+/** KST 오늘 날짜(YYYY-MM-DD) — KST는 고정 UTC+9(서머타임 없음)라 클라이언트 산술로 충분. */
+function kstToday(): string {
+  return new Date(Date.now() + 9 * 3600_000).toISOString().slice(0, 10);
+}
+
+function loadCachedExtras(birth: TodayBirth): GuestDailyExtras | null {
+  try {
+    const raw = window.localStorage.getItem(EXTRAS_KEY);
+    if (!raw) return null;
+    const c = JSON.parse(raw) as {
+      birthDate?: string; birthTime?: string; extras?: GuestDailyExtras;
+    };
+    if (
+      c.birthDate === birth.birthDate && c.birthTime === birth.birthTime &&
+      c.extras?.date === kstToday()
+    )
+      return c.extras;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function saveCachedExtras(birth: TodayBirth, extras: GuestDailyExtras): void {
+  try {
+    window.localStorage.setItem(
+      EXTRAS_KEY,
+      JSON.stringify({ birthDate: birth.birthDate, birthTime: birth.birthTime, extras }),
+    );
+  } catch {
+    // 저장 불가(시크릿 모드 등)여도 이번 화면은 계속
+  }
+}
+
 /**
- * 비로그인 오늘의운세 흐름(스펙 §3): 저장된 입력이 없으면 바텀시트가 뜨고,
- * 저장되면 무료 공통 일진 + 블러 티저를 보여준다. 공통 일진(헤드라인·마음가짐·색·키워드·행운)은
- * 서버 컴포넌트가 날짜만으로 계산해 props로 내려준다 — 이 컴포넌트는 엔진을 모른다(클라이언트
- * 번들 보호). 태어난 날/시간이 있으면 서버 액션(computeGuestDailyPersonal)에 그 값만 넘겨
- * "개인화 한 줄"만 돌려받는다 — 계산은 여전히 서버에만 있다.
+ * 비로그인 오늘의운세 흐름(스펙 §3, 2026-07-24 개정): 저장된 입력이 없으면 바텀시트가 뜨고,
+ * 저장되면 무료 공통 일진에 더해 개인화 세 가지 — 내 일간으로 본 오늘·내 띠와 오늘·AI가
+ * 다듬은 오늘의 이야기 — 를 **블러 없이 전부** 보여준다(예전 블러 티저 3장 삭제).
+ * 공통 일진(헤드라인·마음가짐·색·키워드·행운)은 서버 컴포넌트가 날짜만으로 계산해 props로
+ * 내려주고, 개인화는 서버 액션(computeGuestDailyExtras)이 계산한다 — 엔진·LLM은 서버에만.
  * localStorage는 마운트 후(useEffect)에만 읽는다 — 시트 표시 여부는 구조 차이라
  * 초기화식에서 읽으면 하이드레이션 불일치가 난다.
  * intro가 있으면 페르소나 인트로 영상을 이 컴포넌트가 직접 띄운다 — 입력 시트를
@@ -47,7 +84,7 @@ export default function TodayFreeFlow({
   const [introDone, setIntroDone] = useState(!intro);
   const [forcedOpen, setForcedOpen] = useState(Boolean(forceInput));
   const [birth, setBirth] = useState<TodayBirth | null>(null);
-  const [personal, setPersonal] = useState<string | null>(null);
+  const [extras, setExtras] = useState<GuestDailyExtras | null>(null);
   useEffect(() => {
     // 마운트 후 1회만 localStorage를 읽어 시트 표시 여부를 정한다(위 주석 참고) —
     // 외부 스토어를 구독하는 게 아니라 최초 1회 동기화라 set-state-in-effect 휴리스틱의
@@ -58,10 +95,22 @@ export default function TodayFreeFlow({
   }, []);
 
   useEffect(() => {
-    if (!birth) return;
+    if (!birth) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setExtras(null);
+      return;
+    }
+    // 같은 날짜·같은 생일이면 저장분 재사용 — LLM 재호출 없음(무료 쿼터 보호).
+    const cached = loadCachedExtras(birth);
+    if (cached) {
+      setExtras(cached);
+      return;
+    }
     let cancelled = false;
-    computeGuestDailyPersonal(birth.birthDate, birth.birthTime).then((p) => {
-      if (!cancelled) setPersonal(p);
+    computeGuestDailyExtras(birth.birthDate, birth.birthTime).then((e) => {
+      if (cancelled || !e) return;
+      setExtras(e);
+      saveCachedExtras(birth, e);
     });
     return () => {
       cancelled = true;
@@ -82,9 +131,20 @@ export default function TodayFreeFlow({
           {headline}
         </p>
         <p className="mt-3 leading-relaxed text-text-main">{mind}</p>
-        {birth && personal && (
+        {birth && extras?.personal && (
           <p className="mt-3 rounded-card bg-warm-base p-3 text-sm leading-relaxed text-text-main">
-            {personal}
+            {extras.personal}
+          </p>
+        )}
+        {birth && extras?.zodiac && (
+          <p className="mt-3 rounded-card bg-warm-base p-3 text-sm leading-relaxed text-text-main">
+            <span className="text-text-soft">{extras.zodiac.animal}띠인 당신에게 — </span>
+            {extras.zodiac.line}
+          </p>
+        )}
+        {birth && extras?.story && (
+          <p className="mt-3 rounded-card border border-primary-green/20 bg-warm-base p-3 text-sm leading-relaxed text-text-main">
+            🌿 {extras.story}
           </p>
         )}
         <div className="mt-5 flex gap-2">
@@ -112,7 +172,10 @@ export default function TodayFreeFlow({
         )}
       </section>
 
-      <TodayTeaser />
+      {/* 예전 블러 티저 자리 — 이제 위 카드로 전부 공개. 로그인은 저장 보너스로만 유도. */}
+      <p className="mt-4 text-center text-xs text-text-soft">
+        <Link href="/login" className="underline">로그인</Link>하면 오늘의 기록이 보관함에 차곡차곡 쌓여요.
+      </p>
 
       {ready && introDone && (forcedOpen || !birth) && (
         <TodayInputSheet

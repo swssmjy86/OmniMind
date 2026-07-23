@@ -21,9 +21,9 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic"; // 날짜·세션에 따라 매번 렌더
 
 /**
- * 오늘의운세 탭(스펙 §3) — 로그인+프로필이면 전체(심화+띠 관계+마음 챗 진입),
- * 아니면 무료 공통 일진 + 블러 티저(입력 팝업 포함). 잠긴 개인화 본문은
- * 비로그인 응답에 아예 없다(P9 §5.1).
+ * 오늘의운세 탭(스펙 §3, 2026-07-24 개정) — 로그인+프로필이면 전체(심화+띠 관계+마음 챗
+ * 진입), 아니면 무료 공통 일진 + 입력 팝업 → 개인화(일간·띠·AI 이야기)까지 블러 없이
+ * 전부 공개(TodayFreeFlow). 로그인은 보관함 저장·마음 챗 보너스로만 유도한다.
  */
 export default async function TodayPage({
   searchParams,
