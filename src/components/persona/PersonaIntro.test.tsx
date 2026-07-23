@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import PersonaIntro from "./PersonaIntro";
 
@@ -10,21 +10,18 @@ const PROPS = {
 };
 
 describe("PersonaIntro", () => {
-  beforeEach(() => {
-    sessionStorage.clear();
-  });
-
-  it("처음 진입하면 영상 오버레이가 뜨고, 세션에 본 것으로 기록된다", async () => {
+  it("진입하면 영상 오버레이가 뜬다", async () => {
     render(<PersonaIntro {...PROPS} />);
     expect(await screen.findByRole("dialog")).toBeInTheDocument();
     expect(screen.getByText(PROPS.line)).toBeInTheDocument();
-    expect(sessionStorage.getItem("persona-intro-seen:dalzigi")).toBe("1");
   });
 
-  it("이미 본 세션에서는 다시 뜨지 않는다", () => {
-    sessionStorage.setItem("persona-intro-seen:dalzigi", "1");
+  it("페이지를 나갔다 다시 들어오면(재마운트) 매번 다시 뜬다", async () => {
+    const first = render(<PersonaIntro {...PROPS} />);
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
+    first.unmount();
     render(<PersonaIntro {...PROPS} />);
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
   });
 
   it("건너뛰기를 누르면 사라진다", async () => {
