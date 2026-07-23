@@ -1,8 +1,9 @@
 import Link from "next/link";
 
 /**
- * 비로그인 풀이 안내 — 총운·사주상품·궁합 심층은 로그인 전용(GUEST_READING_ACCESS=false).
- * 블러 잠금 화면 대신 담백한 문구 + 로그인 CTA만 보여준다(§P3 "블러 기능 삭제" 결정).
+ * 비로그인 풀이 안내 — GUEST_READING_ACCESS가 꺼져 있을 때의 폴백(현재는 켜져 있어
+ * 게스트도 입력 시트로 풀이를 본다). 블러 잠금 화면 대신 담백한 문구 + 로그인 CTA만
+ * 보여준다(§P3 "블러 기능 삭제" 결정).
  */
 export default function LoginRequiredNotice({ message }: { message: string }) {
   return (

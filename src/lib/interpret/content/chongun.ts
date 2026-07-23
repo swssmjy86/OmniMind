@@ -8,8 +8,10 @@ import { PRODUCT_PERSONA } from "@/lib/persona/products";
 import { assembleProfile } from "../templates";
 import { currentDaeun } from "@/lib/engine/daeun";
 import { daeunSeasonText } from "./daeun";
+import { traitsText, type Traits } from "./traits";
 
 export const SEASON_TITLE = "운의 계절";
+export const TRAITS_TITLE = "겉과 속";
 
 // 골격 세 분기(진행 중/첫 대운 이전/성별 미상) × 어미 4갈래 — 내용은 동일, 어미·호칭만 다르다.
 const SEASON_SKELETON: Record<Voice, {
@@ -61,11 +63,16 @@ function seasonSection(ctx: ProfileContext, age: number | null): InterpretationS
   return { title: SEASON_TITLE, body: daeunSeasonBody(ctx, age, CHONGUN_VOICE) };
 }
 
-/** 총운 섹션 전체 — assembleProfile 뒤에 운의 계절이 붙는다(팔자 주축 순서 유지). */
+/** 총운 섹션 전체 — assembleProfile 뒤에 운의 계절이 붙는다(팔자 주축 순서 유지).
+ *  traits(MBTI·혈액형)가 있으면 맨 끝에 '겉과 속' 보조 섹션이 더해진다(위계 §3 — 보조는
+ *  항상 팔자 뒤). 없으면 기존과 완전히 동일(폴백). */
 export function assembleChongun(
   ctx: ProfileContext,
   nickname: string,
   age: number | null,
+  traits?: Traits | null,
 ): InterpretationSection[] {
-  return [...assembleProfile(ctx, nickname), seasonSection(ctx, age)];
+  const base = [...assembleProfile(ctx, nickname), seasonSection(ctx, age)];
+  const aux = traitsText(traits, CHONGUN_VOICE);
+  return aux ? [...base, { title: TRAITS_TITLE, body: aux }] : base;
 }

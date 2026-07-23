@@ -95,6 +95,20 @@ describe("크레딧 풀이 조립 4종 (3단계 스펙 §3)", () => {
     }
   });
 
+  it("보조축(MBTI·혈액형) — 있으면 보조 섹션 끝에 페르소나 말투로 붙고, 없으면 기존 그대로", () => {
+    for (const p of CREDIT_READING_PRODUCTS) {
+      const plain = assembleCreditReading(p, ctx, "새벽", 36);
+      const withTraits = assembleCreditReading(p, ctx, "새벽", 36, { mbti: "ENFP", blood: "A" });
+      expect(plain[3].body).not.toContain("혈액형");
+      expect(withTraits[3].body).toContain("혈액형");
+      expect(withTraits[3].body).toContain("생기를 얻는"); // MBTI E 조각
+      expect(withTraits).toHaveLength(4); // 섹션 수는 그대로 — 보조축 안에 수식으로만
+    }
+    // 말투 유지: 반말 상품엔 보조 문장도 요체 종결 없음
+    const love = assembleCreditReading("love", ctx, "새벽", 36, { mbti: "ENFP", blood: "A" });
+    expect(love.map((s) => s.body).join(" ")).not.toMatch(/요[.!?]/);
+  });
+
   it("LLM 프롬프트는 상품·섹션 본문을 담고 새 결론을 금지한다", () => {
     const sections = assembleCreditReading("career", ctx, "새벽", 36);
     const prompt = creditReadingPrompt("career", ctx, sections);

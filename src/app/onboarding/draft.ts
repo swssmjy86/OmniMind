@@ -8,6 +8,9 @@ export interface Draft {
   timeUnknown: boolean;
   /** 선택 — 있으면 대운(10년 흐름)까지 계산. 구버전 draft 호환을 위해 optional */
   gender?: "male" | "female" | null;
+  /** 풀이 입력 시트(2026-07-23) — 보조축용. 구버전 draft 호환을 위해 optional */
+  mbti?: string | null;
+  blood?: "A" | "B" | "O" | "AB" | null;
 }
 
 export const DRAFT_KEY = "om_onboarding_draft";
@@ -38,7 +41,9 @@ export function loadDraft(): Draft | null {
       typeof d.birthDate !== "string" ||
       typeof d.birthTime !== "string" ||
       typeof d.timeUnknown !== "boolean" ||
-      (d.gender != null && d.gender !== "male" && d.gender !== "female")
+      (d.gender != null && d.gender !== "male" && d.gender !== "female") ||
+      (d.mbti != null && typeof d.mbti !== "string") ||
+      (d.blood != null && !["A", "B", "O", "AB"].includes(d.blood))
     )
       return null;
     return d as Draft;

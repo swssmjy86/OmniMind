@@ -3,8 +3,8 @@ import { PERSONAS, type PersonaId } from "@/lib/persona/personas";
 import type { Product } from "@/lib/persona/products";
 
 // 일러스트(webp)가 생기기 전까지의 CSS 심볼 폴백(§4.3) — 배포를 막지 않는다.
-// 교체 시 이 글리프 자리에 <img>만 넣으면 된다.
-const GLYPHS: Record<PersonaId, string> = {
+// 교체 시 이 글리프 자리에 <img>만 넣으면 된다. 풀이 입력 시트 등 다른 화면도 재사용한다.
+export const PERSONA_GLYPHS: Record<PersonaId, string> = {
   dalzigi: "🏮",
   seoon: "📜",
   byeori: "⚒️",
@@ -31,7 +31,7 @@ export default function PersonaCard({ product }: { product: Product }) {
           aria-hidden
           className="persona-glyph grid size-14 shrink-0 place-items-center rounded-full bg-warm-base text-2xl"
         >
-          {GLYPHS[persona.id]}
+          {PERSONA_GLYPHS[persona.id]}
         </span>
         <div className="min-w-0">
           <p className="text-xs text-text-soft">

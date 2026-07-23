@@ -39,12 +39,20 @@ function profileFromDraft(draft: Draft): ProfileContext {
   });
 }
 
+/** draft의 보조축 입력(MBTI·혈액형) — 없으면 null(풀이는 그대로 동작). */
+function traitsFromDraft(draft: Draft) {
+  return { mbti: draft.mbti ?? null, blood: draft.blood ?? null };
+}
+
 /** 총운 — 게스트. assembleProfile + 운의 계절, 로그인 경로와 문구 동일(LLM 없음은 원래도 같음). */
 export async function computeGuestChongun(draft: Draft): Promise<GuestReadingResult> {
   try {
     const ctx = profileFromDraft(draft);
     const age = ageFrom(draft.birthDate, new Date());
-    return { ok: true, ctx, sections: assembleChongun(ctx, draft.nickname, age) };
+    return {
+      ok: true, ctx,
+      sections: assembleChongun(ctx, draft.nickname, age, traitsFromDraft(draft)),
+    };
   } catch {
     return { ok: false };
   }
@@ -60,7 +68,10 @@ export async function computeGuestCreditReading(
   try {
     const ctx = profileFromDraft(draft);
     const age = ageFrom(draft.birthDate, new Date());
-    return { ok: true, ctx, sections: assembleCreditReading(product, ctx, draft.nickname, age) };
+    return {
+      ok: true, ctx,
+      sections: assembleCreditReading(product, ctx, draft.nickname, age, traitsFromDraft(draft)),
+    };
   } catch {
     return { ok: false };
   }

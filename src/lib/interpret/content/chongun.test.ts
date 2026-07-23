@@ -49,6 +49,16 @@ describe("총운 조립 (2단계 스펙 §4)", () => {
     expect(checkTone(assembleChongun(noGenderCtx, "새벽", 36).at(-1)!.body)).toEqual([]);
   });
 
+  it("보조축(MBTI·혈액형) — 있으면 '겉과 속' 섹션이 맨 끝에 붙고, 없으면 기존 그대로", () => {
+    const plain = assembleChongun(ctx, "새벽", 36);
+    const withTraits = assembleChongun(ctx, "새벽", 36, { mbti: "ISTJ", blood: "O" });
+    expect(plain.some((s) => s.title === "겉과 속")).toBe(false);
+    expect(withTraits).toHaveLength(plain.length + 1);
+    expect(withTraits.at(-1)!.title).toBe("겉과 속");
+    expect(withTraits.at(-1)!.body).toContain("혈액형");
+    expect(checkTone(withTraits.at(-1)!.body)).toEqual([]);
+  });
+
   it("운의 계절 — 말투 4갈래(페르소나 전면 몰입) × 세 분기 전부 톤 통과 + '대운' 표기 유지", () => {
     for (const v of VOICES) {
       for (const [c, age] of [[ctx, 36], [ctx, 0], [noGenderCtx, 36]] as const) {
