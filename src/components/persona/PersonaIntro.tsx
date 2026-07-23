@@ -64,7 +64,11 @@ export default function PersonaIntro({ personaId, eyebrow, line, src, onComplete
       v.muted = false;
       v.play?.()?.catch?.(() => {
         // 정책상 소리 자동재생 차단(모바일 기본) — 음소거로 폴백해 영상은 계속 보여준다.
+        // iOS Safari 일부 버전은 muted 프로퍼티만으론 무음 자동재생을 허용하지 않고
+        // 콘텐츠 속성까지 확인하므로 속성·defaultMuted도 함께 세운다.
         v.muted = true;
+        v.defaultMuted = true;
+        v.setAttribute("muted", "");
         setMuted(true);
         v.play?.()?.catch?.(() => setNeedsTap(true));
       });
