@@ -135,16 +135,31 @@ describe("PersonaIntro", () => {
     }
   });
 
-  it("소리 켠 자동재생을 우선 시도한다 — 버튼으로 끄고 켤 수 있다", async () => {
+  it("소리 켠 자동재생이 허용되는 환경이면 소리 ON으로 재생된다 — 버튼으로 끄고 켤 수 있다", async () => {
+    const play = vi
+      .spyOn(window.HTMLMediaElement.prototype, "play")
+      .mockResolvedValue(undefined); // 소리 켠 play() 허용 환경
+    try {
+      render(<PersonaIntro {...PROPS} />);
+      const dialog = await screen.findByRole("dialog");
+      const video = dialog.querySelector("video")!;
+      await waitFor(() => expect(video.muted).toBe(false));
+      fireEvent.click(await screen.findByRole("button", { name: "🔊 소리 끄기" }));
+      expect(video.muted).toBe(true);
+      fireEvent.click(screen.getByRole("button", { name: "🔇 소리 켜기" }));
+      expect(video.muted).toBe(false);
+    } finally {
+      play.mockRestore();
+    }
+  });
+
+  it("영상 태그는 선언적 무음 자동재생 조합(autoplay·muted 속성·playsinline)을 갖춘다", async () => {
     render(<PersonaIntro {...PROPS} />);
     const dialog = await screen.findByRole("dialog");
     const video = dialog.querySelector("video")!;
-    // jsdom의 play()는 성공도 실패도 알려주지 않으므로 1차(소리 켠) 시도 상태로 남는다.
-    await waitFor(() => expect(video.muted).toBe(false));
-    fireEvent.click(screen.getByRole("button", { name: "🔊 소리 끄기" }));
-    expect(video.muted).toBe(true);
-    fireEvent.click(screen.getByRole("button", { name: "🔇 소리 켜기" }));
-    expect(video.muted).toBe(false);
+    expect(video.autoplay).toBe(true);
+    expect(video.defaultMuted).toBe(true); // muted 콘텐츠 속성 — 모바일 자동재생 정책의 요건
+    expect(video.playsInline).toBe(true);
   });
 
   it("▶ 버튼 재생은 사용자 제스처이므로 소리를 켠 채 시작한다", async () => {

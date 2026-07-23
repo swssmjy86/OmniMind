@@ -22,17 +22,19 @@ interface Props {
 /**
  * 페르소나 인트로 영상 오버레이 — 오늘의운세/온보딩에 들어올 때마다 짧은 홍보 컷을 보여준다
  * (홈에 갔다가 다시 들어와도 재생 — 라우트 이동으로 컴포넌트가 새로 마운트될 때마다).
- * 소리는 3단 사다리: ①소리 켠 자동재생 시도(허용 환경에선 바로 소리) → ②정책상 차단되면
- * 음소거 자동재생 + 소리 켜기 버튼 → ③그마저 차단되면(iOS 저전력 모드 등) 첫 프레임
- * 정지 화면 + ▶ 버튼(탭은 사용자 제스처라 소리 켠 재생 가능). 움직임 줄이기 설정
- * 사용자는 자동재생 없이 ③으로 시작한다. 영상이 끝나거나, 건너뛰기를 누르거나,
- * 영상 로드에 실패하면 조용히 사라진다 — 끝까지 본 경우에만 onComplete를 부른다.
+ * 자동재생은 선언적 autoplay+muted+playsinline 속성에 맡긴다 — 모바일 포함 모든
+ * 브라우저가 가장 확실하게 허용하는 경로다. 그 위에서 소리 승격을 시도한다:
+ * ①소리 켠 play()가 허용되면 소리 ON → ②거부되면 음소거 재생 유지 + 소리 켜기 버튼 →
+ * ③무음 자동재생마저 차단된 환경(인앱 브라우저·iOS 저전력 모드 등)은 첫 프레임 정지
+ * 화면 + ▶ 버튼(탭은 사용자 제스처라 소리 켠 재생 가능). 움직임 줄이기 설정 사용자는
+ * 자동재생 없이 ③으로 시작한다. 영상이 끝나거나, 건너뛰기를 누르거나, 영상 로드에
+ * 실패하면 조용히 사라진다 — 끝까지 본 경우에만 onComplete를 부른다.
  */
 export default function PersonaIntro({ personaId, eyebrow, line, src, onComplete, onClose }: Props) {
   const [visible, setVisible] = useState(false);
   const [closing, setClosing] = useState(false);
-  // 소리 켠 자동재생을 우선 시도하므로 켠 상태로 시작 — 차단되면 폴백에서 끈다.
-  const [muted, setMuted] = useState(false);
+  // 무음 자동재생이 기본이므로 음소거로 시작 — 소리 승격이 허용되는 환경에서만 켠다.
+  const [muted, setMuted] = useState(true);
   // 자동재생 대신 ▶ 버튼을 보여줘야 하는 상태 — 움직임 줄이기 설정 또는 자동재생 차단.
   const [needsTap, setNeedsTap] = useState(false);
   const [playing, setPlaying] = useState(false);
@@ -54,21 +56,18 @@ export default function PersonaIntro({ personaId, eyebrow, line, src, onComplete
     return () => clearTimeout(t);
   }, [personaId]);
 
-  // 자동재생 — autoPlay 속성 대신 직접 호출해 소리 사다리를 태운다:
-  // 소리 켠 재생 시도 → 차단 시 음소거 재생 → 그마저 차단 시 ▶ 버튼.
+  // 소리 승격 — 무음 자동재생(선언적 autoplay+muted)은 브라우저가 알아서 시작하므로,
+  // 여기서는 소리 켠 재생이 허용되는 환경인지만 시도한다. 거부되면 음소거로 되돌려
+  // 재생을 잇고, 무음 재생마저 거부되는 환경이면 ▶ 버튼으로 전환한다.
   useEffect(() => {
     if (!visible || needsTap) return;
     const v = videoRef.current;
     if (!v) return;
     try {
       v.muted = false;
-      v.play?.()?.catch?.(() => {
-        // 정책상 소리 자동재생 차단(모바일 기본) — 음소거로 폴백해 영상은 계속 보여준다.
-        // iOS Safari 일부 버전은 muted 프로퍼티만으론 무음 자동재생을 허용하지 않고
-        // 콘텐츠 속성까지 확인하므로 속성·defaultMuted도 함께 세운다.
+      v.play?.()?.then?.(() => setMuted(false))?.catch?.(() => {
+        // 정책상 소리 자동재생 차단(모바일 기본) — 음소거 재생으로 되돌린다.
         v.muted = true;
-        v.defaultMuted = true;
-        v.setAttribute("muted", "");
         setMuted(true);
         v.play?.()?.catch?.(() => setNeedsTap(true));
       });
@@ -123,9 +122,18 @@ export default function PersonaIntro({ personaId, eyebrow, line, src, onComplete
         className="fade-rise relative w-full max-w-[32rem] overflow-hidden rounded-card bg-warm-surface shadow-xl"
       >
         <video
-          ref={videoRef}
+          ref={(el) => {
+            videoRef.current = el;
+            // React는 muted를 프로퍼티로만 세워 콘텐츠 속성이 DOM에 안 생긴다 —
+            // 자동재생 정책이 속성을 요구하는 브라우저를 위해 defaultMuted(속성 반영)를 세운다.
+            if (el) el.defaultMuted = true;
+          }}
           src={src}
-          muted={muted}
+          // 무음 자동재생은 선언적 속성 조합이 가장 확실하다. 음소거 해제는 프로퍼티로만
+          // 다루고 이 prop은 상수로 둔다(React가 되돌리지 않도록). 움직임 줄이기
+          // 사용자는 자동재생하지 않는다(▶ 버튼 경로).
+          autoPlay={!needsTap}
+          muted
           playsInline
           preload="auto"
           onPlay={() => {
