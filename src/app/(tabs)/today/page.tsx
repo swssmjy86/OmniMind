@@ -6,6 +6,7 @@ import { assembleDaily } from "@/lib/interpret/content/daily";
 import { toKstParts } from "@/lib/engine/kst";
 import { PERSONAS } from "@/lib/persona/personas";
 import DailyRecorder from "@/components/DailyRecorder";
+import PersonaIntro from "@/components/persona/PersonaIntro";
 import ShareSheet from "@/components/share/ShareSheet";
 import TodayFreeFlow from "@/components/today/TodayFreeFlow";
 import { dailyCardQuery } from "@/lib/share/card-copy";
@@ -59,6 +60,12 @@ export default async function TodayPage() {
 
     return (
       <main className="fade-rise p-6">
+        <PersonaIntro
+          personaId="dalzigi"
+          eyebrow={`🏮 ${PERSONAS.dalzigi.name} · 오늘의운세`}
+          line={PERSONAS.dalzigi.homeLine}
+          src="/videos/dalzigi-intro.mp4"
+        />
         <h1 className="font-[family-name:var(--font-serif-kr)] text-2xl text-primary-green">
           오늘의운세
         </h1>
@@ -157,6 +164,12 @@ export default async function TodayPage() {
 
   return (
     <main className="fade-rise p-6">
+      <PersonaIntro
+        personaId="dalzigi"
+        eyebrow={`🏮 ${PERSONAS.dalzigi.name} · 오늘의운세`}
+        line={PERSONAS.dalzigi.homeLine}
+        src="/videos/dalzigi-intro.mp4"
+      />
       <h1 className="font-[family-name:var(--font-serif-kr)] text-2xl text-primary-green">
         오늘의운세
       </h1>
