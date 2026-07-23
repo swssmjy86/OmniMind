@@ -19,16 +19,38 @@ describe("크레딧 풀이 조립 4종 (3단계 스펙 §3)", () => {
   });
 
   it("모든 상품: 섹션 4개 — ①핵심 결 ②오행 ③운의 계절 ④보조축(마지막) — 위계 §3", () => {
+    // 보조축 제목의 호칭은 담당 페르소나 말투를 따른다(전면 몰입) — 홍연=너, 금오=그대.
+    const AUX_TITLES = {
+      career: "당신에게 드러나는 방식", love: "너에게 드러나는 방식",
+      wealth: "그대에게 드러나는 방식", marriage: "당신에게 드러나는 방식",
+    } as const;
     for (const p of CREDIT_READING_PRODUCTS) {
       const out = assembleCreditReading(p, ctx, "새벽", 36);
       expect(out).toHaveLength(4);
       expect(out[1].title).toBe("오행이 건네는 조언");
       expect(out[2].title).toBe("운의 계절");
-      expect(out[3].title).toBe("당신에게 드러나는 방식"); // 보조축은 항상 마지막
+      expect(out[3].title).toBe(AUX_TITLES[p]); // 보조축은 항상 마지막
       expect(out[2].body).toContain("대운");
       // 엿보기 제목 = 실제 섹션 제목 + LLM 제목
       expect(readingSectionTitles(p)).toEqual([...out.map((s) => s.title), LLM_SECTION_TITLE]);
     }
+  });
+
+  it("페르소나 말투 — 연애=홍연 반말·부름말, 재물=금오 하오체, 결혼=온새 지요체, 직업=벼리 요체", () => {
+    const joined = (p: (typeof CREDIT_READING_PRODUCTS)[number]) =>
+      assembleCreditReading(p, ctx, "새벽", 36).map((s) => s.body).join(" ");
+    // 홍연(반말): 요체 종결이 하나도 없고, 이름을 "새벽아"로 부른다
+    expect(joined("love")).not.toMatch(/요[.!?]/);
+    expect(joined("love")).toContain("새벽아, ");
+    // 금오(하오체): ~오/~소 종결이 있고 요체 종결은 없다
+    expect(joined("wealth")).toMatch(/[오소][.!?]/);
+    expect(joined("wealth")).not.toMatch(/요[.!?]/);
+    expect(joined("wealth")).toContain("그대");
+    // 온새(지요체): ~지요 종결이 살아 있다
+    expect(joined("marriage")).toMatch(/지요\./);
+    // 벼리(요체): 기본 요체 유지 + 님 호칭
+    expect(joined("career")).toMatch(/요\./);
+    expect(joined("career")).toContain("새벽님, ");
   });
 
   it("보조축 섹션은 신강/신약과 강한 오행을 수식으로만 담는다(단독 결론 금지 — 사주 결을 받는 문장)", () => {
@@ -53,7 +75,7 @@ describe("크레딧 풀이 조립 4종 (3단계 스펙 §3)", () => {
   it("career 상품은 핵심 결 섹션에 직업적성 예시가 이어붙는다", () => {
     const body = assembleCreditReading("career", ctx, "새벽", 36)[0].body;
     expect(body).toContain("예를 들면");
-    expect(body).toContain("같은 자리에서 결이 살아나요");
+    expect(body).toContain("거기서 결이 서요");
   });
 
   it("career 외 상품(love/wealth/marriage)에는 직업적성 예시가 붙지 않는다", () => {

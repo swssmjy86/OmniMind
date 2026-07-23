@@ -16,11 +16,20 @@ export function stableStringify(value: unknown): string {
 }
 
 /**
- * 풀이 입력 해시 — 프로필 컨텍스트 + 엔진 버전 + 현재 대운 간지(대운이 바뀌면 '운의
+ * 템플릿 문구 버전 — 풀이 본문 카피가 의미 있게 바뀌면 올린다. 캐시된 옛 문구 풀이가
+ * 재생성 대상이 되게 해시에 섞는다(엔진 버전과 별개 — 계산은 그대로, 문장만 바뀐 경우).
+ * v2: 페르소나 전면 몰입(2026-07-23) — 벼리·홍연·금오·온새·연리 말투 반영.
+ */
+export const READING_TEMPLATE_VERSION = 2;
+
+/**
+ * 풀이 입력 해시 — 프로필 컨텍스트 + 엔진·템플릿 버전 + 현재 대운 간지(대운이 바뀌면 '운의
  * 계절' 섹션이 바뀌므로 캐시도 자연 무효화). season은 대운 미상이면 "none".
  */
 export function readingInputHash(ctx: unknown, season: string): string {
   return createHash("sha256")
-    .update(stableStringify({ v: PROFILE_CONTEXT_VERSION, season, ctx }))
+    .update(stableStringify({
+      v: PROFILE_CONTEXT_VERSION, tv: READING_TEMPLATE_VERSION, season, ctx,
+    }))
     .digest("hex");
 }

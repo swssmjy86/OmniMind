@@ -57,6 +57,18 @@ describe("콘텐츠 톤 준수 (§5.4)", () => {
     }
   });
 
+  it("오행 균형 문구 — 말투 4갈래(페르소나 전면 몰입) 전부 톤 통과·개수 표기 유지", () => {
+    for (const v of ["yo", "banmal", "hao", "jiyo"] as const) {
+      const t = ELEMENT_BALANCE_TEXT(
+        { counts: { 목: 3, 화: 2, 토: 0, 금: 0, 수: 3 }, dominant: "목", lacking: ["토", "금"] },
+        v,
+      );
+      expect(t).toContain("목의 기운이 3개");
+      expect(checkTone(t)).toHaveLength(0);
+      expect(checkToneWarnings(t)).toHaveLength(0);
+    }
+  });
+
   it("오행 동률이면 '나란히' 서술로 분기 — 한쪽을 단정하지 않는다", () => {
     const tie = ELEMENT_BALANCE_TEXT({
       counts: { 목:4,화:4,토:0,금:0,수:0 }, dominant: "화",

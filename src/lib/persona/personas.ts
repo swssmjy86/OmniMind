@@ -6,6 +6,12 @@
 export type PersonaId =
   | "dalzigi" | "seoon" | "byeori" | "hongyeon" | "yeonri" | "onsae" | "geumo";
 
+/** 어미 문법 갈래 — 템플릿 문구(2단)가 페르소나 말투로 조립될 때 고르는 축.
+ *  리듬·비유 같은 결은 상품별 전용 문구가 담고, 공용 문구는 이 네 갈래만 안다.
+ *  yo=~요체(달지기·서온·벼리·연리) / banmal=반말(홍연) / hao=하오체(금오) /
+ *  jiyo=~지요체(온새). */
+export type Voice = "yo" | "banmal" | "hao" | "jiyo";
+
 export interface Persona {
   id: PersonaId;
   name: string;            // "서온"
@@ -13,6 +19,7 @@ export interface Persona {
   homeLine: string;        // 홈 카드 5초 멘트
   greeting: string;        // 상품 페이지 인사
   toneInstruction: string; // LLM 말투 지시문 — 내용이 아니라 어조만
+  voice: Voice;            // 템플릿 조립용 어미 갈래
 }
 
 // 십성 그라운딩 — 계산에 쓰이지 않는 문서용 메모(P3-9). 페르소나는 캐릭터가 먼저고 십성은
@@ -24,6 +31,7 @@ export const PERSONAS: Record<PersonaId, Persona> = {
   // 다정한 문지기 톤이 두 결의 "받아주고 내어주는" 성질과 맞닿아 있다.
   dalzigi: {
     id: "dalzigi",
+    voice: "yo",
     name: "달지기",
     title: "밤마다 등불을 켜는 문지기",
     homeLine: "밤이 깊어도 등불은 켜 두었어요. 오늘의 기운, 함께 볼까요?",
@@ -35,6 +43,7 @@ export const PERSONAS: Record<PersonaId, Persona> = {
   // 톤이 "채우고 익히는" 인성의 성질과 맞닿아 있다.
   seoon: {
     id: "seoon",
+    voice: "yo",
     name: "서온",
     title: "서고를 지키는 이",
     homeLine: "당신의 여덟 글자, 서고에 이미 닿아 있어요.",
@@ -46,6 +55,7 @@ export const PERSONAS: Record<PersonaId, Persona> = {
   // 내보내는 대장장이의 성질과 맞닿아 있다. 서온이 서재라면 벼리는 작업장.
   byeori: {
     id: "byeori",
+    voice: "yo",
     name: "벼리",
     title: "쇠를 벼리는 이",
     homeLine: "당신 안의 재능, 아직 덜 벼려졌을 뿐이에요.",
@@ -57,6 +67,7 @@ export const PERSONAS: Record<PersonaId, Persona> = {
   // 잇는다는 정체성이 년살의 "곁에 사람이 모이는" 성질과 맞닿아 있다.
   hongyeon: {
     id: "hongyeon",
+    voice: "banmal",
     name: "홍연",
     title: "붉은 실을 잇는 이",
     homeLine: "실은 이미 이어져 있어. 어디로 닿는지 보여줄게.",
@@ -68,6 +79,7 @@ export const PERSONAS: Record<PersonaId, Persona> = {
   // 똑같이 돌보는 원지기의 공평함과 맞닿아 있다. 홍연이 실(시작)이라면 연리는 나무(맞물림).
   yeonri: {
     id: "yeonri",
+    voice: "yo",
     name: "연리",
     title: "맞닿은 가지를 돌보는 이",
     homeLine: "따로 자란 두 나무도, 가지는 맞닿을 수 있어요.",
@@ -79,6 +91,7 @@ export const PERSONAS: Record<PersonaId, Persona> = {
   // 장인의 손과 맞닿아 있다. 시간축의 마지막: 홍연(시작)→연리(맞물림)→온새(동행).
   onsae: {
     id: "onsae",
+    voice: "jiyo",
     name: "온새",
     title: "나무 기러기를 깎는 이",
     homeLine: "같이 걷는 길엔, 서두르지 않아도 좋은 때가 있어요.",
@@ -90,6 +103,7 @@ export const PERSONAS: Record<PersonaId, Persona> = {
   // "기회를 알아보고 손에 잡히게 만드는" 재성의 성질과 맞닿아 있다.
   geumo: {
     id: "geumo",
+    voice: "hao",
     name: "금오",
     title: "금까마귀",
     homeLine: "재물의 물길, 내 눈에는 훤히 보이오.",
