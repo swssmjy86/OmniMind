@@ -18,31 +18,46 @@ interface Props {
  * 페르소나 인트로 영상 오버레이 — 오늘의운세/온보딩에 들어올 때마다 짧은 홍보 컷을 보여준다
  * (홈에 갔다가 다시 들어와도 재생 — 라우트 이동으로 컴포넌트가 새로 마운트될 때마다).
  * 모바일 자동재생 정책에 따라 음소거로 시작하고 소리 켜기 버튼을 준다. 움직임 줄이기 설정
- * 사용자에겐 아예 띄우지 않는다. 영상이 끝나거나, 건너뛰기를 누르거나, 영상 로드에
- * 실패하면 조용히 사라진다.
+ * 사용자에겐 자동재생하지 않고 첫 프레임 정지 화면 + ▶ 버튼을 보여준다(자동재생이
+ * 차단된 환경 — iOS 저전력 모드 등 — 도 같은 경로). 영상이 끝나거나, 건너뛰기를
+ * 누르거나, 영상 로드에 실패하면 조용히 사라진다.
  */
 export default function PersonaIntro({ personaId, eyebrow, line, src }: Props) {
   const [visible, setVisible] = useState(false);
   const [closing, setClosing] = useState(false);
   const [muted, setMuted] = useState(true);
+  // 자동재생 대신 ▶ 버튼을 보여줘야 하는 상태 — 움직임 줄이기 설정 또는 자동재생 차단.
+  const [needsTap, setNeedsTap] = useState(false);
+  const [playing, setPlaying] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
     // 페이지가 한 프레임 먼저 그려진 뒤 오버레이를 띄운다(동기 setState 금지 규칙과도 맞다).
     const t = setTimeout(() => {
-      // 접근성 — 움직임을 줄이고 싶은 사용자에게 자동재생 영상을 들이밀지 않는다.
-      if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+      // 접근성 — 움직임을 줄이고 싶은 사용자에게 자동재생을 들이밀지 않는다(직접 ▶는 가능).
+      setNeedsTap(window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false);
       setVisible(true);
     }, 200);
     return () => clearTimeout(t);
   }, [personaId]);
 
-  // 영상이 멈춰버려도 오버레이가 화면을 계속 덮지 않도록 상한을 둔다(영상 8초 + 여유).
+  // 자동재생 — autoPlay 속성 대신 직접 호출해 실패(저전력 모드 등)를 감지, ▶ 버튼으로 전환한다.
   useEffect(() => {
-    if (!visible) return;
+    if (!visible || needsTap) return;
+    try {
+      videoRef.current?.play?.()?.catch?.(() => setNeedsTap(true));
+    } catch {
+      // jsdom 등 play() 미구현 환경 — 실제 브라우저의 play()는 동기로 던지지 않는다.
+    }
+  }, [visible, needsTap]);
+
+  // 영상이 멈춰버려도 오버레이가 화면을 계속 덮지 않도록 상한을 둔다(영상 8초 + 여유).
+  // 재생이 시작된 뒤부터 잰다 — ▶ 버튼을 기다리는 정지 화면은 사용자가 직접 닫을 때까지 유지.
+  useEffect(() => {
+    if (!playing) return;
     const t = setTimeout(close, 15_000);
     return () => clearTimeout(t);
-  }, [visible]);
+  }, [playing]);
 
   function close() {
     setClosing(true);
@@ -81,14 +96,32 @@ export default function PersonaIntro({ personaId, eyebrow, line, src }: Props) {
         <video
           ref={videoRef}
           src={src}
-          autoPlay
           muted
           playsInline
           preload="auto"
+          onPlay={() => {
+            setPlaying(true);
+            setNeedsTap(false);
+          }}
           onEnded={close}
           onError={close}
           className="aspect-[9/16] w-full object-cover"
         />
+        {needsTap && (
+          <button
+            onClick={() => {
+              try {
+                videoRef.current?.play?.()?.catch?.(() => {});
+              } catch {
+                // play() 미구현 환경 무시
+              }
+            }}
+            aria-label="인사 영상 재생"
+            className="press absolute inset-0 m-auto flex h-16 w-16 items-center justify-center rounded-full bg-black/50 text-2xl text-white"
+          >
+            ▶
+          </button>
+        )}
         <div className="absolute inset-x-0 top-0 flex items-center justify-between bg-gradient-to-b from-black/60 to-transparent px-4 pb-8 pt-3">
           <p className="text-xs text-white/80">{eyebrow}</p>
           <button
