@@ -8,24 +8,28 @@ interface Props {
   personaId: string;
   /** 카드 상단 라벨 — "🏮 달지기 · 오늘의운세" */
   eyebrow: string;
-  /** 페르소나의 한마디 — 영상은 음소거로 시작하므로 자막으로 함께 보여준다 */
+  /** 페르소나의 한마디 — 음소거 폴백 재생에 대비해 자막으로 함께 보여준다 */
   line: string;
   /** 영상 경로 — public/ 아래 mp4 */
   src: string;
+  /** 영상이 끝까지 재생됐을 때 호출 — 건너뛰기·로드 실패에는 부르지 않는다 */
+  onComplete?: () => void;
 }
 
 /**
  * 페르소나 인트로 영상 오버레이 — 오늘의운세/온보딩에 들어올 때마다 짧은 홍보 컷을 보여준다
  * (홈에 갔다가 다시 들어와도 재생 — 라우트 이동으로 컴포넌트가 새로 마운트될 때마다).
- * 모바일 자동재생 정책에 따라 음소거로 시작하고 소리 켜기 버튼을 준다. 움직임 줄이기 설정
- * 사용자에겐 자동재생하지 않고 첫 프레임 정지 화면 + ▶ 버튼을 보여준다(자동재생이
- * 차단된 환경 — iOS 저전력 모드 등 — 도 같은 경로). 영상이 끝나거나, 건너뛰기를
- * 누르거나, 영상 로드에 실패하면 조용히 사라진다.
+ * 소리는 3단 사다리: ①소리 켠 자동재생 시도(허용 환경에선 바로 소리) → ②정책상 차단되면
+ * 음소거 자동재생 + 소리 켜기 버튼 → ③그마저 차단되면(iOS 저전력 모드 등) 첫 프레임
+ * 정지 화면 + ▶ 버튼(탭은 사용자 제스처라 소리 켠 재생 가능). 움직임 줄이기 설정
+ * 사용자는 자동재생 없이 ③으로 시작한다. 영상이 끝나거나, 건너뛰기를 누르거나,
+ * 영상 로드에 실패하면 조용히 사라진다 — 끝까지 본 경우에만 onComplete를 부른다.
  */
-export default function PersonaIntro({ personaId, eyebrow, line, src }: Props) {
+export default function PersonaIntro({ personaId, eyebrow, line, src, onComplete }: Props) {
   const [visible, setVisible] = useState(false);
   const [closing, setClosing] = useState(false);
-  const [muted, setMuted] = useState(true);
+  // 소리 켠 자동재생을 우선 시도하므로 켠 상태로 시작 — 차단되면 폴백에서 끈다.
+  const [muted, setMuted] = useState(false);
   // 자동재생 대신 ▶ 버튼을 보여줘야 하는 상태 — 움직임 줄이기 설정 또는 자동재생 차단.
   const [needsTap, setNeedsTap] = useState(false);
   const [playing, setPlaying] = useState(false);
@@ -41,11 +45,20 @@ export default function PersonaIntro({ personaId, eyebrow, line, src }: Props) {
     return () => clearTimeout(t);
   }, [personaId]);
 
-  // 자동재생 — autoPlay 속성 대신 직접 호출해 실패(저전력 모드 등)를 감지, ▶ 버튼으로 전환한다.
+  // 자동재생 — autoPlay 속성 대신 직접 호출해 소리 사다리를 태운다:
+  // 소리 켠 재생 시도 → 차단 시 음소거 재생 → 그마저 차단 시 ▶ 버튼.
   useEffect(() => {
     if (!visible || needsTap) return;
+    const v = videoRef.current;
+    if (!v) return;
     try {
-      videoRef.current?.play?.()?.catch?.(() => setNeedsTap(true));
+      v.muted = false;
+      v.play?.()?.catch?.(() => {
+        // 정책상 소리 자동재생 차단(모바일 기본) — 음소거로 폴백해 영상은 계속 보여준다.
+        v.muted = true;
+        setMuted(true);
+        v.play?.()?.catch?.(() => setNeedsTap(true));
+      });
     } catch {
       // jsdom 등 play() 미구현 환경 — 실제 브라우저의 play()는 동기로 던지지 않는다.
     }
@@ -96,22 +109,30 @@ export default function PersonaIntro({ personaId, eyebrow, line, src }: Props) {
         <video
           ref={videoRef}
           src={src}
-          muted
+          muted={muted}
           playsInline
           preload="auto"
           onPlay={() => {
             setPlaying(true);
             setNeedsTap(false);
           }}
-          onEnded={close}
+          onEnded={() => {
+            onComplete?.();
+            close();
+          }}
           onError={close}
           className="aspect-[9/16] w-full object-cover"
         />
         {needsTap && (
           <button
             onClick={() => {
+              // 탭은 사용자 제스처 — 소리 켠 재생이 허용된다.
+              const v = videoRef.current;
+              if (!v) return;
+              v.muted = false;
+              setMuted(false);
               try {
-                videoRef.current?.play?.()?.catch?.(() => {});
+                v.play?.()?.catch?.(() => {});
               } catch {
                 // play() 미구현 환경 무시
               }

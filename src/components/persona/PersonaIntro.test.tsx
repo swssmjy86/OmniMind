@@ -32,13 +32,24 @@ describe("PersonaIntro", () => {
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
   });
 
-  it("영상이 끝나면 스스로 닫힌다", async () => {
-    render(<PersonaIntro {...PROPS} />);
+  it("영상이 끝나면 스스로 닫히고 onComplete를 부른다", async () => {
+    const onComplete = vi.fn();
+    render(<PersonaIntro {...PROPS} onComplete={onComplete} />);
     const dialog = await screen.findByRole("dialog");
     const video = dialog.querySelector("video");
     expect(video).not.toBeNull();
     fireEvent.ended(video!);
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(onComplete).toHaveBeenCalledTimes(1);
+  });
+
+  it("건너뛰기로 닫을 때는 onComplete를 부르지 않는다", async () => {
+    const onComplete = vi.fn();
+    render(<PersonaIntro {...PROPS} onComplete={onComplete} />);
+    await screen.findByRole("dialog");
+    fireEvent.click(screen.getByRole("button", { name: "인사 영상 건너뛰기" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(onComplete).not.toHaveBeenCalled();
   });
 
   it("움직임 줄이기(prefers-reduced-motion) 사용자는 자동재생 대신 ▶ 버튼을 본다", async () => {
@@ -77,7 +88,25 @@ describe("PersonaIntro", () => {
     expect(screen.queryByRole("button", { name: "인사 영상 재생" })).not.toBeInTheDocument();
   });
 
-  it("자동재생이 차단되면(저전력 모드 등) ▶ 버튼으로 전환된다", async () => {
+  it("소리 자동재생이 차단되면 음소거로 폴백해 재생한다 (소리 켜기 버튼 제공)", async () => {
+    const play = vi
+      .spyOn(window.HTMLMediaElement.prototype, "play")
+      .mockRejectedValueOnce(new DOMException("NotAllowedError")) // 1차: 소리 켠 시도 차단
+      .mockResolvedValue(undefined); // 2차: 음소거 재생은 허용
+    try {
+      render(<PersonaIntro {...PROPS} />);
+      const dialog = await screen.findByRole("dialog");
+      const video = dialog.querySelector("video")!;
+      await waitFor(() => expect(video.muted).toBe(true));
+      expect(screen.getByRole("button", { name: "🔇 소리 켜기" })).toBeInTheDocument();
+      // 음소거 재생이 됐으므로 ▶ 버튼까지 가지 않는다.
+      expect(screen.queryByRole("button", { name: "인사 영상 재생" })).not.toBeInTheDocument();
+    } finally {
+      play.mockRestore();
+    }
+  });
+
+  it("음소거 자동재생마저 차단되면(저전력 모드 등) ▶ 버튼으로 전환된다", async () => {
     const play = vi
       .spyOn(window.HTMLMediaElement.prototype, "play")
       .mockRejectedValue(new DOMException("NotAllowedError"));
@@ -90,13 +119,30 @@ describe("PersonaIntro", () => {
     }
   });
 
-  it("소리 켜기 버튼으로 음소거를 풀 수 있다 (모바일 자동재생 정책상 음소거로 시작)", async () => {
+  it("소리 켠 자동재생을 우선 시도한다 — 버튼으로 끄고 켤 수 있다", async () => {
     render(<PersonaIntro {...PROPS} />);
     const dialog = await screen.findByRole("dialog");
     const video = dialog.querySelector("video")!;
+    // jsdom의 play()는 성공도 실패도 알려주지 않으므로 1차(소리 켠) 시도 상태로 남는다.
+    await waitFor(() => expect(video.muted).toBe(false));
+    fireEvent.click(screen.getByRole("button", { name: "🔊 소리 끄기" }));
     expect(video.muted).toBe(true);
     fireEvent.click(screen.getByRole("button", { name: "🔇 소리 켜기" }));
     expect(video.muted).toBe(false);
-    expect(screen.getByRole("button", { name: "🔊 소리 끄기" })).toBeInTheDocument();
+  });
+
+  it("▶ 버튼 재생은 사용자 제스처이므로 소리를 켠 채 시작한다", async () => {
+    const original = window.matchMedia;
+    window.matchMedia = vi.fn().mockReturnValue({ matches: true }) as unknown as typeof window.matchMedia;
+    try {
+      render(<PersonaIntro {...PROPS} />);
+      const dialog = await screen.findByRole("dialog");
+      const video = dialog.querySelector("video")!;
+      fireEvent.click(screen.getByRole("button", { name: "인사 영상 재생" }));
+      expect(video.muted).toBe(false);
+      expect(screen.getByRole("button", { name: "🔊 소리 끄기" })).toBeInTheDocument();
+    } finally {
+      window.matchMedia = original;
+    }
   });
 });

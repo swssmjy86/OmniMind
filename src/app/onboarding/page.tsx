@@ -104,6 +104,9 @@ export default function OnboardingPage() {
         eyebrow={`🏮 ${PERSONAS.dalzigi.name} · 오늘의운세`}
         line={PERSONAS.dalzigi.homeLine}
         src="/videos/dalzigi-intro.mp4"
+        // 영상을 끝까지 보면 생년월일 입력 스텝으로 바로 전환 — 별명은 건너뛰어도
+        // "당신"으로 폴백되고, 이전 버튼으로 돌아가 채울 수도 있다.
+        onComplete={() => setStep((s) => (s === 0 ? 1 : s))}
       />
       <Progress step={step} total={3} />
 
