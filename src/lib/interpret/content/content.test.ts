@@ -4,6 +4,7 @@ import { ZODIAC_TEXT } from "./zodiac";
 import { ELEMENT_BALANCE_TEXT } from "./elements";
 import { tenGodTheme, tenGodStrength, tenGodNuance, dominantCategory, dominantGod } from "./ten-gods";
 import { checkTone, checkToneWarnings } from "../tone-guard";
+import { VOICES } from "@/lib/persona/personas";
 import type { TenGod, TenGodChart } from "@/lib/engine/ten-gods";
 
 const ALL_GODS: readonly TenGod[] = [
@@ -58,7 +59,7 @@ describe("콘텐츠 톤 준수 (§5.4)", () => {
   });
 
   it("오행 균형 문구 — 말투 4갈래(페르소나 전면 몰입) 전부 톤 통과·개수 표기 유지", () => {
-    for (const v of ["yo", "banmal", "hao", "jiyo"] as const) {
+    for (const v of VOICES) {
       const t = ELEMENT_BALANCE_TEXT(
         { counts: { 목: 3, 화: 2, 토: 0, 금: 0, 수: 3 }, dominant: "목", lacking: ["토", "금"] },
         v,

@@ -9,8 +9,9 @@ export type PersonaId =
 /** 어미 문법 갈래 — 템플릿 문구(2단)가 페르소나 말투로 조립될 때 고르는 축.
  *  리듬·비유 같은 결은 상품별 전용 문구가 담고, 공용 문구는 이 네 갈래만 안다.
  *  yo=~요체(달지기·서온·벼리·연리) / banmal=반말(홍연) / hao=하오체(금오) /
- *  jiyo=~지요체(온새). */
-export type Voice = "yo" | "banmal" | "hao" | "jiyo";
+ *  jiyo=~지요체(온새). 런타임 목록(VOICES)은 말투 전수 테스트가 공유한다. */
+export const VOICES = ["yo", "banmal", "hao", "jiyo"] as const;
+export type Voice = (typeof VOICES)[number];
 
 export interface Persona {
   id: PersonaId;

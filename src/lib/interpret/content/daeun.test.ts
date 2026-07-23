@@ -3,7 +3,7 @@ import { DAEUN_SEASON_TEXT, daeunSeasonText } from "./daeun";
 import { HEAVENLY_STEMS, EARTHLY_BRANCHES } from "@/lib/engine/constants";
 import { checkTone, checkToneWarnings } from "../tone-guard";
 
-const VOICES = ["yo", "banmal", "hao", "jiyo"] as const;
+import { VOICES } from "@/lib/persona/personas";
 
 describe("대운 해석 문구", () => {
   it("오행 5종 × 말투 4갈래 전부 존재 + 톤 통과(경고 포함)", () => {

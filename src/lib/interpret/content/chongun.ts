@@ -3,7 +3,8 @@
 // 페르소나 인사는 여기 없다 — 표현 계층은 화면이 렌더하고, 캐시에는 해석만 담는다.
 import type { ProfileContext } from "@/lib/engine/index";
 import type { InterpretationSection } from "../types";
-import type { Voice } from "@/lib/persona/personas";
+import { PERSONAS, type Voice } from "@/lib/persona/personas";
+import { PRODUCT_PERSONA } from "@/lib/persona/products";
 import { assembleProfile } from "../templates";
 import { currentDaeun } from "@/lib/engine/daeun";
 import { daeunSeasonText } from "./daeun";
@@ -51,9 +52,13 @@ export function daeunSeasonBody(ctx: ProfileContext, age: number | null, voice: 
   return `${sk.current(season.ganzhi, season.fromAge, season.toAge)}${daeunSeasonText(season.ganzhi, voice)}`;
 }
 
+// 총운의 말투는 담당 페르소나(서온)의 voice에서 파생 — personas.ts가 SSOT(CLAUDE.md 원칙 5).
+// 서온은 요체라 daeunSeasonBody 기본값과 결과가 같지만, 매핑을 여기 하드코딩하지 않는다.
+const CHONGUN_VOICE = PERSONAS[PRODUCT_PERSONA.chongun].voice;
+
 /** 대운 섹션 — /me와 같은 3분기: 진행 중 / 첫 대운 이전 / 성별 미상(폴백, 항상 동작). */
 function seasonSection(ctx: ProfileContext, age: number | null): InterpretationSection {
-  return { title: SEASON_TITLE, body: daeunSeasonBody(ctx, age) };
+  return { title: SEASON_TITLE, body: daeunSeasonBody(ctx, age, CHONGUN_VOICE) };
 }
 
 /** 총운 섹션 전체 — assembleProfile 뒤에 운의 계절이 붙는다(팔자 주축 순서 유지). */

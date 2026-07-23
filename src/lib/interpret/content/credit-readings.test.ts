@@ -2,8 +2,9 @@ import { describe, expect, it } from "vitest";
 import { computeProfile } from "@/lib/engine";
 import { checkTone, checkToneWarnings } from "../tone-guard";
 import {
-  CREDIT_READING_PRODUCTS, LLM_SECTION_TITLE, assembleCreditReading,
-  creditReadingPrompt, isCreditReadingProduct, readingSectionTitles,
+  CREDIT_READING_PRODUCTS, LLM_SECTION_TITLE, __TEXT_BY_PRODUCT_FOR_TEST,
+  assembleCreditReading, creditReadingPrompt, isCreditReadingProduct,
+  llmSectionTitle, readingSectionTitles,
 } from "./credit-readings";
 
 const ctx = computeProfile({
@@ -31,9 +32,12 @@ describe("크레딧 풀이 조립 4종 (3단계 스펙 §3)", () => {
       expect(out[2].title).toBe("운의 계절");
       expect(out[3].title).toBe(AUX_TITLES[p]); // 보조축은 항상 마지막
       expect(out[2].body).toContain("대운");
-      // 엿보기 제목 = 실제 섹션 제목 + LLM 제목
-      expect(readingSectionTitles(p)).toEqual([...out.map((s) => s.title), LLM_SECTION_TITLE]);
+      // 엿보기 제목 = 실제 섹션 제목 + LLM 제목(상품 말투의 호칭)
+      expect(readingSectionTitles(p)).toEqual([...out.map((s) => s.title), llmSectionTitle(p)]);
     }
+    expect(llmSectionTitle("love")).toBe("너만을 위한 이야기");
+    expect(llmSectionTitle("wealth")).toBe("그대만을 위한 이야기");
+    expect(llmSectionTitle("career")).toBe(LLM_SECTION_TITLE);
   });
 
   it("페르소나 말투 — 연애=홍연 반말·부름말, 재물=금오 하오체, 결혼=온새 지요체, 직업=벼리 요체", () => {
@@ -61,15 +65,21 @@ describe("크레딧 풀이 조립 4종 (3단계 스펙 §3)", () => {
     }
   });
 
-  it("전 카피 톤 가드 — 4상품 × 5갈래(dominant 조작 불가하므로 표를 직접 검사)", async () => {
-    const mod = await import("./credit-readings");
-    // 내부 표를 export하지 않으므로, 조립 결과와 프롬프트로 검사 가능한 것 + 표 전수는
-    // __TEXT_FOR_TEST export로 노출한다(테스트 전용 — 런타임 사용 금지 주석).
-    const { __TEXT_FOR_TEST } = mod;
-    for (const t of __TEXT_FOR_TEST) {
-      expect(checkTone(t)).toEqual([]);
-      expect(checkToneWarnings(t)).toEqual([]);
+  it("전 카피 톤 가드 — 4상품 × 5갈래(dominant 조작 불가하므로 표를 직접 검사)", () => {
+    for (const texts of Object.values(__TEXT_BY_PRODUCT_FOR_TEST)) {
+      for (const t of texts) {
+        expect(checkTone(t)).toEqual([]);
+        expect(checkToneWarnings(t)).toEqual([]);
+      }
     }
+  });
+
+  it("전 카피 말투 서명 — 표 전수: 연애에 요체 종결 없음, 재물에 요체 없음·하오체 있음, 결혼에 지요체", () => {
+    // 조립 경로는 한 십성 갈래만 지나므로, 표 자체를 전수로 검사해 갈래 섞임을 막는다.
+    for (const t of __TEXT_BY_PRODUCT_FOR_TEST.love) expect(t).not.toMatch(/요[.!?]/);
+    for (const t of __TEXT_BY_PRODUCT_FOR_TEST.wealth) expect(t).not.toMatch(/요[.!?]/);
+    expect(__TEXT_BY_PRODUCT_FOR_TEST.wealth.join(" ")).toMatch(/[오소]\./);
+    expect(__TEXT_BY_PRODUCT_FOR_TEST.marriage.join(" ")).toMatch(/지요\./);
   });
 
   it("career 상품은 핵심 결 섹션에 직업적성 예시가 이어붙는다", () => {

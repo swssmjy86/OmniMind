@@ -3,9 +3,10 @@ import { checkTone, checkToneWarnings } from "../tone-guard";
 import { strengthText, patternText, patternsText, sarangText, gyeokText, stageText } from "./strength";
 import { HEAVENLY_STEMS } from "@/lib/engine/constants";
 
+import { VOICES } from "@/lib/persona/personas";
+
 const STRENGTHS = ["신강", "신약", "중화"] as const;
 const PATTERNS = ["식신제살", "상관제살", "식상생재", "군비쟁재"] as const;
-const VOICES = ["yo", "banmal", "hao", "jiyo"] as const;
 const LAYERS = ["여기", "중기", "정기"] as const;
 const GYEOKS = [
   "식신격", "상관격", "정재격", "편재격", "정관격", "편관격",

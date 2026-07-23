@@ -25,7 +25,16 @@ export const CREDIT_READING_PRODUCTS: CreditReadingProduct[] = [
 export const isCreditReadingProduct = (v: string): v is CreditReadingProduct =>
   (CREDIT_READING_PRODUCTS as string[]).includes(v);
 
-export const LLM_SECTION_TITLE = "당신만을 위한 이야기";
+// LLM 문단(⑤) 제목 — 호칭이 담긴 제목이라 말투를 따른다(AUX_TITLE과 같은 이유).
+const LLM_TITLE: Record<Voice, string> = {
+  yo: "당신만을 위한 이야기",
+  banmal: "너만을 위한 이야기",
+  hao: "그대만을 위한 이야기",
+  jiyo: "당신만을 위한 이야기",
+};
+
+/** 말투 무관 기본 제목(요체) — 궁합(연리·요체) 등 크레딧 4종 밖 호출부용. */
+export const LLM_SECTION_TITLE = LLM_TITLE.yo;
 
 /** 상품 → 담당 페르소나의 어미 갈래. PRODUCT_PERSONA(파생)를 다시 옮겨 적지 않는다. */
 const PRODUCT_VOICE = Object.fromEntries(
@@ -71,7 +80,7 @@ const KEY_TEXT: Record<CreditReadingProduct, Record<TenGodCategory, string>> = {
     비겁: "결혼에서 당신은 각자의 영역이 살아 있는 동반자를 원하지요. 서로의 삶을 존중하는 두 사람이 나란히 걷는 그림 — 하나로 녹아들기보다 나란히 서는 데서 안정을 찾는 결이지요.",
     식상: "당신의 가정은 표현이 흐르는 곳일 때 따뜻하지요. 말하고 웃고 함께 만드는 일상 — 침묵이 길어지는 집보다 소소한 수다가 이어지는 집이 어울리지요.",
     재성: "당신은 가정을 현실로 단단히 꾸리는 쪽이지요. 함께의 삶을 구체적으로 그리고 챙기는 결 — 생활의 합이 맞는 상대와 오래 편안하지요.",
-    관성: "당신에게 결혼은 약속의 무게를 함께 지는 일이지요. 신의로 쌓아가는 관계에서 깊은 안정을 느끼는 결 — 서두르지 않고 확신 위에 시작해도 늦지 않아요.",
+    관성: "당신에게 결혼은 약속의 무게를 함께 지는 일이지요. 신의로 쌓아가는 관계에서 깊은 안정을 느끼는 결 — 서두르지 않고 확신 위에 시작해도 늦지 않지요.",
     인성: "당신의 가정은 서로를 이해하는 대화 위에 서지요. 말없이도 통하는 순간을 소중히 여기고, 배우자에게서 배우고 기대는 데서 편안함을 찾는 결이지요.",
   },
 };
@@ -115,7 +124,7 @@ const AUX_TEXT: Record<CreditReadingProduct, Record<DayMasterStrength, string>> 
   },
   marriage: {
     신강: "이 결이 힘 있게 뻗어나가는 사주지요. 두 사람의 그림을 적극적으로 그려갈수록 가정이 단단해지지요.",
-    신약: "이 결이 아직 힘을 키워가는 사주지요. 서두르지 않고 천천히 쌓아가는 쪽이 당신에게 잘 맞아요.",
+    신약: "이 결이 아직 힘을 키워가는 사주지요. 서두르지 않고 천천히 쌓아가는 쪽이 당신에게 잘 맞지요.",
     중화: "이 결이 무리 없이 자리 잡은 사주지요. 있는 그대로도 편안한 가정을 꾸릴 수 있지요.",
   },
 };
@@ -163,18 +172,34 @@ const AUX_TITLE: Record<Voice, string> = {
   jiyo: "당신에게 드러나는 방식",
 };
 
-/** 받침 유무에 따른 부름말(반말 전용) — "새벽아"/"하나야". 한글이 아니면 이름 그대로. */
-function vocative(name: string): string {
+/** 받침 유무에 따른 부름말 어미 선택 — 한글 음절로 끝나지 않으면(빈 이름 포함) null. */
+function finalConsonant(name: string): boolean | null {
   const code = name.charCodeAt(name.length - 1) - 0xac00;
-  if (code < 0 || code >= 11172) return name;
-  return code % 28 === 0 ? `${name}야` : `${name}아`;
+  if (Number.isNaN(code) || code < 0 || code >= 11172) return null;
+  return code % 28 !== 0;
+}
+
+/** 페르소나 말투별 부름말 — 홍연 "새벽아,"/"하나야," · 금오 "새벽이여,"(연극적 하오체) ·
+ *  그 외 "새벽님,". 이름이 비었거나 한글로 끝나지 않으면 어미 없이 안전하게 줄인다. */
+function address(nickname: string, voice: Voice): string {
+  const name = nickname.trim();
+  if (!name) return "";
+  const batchim = finalConsonant(name);
+  if (voice === "banmal") return batchim === null ? `${name}, ` : `${name}${batchim ? "아" : "야"}, `;
+  if (voice === "hao") return batchim === null ? `${name}, ` : `${name}${batchim ? "이여" : "여"}, `;
+  return `${name}님, `;
+}
+
+/** LLM 문단(⑤) 제목 — 상품의 담당 페르소나 말투로. */
+export function llmSectionTitle(product: CreditReadingProduct): string {
+  return LLM_TITLE[PRODUCT_VOICE[product]];
 }
 
 /** 엿보기·화면이 쓰는 섹션 제목 목록(잠김 상태에서도 제목은 공개 — P9 §5.1). */
 export function readingSectionTitles(product: CreditReadingProduct): string[] {
   return [
     KEY_TITLE[product], ELEMENTS_TITLE, SEASON_TITLE,
-    AUX_TITLE[PRODUCT_VOICE[product]], LLM_SECTION_TITLE,
+    AUX_TITLE[PRODUCT_VOICE[product]], llmSectionTitle(product),
   ];
 }
 
@@ -187,7 +212,6 @@ export function assembleCreditReading(
 ): InterpretationSection[] {
   const voice = PRODUCT_VOICE[product];
   const cat = dominantCategory(ctx.tenGods);
-  const address = voice === "banmal" ? `${vocative(nickname)}, ` : `${nickname}님, `;
   const structure = [strengthText(ctx.strength, voice), patternsText(ctx.patterns, voice)]
     .filter((t): t is string => t !== null)
     .join(" ");
@@ -195,7 +219,7 @@ export function assembleCreditReading(
     ? ` 예를 들면 ${CAREER_EXAMPLES[cat].join("·")} 같은 자리 — 거기서 결이 서요.`
     : "";
   return [
-    { title: KEY_TITLE[product], body: `${address}${KEY_TEXT[product][cat]} ${structure}${examples}` },
+    { title: KEY_TITLE[product], body: `${address(nickname, voice)}${KEY_TEXT[product][cat]} ${structure}${examples}` },
     { title: ELEMENTS_TITLE, body: ELEMENT_BALANCE_TEXT(ctx.elements, voice) },
     { title: SEASON_TITLE, body: `${FLOW_INTRO[product]} ${daeunSeasonBody(ctx, age, voice)}` },
     {
@@ -234,7 +258,7 @@ export function creditReadingPrompt(
   ].join("\n");
 }
 
-/** 테스트 전용 — 전 카피 톤 검사용 목록(상품별). 런타임 사용 금지. */
+/** 테스트 전용 — 전 카피 톤·말투 서명 검사용 목록(상품별). 런타임 사용 금지. */
 export const __TEXT_BY_PRODUCT_FOR_TEST: Record<CreditReadingProduct, string[]> =
   Object.fromEntries(
     CREDIT_READING_PRODUCTS.map((p) => [p, [
@@ -244,6 +268,7 @@ export const __TEXT_BY_PRODUCT_FOR_TEST: Record<CreditReadingProduct, string[]> 
       FLOW_INTRO[p],
       KEY_TITLE[p],
       AUX_TITLE[PRODUCT_VOICE[p]],
+      LLM_TITLE[PRODUCT_VOICE[p]],
       ...(p === "career"
         ? Object.values(CAREER_EXAMPLES).map(
             (ex) => `예를 들면 ${ex.join("·")} 같은 자리 — 거기서 결이 서요.`,
@@ -251,6 +276,3 @@ export const __TEXT_BY_PRODUCT_FOR_TEST: Record<CreditReadingProduct, string[]> 
         : []),
     ]]),
   ) as Record<CreditReadingProduct, string[]>;
-
-/** 테스트 전용 — 전 카피 평면 목록(기존 테스트 호환). 런타임 사용 금지. */
-export const __TEXT_FOR_TEST: string[] = Object.values(__TEXT_BY_PRODUCT_FOR_TEST).flat();

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { computeProfile } from "@/lib/engine";
+import { VOICES } from "@/lib/persona/personas";
 import { assembleProfile } from "../templates";
 import { checkTone } from "../tone-guard";
 import { SEASON_TITLE, assembleChongun, daeunSeasonBody } from "./chongun";
@@ -49,7 +50,7 @@ describe("총운 조립 (2단계 스펙 §4)", () => {
   });
 
   it("운의 계절 — 말투 4갈래(페르소나 전면 몰입) × 세 분기 전부 톤 통과 + '대운' 표기 유지", () => {
-    for (const v of ["yo", "banmal", "hao", "jiyo"] as const) {
+    for (const v of VOICES) {
       for (const [c, age] of [[ctx, 36], [ctx, 0], [noGenderCtx, 36]] as const) {
         const body = daeunSeasonBody(c, age, v);
         expect(body).toContain("대운");
