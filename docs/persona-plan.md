@@ -201,3 +201,6 @@
 3. ✅ 테스트 갱신 — `personas.test.ts`, `products.test.ts`, `chat-prompt.test.ts`
 4. ✅ `PersonaCard.tsx` 글리프 폴백(⚒️·🌿·🪿) · `match-deep/page.tsx` 헤더 홍연→연리
 5. ⏳ 영상·이미지 에셋(캐릭터 시트, 상품 페이지 영상)은 별도 논의
+6. ✅ 말투 전면 몰입(2026-07-23) — 템플릿 본문(2단)까지 담당 페르소나 말투로 재작성.
+   설계: `docs/superpowers/specs/2026-07-23-persona-voice-design.md`. 단, 온새의
+   "~답니다"는 톤 가드(단정형 종결 금지)와 충돌해 ~지요/~그래요만 쓴다.

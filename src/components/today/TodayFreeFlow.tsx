@@ -76,7 +76,7 @@ export default function TodayFreeFlow({
         <span aria-hidden className="persona-star" style={{ top: "26%", right: "24%" }} />
         <span aria-hidden className="persona-star" style={{ top: "16%", right: "38%" }} />
         <p className="text-xs text-text-soft">
-          <span aria-hidden>🏮</span> 달지기 · 오늘의운세 — 누구나 무료
+          <span aria-hidden>🏮</span> 달지기 · 오늘의운세
         </p>
         <p className="mt-2 font-[family-name:var(--font-serif-kr)] text-lg leading-relaxed text-primary-green">
           {headline}

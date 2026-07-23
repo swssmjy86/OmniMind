@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { isPremium, UNLIMITED, FREE_FOR_ALL, GUEST_READING_ACCESS } from "@/lib/consult/quota";
-import { readingInputHash } from "@/lib/readings/hash";
+import { readingInputHash, READING_TEMPLATE_VERSION } from "@/lib/readings/hash";
 import { ensureCurrentProfile } from "@/lib/readings/ensure-profile";
 import {
   isCreditReadingProduct, readingSectionTitles,
@@ -100,7 +100,7 @@ export default async function CreditReadingPage({
   const t = toKstParts(now);
   const age = Math.max(0, t.y - Number(profile.birth_date.slice(0, 4)));
   const season = ctx.daeun ? currentDaeun(ctx.daeun, age) : null;
-  const hash = readingInputHash(ctx, season?.ganzhi ?? "none");
+  const hash = readingInputHash(ctx, season?.ganzhi ?? "none", READING_TEMPLATE_VERSION);
 
   // 재열람 — 캐시 히트는 차감 없이 바로 렌더(P9 §6.2)
   const { data: cached } = await supabase

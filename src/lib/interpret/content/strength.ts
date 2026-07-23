@@ -2,36 +2,78 @@ import type { DayMasterStrength, GyeokPattern } from "@/lib/engine/strength";
 import type { HiddenStemLayer } from "@/lib/engine/sarang";
 import type { Gyeok, GyeokCandidate } from "@/lib/engine/gyeok";
 import type { BranchStage } from "@/lib/engine/branch-stage";
+import type { Voice } from "@/lib/persona/personas";
 import { HEAVENLY_STEMS, ELEMENTS, stemElement } from "@/lib/engine/constants";
 
 // 신강/신약·격국 패턴을 문장으로 — §5.4 문체(비단정·비명령·공감형). "~구조가 보여요"처럼
 // 관찰형으로 끝내 단정하지 않는다.
+//
+// voice: 페르소나 전면 몰입(2026-07-23) — 크레딧 풀이 4종이 서로 다른 페르소나 말투를 쓰므로,
+// 공용 문구도 어미 4갈래(personas.ts Voice)를 안다. 내용은 네 갈래가 동일하고 어미·호칭만
+// 다르다. 기본값 "yo"는 기존 호출부(총운·프로필)와의 호환.
 
-const STRENGTH_TEXT: Record<DayMasterStrength, string> = {
-  신강: "타고난 기운이 넘치는 신강 사주라, 그 힘을 밖으로 뻗어내거나 결실로 바꿔낼 때 삶이 가장 잘 풀려요.",
-  신약: "기운을 안으로 다독이며 채워가는 신약 사주라, 무리하게 밀어붙이기보다 곁의 도움을 받아들일 때 결이 살아나요.",
-  중화: "기운이 고르게 균형 잡힌 사주라, 어느 한쪽에 치우치지 않고 상황에 맞춰 유연하게 대응하는 결이에요.",
+const STRENGTH_TEXT: Record<Voice, Record<DayMasterStrength, string>> = {
+  yo: {
+    신강: "타고난 기운이 넘치는 신강 사주라, 그 힘을 밖으로 뻗어내거나 결실로 바꿔낼 때 삶이 가장 잘 풀려요.",
+    신약: "기운을 안으로 다독이며 채워가는 신약 사주라, 무리하게 밀어붙이기보다 곁의 도움을 받아들일 때 결이 살아나요.",
+    중화: "기운이 고르게 균형 잡힌 사주라, 어느 한쪽에 치우치지 않고 상황에 맞춰 유연하게 대응하는 결이에요.",
+  },
+  banmal: {
+    신강: "타고난 기운이 넘치는 신강 사주야. 그 힘을 밖으로 뻗어내거나 결실로 바꿔낼 때 삶이 가장 잘 풀리지.",
+    신약: "기운을 안으로 다독이며 채워가는 신약 사주야. 무리하게 밀어붙이기보다 곁의 도움을 받아들일 때 결이 살아나.",
+    중화: "기운이 고르게 균형 잡힌 사주라, 어느 한쪽에 치우치지 않고 상황에 맞춰 유연하게 대응하는 결이야.",
+  },
+  hao: {
+    신강: "타고난 기운이 넘치는 신강 사주이니, 그 힘을 밖으로 뻗어내거나 결실로 바꿔낼 때 삶이 가장 잘 풀리오.",
+    신약: "기운을 안으로 다독이며 채워가는 신약 사주이니, 무리하게 밀어붙이기보다 곁의 도움을 받아들일 때 결이 살아나오.",
+    중화: "기운이 고르게 균형 잡힌 사주이니, 어느 한쪽에 치우치지 않고 상황에 맞춰 유연하게 대응하는 결이오.",
+  },
+  jiyo: {
+    신강: "타고난 기운이 넘치는 신강 사주지요. 그 힘을 밖으로 뻗어내거나 결실로 바꿔낼 때 삶이 가장 잘 풀리지요.",
+    신약: "기운을 안으로 다독이며 채워가는 신약 사주지요. 무리하게 밀어붙이기보다 곁의 도움을 받아들일 때 결이 살아나지요.",
+    중화: "기운이 고르게 균형 잡힌 사주라, 어느 한쪽에 치우치지 않고 상황에 맞춰 유연하게 대응하는 결이지요.",
+  },
 };
 
-export function strengthText(s: DayMasterStrength): string {
-  return STRENGTH_TEXT[s];
+export function strengthText(s: DayMasterStrength, voice: Voice = "yo"): string {
+  return STRENGTH_TEXT[voice][s];
 }
 
-const PATTERN_TEXT: Record<GyeokPattern, string> = {
-  식신제살: "어려운 문제를 정면으로 맞서기보다, 자신만의 전문성과 재주로 시원하게 풀어내는 구조가 보여요.",
-  상관제살: "날카로운 재기와 표현력으로 까다로운 상황을 돌파해내는 구조가 보여요.",
-  식상생재: "쌓은 재주와 표현이 자연스럽게 결실(재물)로 이어지는 구조가 보여요.",
-  군비쟁재: "뜻을 함께하는 이들과 자원을 나누게 되는 구조라, 몫을 미리 정해두면 마음이 한결 편해져요.",
+const PATTERN_TEXT: Record<Voice, Record<GyeokPattern, string>> = {
+  yo: {
+    식신제살: "어려운 문제를 정면으로 맞서기보다, 자신만의 전문성과 재주로 시원하게 풀어내는 구조가 보여요.",
+    상관제살: "날카로운 재기와 표현력으로 까다로운 상황을 돌파해내는 구조가 보여요.",
+    식상생재: "쌓은 재주와 표현이 자연스럽게 결실(재물)로 이어지는 구조가 보여요.",
+    군비쟁재: "뜻을 함께하는 이들과 자원을 나누게 되는 구조라, 몫을 미리 정해두면 마음이 한결 편해져요.",
+  },
+  banmal: {
+    식신제살: "어려운 문제를 정면으로 맞서기보다, 너만의 전문성과 재주로 시원하게 풀어내는 구조가 보여.",
+    상관제살: "날카로운 재기와 표현력으로 까다로운 상황을 돌파해내는 구조가 보여.",
+    식상생재: "쌓은 재주와 표현이 자연스럽게 결실로 이어지는 구조가 보여.",
+    군비쟁재: "뜻을 함께하는 이들과 자원을 나누게 되는 구조라, 몫을 미리 정해두면 마음이 한결 편해져.",
+  },
+  hao: {
+    식신제살: "어려운 문제를 정면으로 맞서기보다, 그대만의 전문성과 재주로 시원하게 풀어내는 구조가 보이오.",
+    상관제살: "날카로운 재기와 표현력으로 까다로운 상황을 돌파해내는 구조가 보이오.",
+    식상생재: "쌓은 재주와 표현이 자연스럽게 결실(재물)로 이어지는 구조가 보이오.",
+    군비쟁재: "뜻을 함께하는 이들과 자원을 나누게 되는 구조이니, 몫을 미리 정해두면 마음이 한결 편하오.",
+  },
+  jiyo: {
+    식신제살: "어려운 문제를 정면으로 맞서기보다, 자기만의 전문성과 재주로 시원하게 풀어내는 구조가 보이지요.",
+    상관제살: "날카로운 재기와 표현력으로 까다로운 상황을 돌파해내는 구조가 보이지요.",
+    식상생재: "쌓은 재주와 표현이 자연스럽게 결실로 이어지는 구조가 보이지요.",
+    군비쟁재: "뜻을 함께하는 이들과 자원을 나누게 되는 구조라, 몫을 미리 정해두면 마음이 한결 편해지지요.",
+  },
 };
 
-export function patternText(p: GyeokPattern): string {
-  return PATTERN_TEXT[p];
+export function patternText(p: GyeokPattern, voice: Voice = "yo"): string {
+  return PATTERN_TEXT[voice][p];
 }
 
 /** 감지된 격국 패턴 전부를 한 문단으로. 없으면 null(문장 추가 안 함). */
-export function patternsText(patterns: GyeokPattern[]): string | null {
+export function patternsText(patterns: GyeokPattern[], voice: Voice = "yo"): string | null {
   if (!patterns.length) return null;
-  return patterns.map(patternText).join(" ");
+  return patterns.map((p) => patternText(p, voice)).join(" ");
 }
 
 // 사령(월률분야) — 겉으로 드러난 월지와 별개로, 태어난 순간 실제 힘을 쥔 속의 기운.

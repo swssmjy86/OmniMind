@@ -21,4 +21,12 @@ describe("풀이 캐시 키 (2단계 스펙 §3)", () => {
     expect(readingInputHash({ x: 1 }, "신미")).not.toBe(base); // 대운 경계 → 자연 재생성
     expect(readingInputHash({ x: 1 }, "none")).not.toBe(base);
   });
+
+  it("템플릿 버전 — 기본값 1은 v1 시절(버전 필드 없음) 해시와 동일, 2 이상만 재생성 유발", () => {
+    const base = readingInputHash({ x: 1 }, "경오");
+    // 문구가 안 바뀐 상품(총운)의 기존 캐시·후기가 살아 있으려면 기본값이 해시를 바꾸면 안 된다
+    expect(readingInputHash({ x: 1 }, "경오", 1)).toBe(base);
+    expect(readingInputHash({ x: 1 }, "경오", 2)).not.toBe(base);
+    expect(readingInputHash({ x: 1 }, "경오", 2)).toBe(readingInputHash({ x: 1 }, "경오", 2));
+  });
 });

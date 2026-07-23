@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { PERSONAS, type PersonaId } from "@/lib/persona/personas";
-import { ACCESS_LABEL, type Product } from "@/lib/persona/products";
+import type { Product } from "@/lib/persona/products";
 
 // 일러스트(webp)가 생기기 전까지의 CSS 심볼 폴백(§4.3) — 배포를 막지 않는다.
 // 교체 시 이 글리프 자리에 <img>만 넣으면 된다.
@@ -41,9 +41,6 @@ export default function PersonaCard({ product }: { product: Product }) {
             {product.title}
           </h3>
         </div>
-        <span className="ml-auto shrink-0 rounded-full bg-warm-base px-2.5 py-1 text-[11px] text-moon-gold">
-          {ACCESS_LABEL[product.access]}
-        </span>
       </div>
 
       {/* 멘트는 진짜 텍스트(§4.3) — 수정 자유·스크린리더·SEO */}

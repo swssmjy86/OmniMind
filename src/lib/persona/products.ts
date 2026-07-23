@@ -13,6 +13,9 @@ export interface Product {
   title: string;
   tagline: string;         // 카드 한 줄 소개 — 톤 가드 준수
   personaId: PersonaId;
+  /** 숨긴 기능(2026-07-23) — 전면 무료 전환으로 UI에는 등급을 노출하지 않는다.
+   *  런타임 게이트(quota.ts readingAccess·각 액션 auth 체크)와 추후 유료화 복원을
+   *  위한 메타데이터로만 유지한다. */
   access: ProductAccess;
   href: string;            // 연결 화면 — 전용 라우트가 생기면 갱신(2·3단계)
   status: "live" | "soon"; // soon = 카드 비활성(링크 없음)
@@ -55,12 +58,6 @@ export const PRODUCTS: Product[] = [
     access: "login", href: "/saju/marriage", status: "live",
   },
 ];
-
-export const ACCESS_LABEL: Record<ProductAccess, string> = {
-  free: "누구나 무료",
-  login: "로그인 필요",
-  credit: "크레딧",
-};
 
 /** 상품 ID → 페르소나. LLM 시스템 프롬프트(chat-prompt.ts)가 상품별 말투를 고를 때 쓴다 —
  *  PRODUCTS의 personaId를 다시 옮겨 적지 않도록 한 번만 파생시킨다. */

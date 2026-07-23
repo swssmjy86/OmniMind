@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { checkTone, checkToneWarnings } from "@/lib/interpret/tone-guard";
 import { PERSONAS } from "./personas";
-import { ACCESS_LABEL, PRODUCT_PERSONA, PRODUCTS } from "./products";
+import { PRODUCT_PERSONA, PRODUCTS } from "./products";
 
 describe("상품 카탈로그 v2 (4탭 IA 스펙 §4)", () => {
   it("7종 — today + 총운/직업/연애/재물/궁합/결혼", () => {
@@ -10,7 +10,7 @@ describe("상품 카탈로그 v2 (4탭 IA 스펙 §4)", () => {
     ]);
   });
 
-  it("접근 등급 — today만 게스트 무료, 나머지는 로그인 전용(2026-07-21 되돌림)", () => {
+  it("접근 등급(숨긴 기능) — today만 게스트 무료, 나머지는 로그인 전용. UI 비노출 메타데이터", () => {
     const access = Object.fromEntries(PRODUCTS.map((p) => [p.id, p.access]));
     expect(access).toEqual({
       today: "free", chongun: "login",
@@ -44,10 +44,7 @@ describe("상품 카탈로그 v2 (4탭 IA 스펙 §4)", () => {
   });
 
   it("카피가 톤 가드를 통과한다", () => {
-    const texts = [
-      ...PRODUCTS.flatMap((p) => [p.title, p.tagline]),
-      ...Object.values(ACCESS_LABEL),
-    ];
+    const texts = PRODUCTS.flatMap((p) => [p.title, p.tagline]);
     for (const t of texts) {
       expect(checkTone(t)).toEqual([]);
       expect(checkToneWarnings(t)).toEqual([]);

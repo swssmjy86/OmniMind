@@ -3,6 +3,8 @@ import { checkTone, checkToneWarnings } from "../tone-guard";
 import { strengthText, patternText, patternsText, sarangText, gyeokText, stageText } from "./strength";
 import { HEAVENLY_STEMS } from "@/lib/engine/constants";
 
+import { VOICES } from "@/lib/persona/personas";
+
 const STRENGTHS = ["신강", "신약", "중화"] as const;
 const PATTERNS = ["식신제살", "상관제살", "식상생재", "군비쟁재"] as const;
 const LAYERS = ["여기", "중기", "정기"] as const;
@@ -12,24 +14,34 @@ const GYEOKS = [
 ] as const;
 const STAGES = ["생지", "왕지", "고지"] as const;
 
-describe("strengthText — 신강/신약/중화 3종 전부 존재 + 톤 통과", () => {
-  it("3종 전부 문구가 있고 톤 가드를 통과한다", () => {
+describe("strengthText — 신강/신약/중화 3종 × 말투 4갈래 전부 존재 + 톤 통과", () => {
+  it("3종 × 4말투 전부 문구가 있고 톤 가드를 통과한다", () => {
+    for (const v of VOICES) {
+      for (const s of STRENGTHS) {
+        const t = strengthText(s, v);
+        expect(t.length).toBeGreaterThan(0);
+        expect(checkTone(t)).toEqual([]);
+        expect(checkToneWarnings(t)).toEqual([]);
+      }
+    }
+  });
+
+  it("말투 4갈래가 서로 다른 어미를 낸다(페르소나 전면 몰입)", () => {
     for (const s of STRENGTHS) {
-      const t = strengthText(s);
-      expect(t.length).toBeGreaterThan(0);
-      expect(checkTone(t)).toEqual([]);
-      expect(checkToneWarnings(t)).toEqual([]);
+      expect(new Set(VOICES.map((v) => strengthText(s, v))).size).toBe(VOICES.length);
     }
   });
 });
 
 describe("patternText/patternsText — 격국 패턴 4종", () => {
-  it("4종 전부 문구가 있고 톤 가드를 통과한다", () => {
-    for (const p of PATTERNS) {
-      const t = patternText(p);
-      expect(t.length).toBeGreaterThan(0);
-      expect(checkTone(t)).toEqual([]);
-      expect(checkToneWarnings(t)).toEqual([]);
+  it("4종 × 말투 4갈래 전부 문구가 있고 톤 가드를 통과한다", () => {
+    for (const v of VOICES) {
+      for (const p of PATTERNS) {
+        const t = patternText(p, v);
+        expect(t.length).toBeGreaterThan(0);
+        expect(checkTone(t)).toEqual([]);
+        expect(checkToneWarnings(t)).toEqual([]);
+      }
     }
   });
 

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { currentMilestone, isMilestoneToday } from "@/lib/interpret/milestone";
-import { PRODUCTS, ACCESS_LABEL } from "@/lib/persona/products";
+import { PRODUCTS } from "@/lib/persona/products";
 import { FAQ_ITEMS } from "@/app/faq/page";
 import AdSlot from "@/components/ads/AdSlot";
 import ReviewHighlights from "@/components/reviews/ReviewHighlights";
@@ -105,7 +105,6 @@ export default async function HomePage() {
                 {p.title}
               </p>
               <p className="mt-1 text-xs text-text-soft">{p.tagline}</p>
-              <p className="mt-2 text-[11px] text-accent-coral">{ACCESS_LABEL[p.access]}</p>
             </Link>
           ))}
         </div>

@@ -2,7 +2,7 @@
 
 import { createServerSupabase } from "@/lib/supabase/server";
 import { readingAccess, UNLIMITED, isPremium } from "@/lib/consult/quota";
-import { readingInputHash } from "./hash";
+import { readingInputHash, READING_TEMPLATE_VERSION } from "./hash";
 import { ensureCurrentProfile } from "./ensure-profile";
 // 공용 머니 패스는 일반 모듈 — "use server" 파일의 export는 전부 네트워크 노출 액션이 되므로
 // 내부 헬퍼를 이 파일에서 export하지 않는다(최종 리뷰 반영).
@@ -10,6 +10,7 @@ import { cacheAndCharge } from "./cache-and-charge";
 import { parseMatchDeepInput } from "./match-input";
 import {
   LLM_SECTION_TITLE, assembleCreditReading, creditReadingPrompt, isCreditReadingProduct,
+  llmSectionTitle,
 } from "@/lib/interpret/content/credit-readings";
 import { assembleDeepMatch } from "@/lib/interpret/content/match";
 import { matchDeepPrompt } from "@/lib/interpret/content/match-deep";
@@ -63,7 +64,7 @@ export async function unlockReading(productRaw: string): Promise<UnlockResult> {
     const t = toKstParts(now);
     const age = Math.max(0, t.y - Number(profile.birth_date.slice(0, 4)));
     const season = ctx.daeun ? currentDaeun(ctx.daeun, age) : null;
-    const hash = readingInputHash(ctx, season?.ganzhi ?? "none");
+    const hash = readingInputHash(ctx, season?.ganzhi ?? "none", READING_TEMPLATE_VERSION);
 
     const remainingNow = premium ? UNLIMITED : credits;
 
@@ -95,7 +96,7 @@ export async function unlockReading(productRaw: string): Promise<UnlockResult> {
     );
 
     if (r.source === "llm" && r.text) {
-      const full = [...sections, { title: LLM_SECTION_TITLE, body: r.text }];
+      const full = [...sections, { title: llmSectionTitle(product), body: r.text }];
       const out = await cacheAndCharge({
         supabase, userId: user.id, product, hash, sections: full,
         consumesCredit: access.consumesCredit, remainingNow,
@@ -157,6 +158,7 @@ export async function unlockMatchDeep(raw: unknown): Promise<UnlockResult> {
 
     const hash = readingInputHash(
       { me: ctx, partner: { ...input }, mode: input.mode }, "match-deep",
+      READING_TEMPLATE_VERSION,
     );
     const remainingNow = premium ? UNLIMITED : credits;
 

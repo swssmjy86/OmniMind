@@ -21,6 +21,15 @@ describe("페르소나 상수 (§2.3)", () => {
     }
   });
 
+  it("어미 갈래(voice) — 홍연=반말, 금오=하오체, 온새=지요체, 나머지=요체", () => {
+    expect(PERSONAS.hongyeon.voice).toBe("banmal");
+    expect(PERSONAS.geumo.voice).toBe("hao");
+    expect(PERSONAS.onsae.voice).toBe("jiyo");
+    for (const id of ["dalzigi", "seoon", "byeori", "yeonri"] as const) {
+      expect(PERSONAS[id].voice).toBe("yo");
+    }
+  });
+
   it("사용자 대면 대사(homeLine·greeting)가 톤 가드를 통과한다 (§11 톤 가드)", () => {
     for (const p of PERSONA_LIST) {
       for (const line of [p.homeLine, p.greeting]) {

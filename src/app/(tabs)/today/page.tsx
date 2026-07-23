@@ -15,7 +15,7 @@ import type { ProfileRow, InterpretationRow } from "@/lib/db/types";
 
 export const metadata: Metadata = {
   title: "오늘의운세 — 옴니마인드",
-  description: "매일 새로 흐르는 오늘의 기운 — 기본은 누구나 무료.",
+  description: "매일 새로 흐르는 오늘의 기운 — 달지기가 밤마다 등불을 켜 두어요.",
 };
 
 export const dynamic = "force-dynamic"; // 날짜·세션에 따라 매번 렌더
