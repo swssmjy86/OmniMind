@@ -3,9 +3,13 @@ import { checkTone, checkToneWarnings } from "@/lib/interpret/tone-guard";
 import { PERSONAS, PERSONA_LIST } from "./personas";
 
 describe("페르소나 상수 (§2.3)", () => {
-  it("4인이 정의되고 목록 순서는 달지기·서온·홍연·금오다", () => {
-    expect(Object.keys(PERSONAS).sort()).toEqual(["dalzigi", "geumo", "hongyeon", "seoon"]);
-    expect(PERSONA_LIST.map((p) => p.id)).toEqual(["dalzigi", "seoon", "hongyeon", "geumo"]);
+  it("7인이 정의되고 목록 순서는 달지기·서온·벼리·홍연·연리·온새·금오다", () => {
+    expect(Object.keys(PERSONAS).sort()).toEqual([
+      "byeori", "dalzigi", "geumo", "hongyeon", "onsae", "seoon", "yeonri",
+    ]);
+    expect(PERSONA_LIST.map((p) => p.id)).toEqual([
+      "dalzigi", "seoon", "byeori", "hongyeon", "yeonri", "onsae", "geumo",
+    ]);
   });
 
   it("모든 필드가 비어 있지 않고 id가 키와 일치한다", () => {

@@ -38,13 +38,27 @@ describe("chatSystemPrompt — 페르소나별 말투", () => {
     const seoon = chatSystemPrompt({ ...baseInput, personaId: "seoon" });
     expect(seoon).toContain("서온");
     expect(seoon).toContain("사서");
+
+    const byeori = chatSystemPrompt({ ...baseInput, personaId: "byeori" });
+    expect(byeori).toContain("벼리");
+    expect(byeori).toContain("대장장이");
+
+    const yeonri = chatSystemPrompt({ ...baseInput, personaId: "yeonri" });
+    expect(yeonri).toContain("연리");
+    expect(yeonri).toContain("정원사");
+
+    const onsae = chatSystemPrompt({ ...baseInput, personaId: "onsae" });
+    expect(onsae).toContain("온새");
+    expect(onsae).toContain("느린 리듬");
   });
 
-  it("4개 페르소나 전부 + personaId 없음, report/premium/longForm 조합에서도 프롬프트가 예외 없이 만들어진다", () => {
+  it("7개 페르소나 전부 + personaId 없음, report/premium/longForm 조합에서도 프롬프트가 예외 없이 만들어진다", () => {
     // checkTone은 LLM '출력'에만 적용되는 필터라 여기선 안 쓴다 — 이 프롬프트는 지시문 안에
     // "'~하세요' 금지"처럼 금지 표현을 예시로 인용하므로 checkTone을 걸면 필터가 자기 자신의
     // 설명문에 걸린다(오탐).
-    const personas = ["dalzigi", "seoon", "hongyeon", "geumo", undefined] as const;
+    const personas = [
+      "dalzigi", "seoon", "byeori", "hongyeon", "yeonri", "onsae", "geumo", undefined,
+    ] as const;
     for (const personaId of personas) {
       for (const opts of [{}, { premium: true }, { premium: true, longForm: true }, { report: true }]) {
         const prompt = chatSystemPrompt({ ...baseInput, personaId }, opts);

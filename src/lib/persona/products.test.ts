@@ -18,12 +18,14 @@ describe("상품 카탈로그 v2 (4탭 IA 스펙 §4)", () => {
     });
   });
 
-  it("페르소나 — 서온=총운·직업, 홍연=연애·궁합·결혼, 금오=재물, 달지기=today", () => {
+  it("페르소나 — 7상품 1:1 전담(겸직 없음, persona-plan.md 7인 체제)", () => {
     const persona = Object.fromEntries(PRODUCTS.map((p) => [p.id, p.personaId]));
     expect(persona).toEqual({
-      today: "dalzigi", chongun: "seoon", career: "seoon",
-      love: "hongyeon", match: "hongyeon", marriage: "hongyeon", wealth: "geumo",
+      today: "dalzigi", chongun: "seoon", career: "byeori",
+      love: "hongyeon", match: "yeonri", marriage: "onsae", wealth: "geumo",
     });
+    // 전담 체제 — 같은 페르소나가 두 상품을 겸직하지 않는다.
+    expect(new Set(Object.values(persona)).size).toBe(PRODUCTS.length);
     for (const p of PRODUCTS) expect(PERSONAS[p.personaId]).toBeDefined();
   });
 

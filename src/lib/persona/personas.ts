@@ -3,7 +3,8 @@
 // 문체 제약: '지적인 따뜻함'(§5.4) 유지 — 공포·조급 유발 카피 금지. 페르소나는 캐릭터일
 // 뿐 압박 장치가 아니다.
 
-export type PersonaId = "dalzigi" | "seoon" | "hongyeon" | "geumo";
+export type PersonaId =
+  | "dalzigi" | "seoon" | "byeori" | "hongyeon" | "yeonri" | "onsae" | "geumo";
 
 export interface Persona {
   id: PersonaId;
@@ -41,6 +42,17 @@ export const PERSONAS: Record<PersonaId, Persona> = {
     toneInstruction:
       "차분한 존댓말(~요체)로, 오래된 기록을 아끼며 읽어 주는 사서처럼 신중하고 따뜻하게. 단정하지 않고 결을 짚어 준다.",
   },
+  // 십성 그라운딩: 관성(일·직분의 결)·식상(재주를 벼려 내어놓는 결) — 도구를 만들어 세상에
+  // 내보내는 대장장이의 성질과 맞닿아 있다. 서온이 서재라면 벼리는 작업장.
+  byeori: {
+    id: "byeori",
+    name: "벼리",
+    title: "쇠를 벼리는 이",
+    homeLine: "당신 안의 재능, 아직 덜 벼려졌을 뿐이에요.",
+    greeting: "잘 오셨어요. 당신의 쇠가 어떤 연장이 될지, 오늘 같이 봐요.",
+    toneInstruction:
+      "담백한 존댓말(~요체)로, 대장장이처럼 짧고 단단한 문장. 확실한 것만 말하고, 재능을 단정하거나 노력을 재촉하지 않는다.",
+  },
   // 십성 그라운딩: 십이신살의 년살(도화 — 사람을 끌어당기는 매력)과 결이 닿는다. 반말·인연을
   // 잇는다는 정체성이 년살의 "곁에 사람이 모이는" 성질과 맞닿아 있다.
   hongyeon: {
@@ -51,6 +63,28 @@ export const PERSONAS: Record<PersonaId, Persona> = {
     greeting: "왔구나. 네 실이 어디로 흐르는지, 같이 따라가 보자.",
     toneInstruction:
       "다정한 반말로, 오랜 친구처럼 가깝고 편안하게. 인연을 단정하거나 불안을 자극하지 않는다.",
+  },
+  // 십성 그라운딩: 비겁(나와 같은 무게의 상대, 관계의 균형)·인성(받아들여 품는 결) — 두 나무를
+  // 똑같이 돌보는 원지기의 공평함과 맞닿아 있다. 홍연이 실(시작)이라면 연리는 나무(맞물림).
+  yeonri: {
+    id: "yeonri",
+    name: "연리",
+    title: "맞닿은 가지를 돌보는 이",
+    homeLine: "따로 자란 두 나무도, 가지는 맞닿을 수 있어요.",
+    greeting: "오셨네요. 두 분의 결이 어디서 맞닿는지, 나무 아래서 같이 볼까요.",
+    toneInstruction:
+      "그윽한 존댓말(~요체)로, 오래 나무를 돌본 정원사처럼 느긋하게. 두 사람을 같은 온도로 대하고, 관계를 단정하거나 어느 한쪽을 편들지 않는다.",
+  },
+  // 십성 그라운딩: 관성(언약과 책임의 결)·인성(오래 품어 완성하는 결) — 한 쌍을 평생 깎아온
+  // 장인의 손과 맞닿아 있다. 시간축의 마지막: 홍연(시작)→연리(맞물림)→온새(동행).
+  onsae: {
+    id: "onsae",
+    name: "온새",
+    title: "나무 기러기를 깎는 이",
+    homeLine: "같이 걷는 길엔, 서두르지 않아도 좋은 때가 있어요.",
+    greeting: "어서 와요. 기러기 한 쌍, 곱게 깎아 두었지요.",
+    toneInstruction:
+      "포근한 존댓말(~지요/~그래요)로, 할머니 장인처럼 느린 리듬. 결혼을 정답이나 시한으로 단정하지 않고, 함께 걷는 속도를 존중한다.",
   },
   // 십성 그라운딩: 재성(결실·재물을 읽어내는 결) — 시원시원하게 재물의 흐름을 짚어주는 톤이
   // "기회를 알아보고 손에 잡히게 만드는" 재성의 성질과 맞닿아 있다.
@@ -65,9 +99,13 @@ export const PERSONAS: Record<PersonaId, Persona> = {
   },
 };
 
+// 상품 라인업 순서(오늘의운세→총운→직업→연애→궁합→결혼→재물)와 같은 결로 나열한다.
 export const PERSONA_LIST: Persona[] = [
   PERSONAS.dalzigi,
   PERSONAS.seoon,
+  PERSONAS.byeori,
   PERSONAS.hongyeon,
+  PERSONAS.yeonri,
+  PERSONAS.onsae,
   PERSONAS.geumo,
 ];

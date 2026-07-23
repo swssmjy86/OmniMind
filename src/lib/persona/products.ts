@@ -30,7 +30,7 @@ export const PRODUCTS: Product[] = [
     access: "login", href: "/saju/chongun", status: "live",
   },
   {
-    id: "career", title: "직업운", personaId: "seoon",
+    id: "career", title: "직업운", personaId: "byeori",
     tagline: "일과 재능의 결이 흐르는 방향",
     access: "login", href: "/saju/career", status: "live",
   },
@@ -45,12 +45,12 @@ export const PRODUCTS: Product[] = [
     access: "login", href: "/saju/wealth", status: "live",
   },
   {
-    id: "match", title: "궁합", personaId: "hongyeon",
+    id: "match", title: "궁합", personaId: "yeonri",
     tagline: "두 사람의 기운이 만나는 자리",
     access: "login", href: "/saju/match-deep", status: "live",
   },
   {
-    id: "marriage", title: "결혼운", personaId: "hongyeon",
+    id: "marriage", title: "결혼운", personaId: "onsae",
     tagline: "함께 걷는 길의 때와 결",
     access: "login", href: "/saju/marriage", status: "live",
   },

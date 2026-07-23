@@ -23,14 +23,14 @@ export default async function MatchDeepPage() {
   const supabase = await createServerSupabase();
   const { data: { user } } = await supabase.auth.getUser();
 
-  const hongyeon = PERSONAS.hongyeon;
+  const yeonri = PERSONAS.yeonri;
   const header = (
     <>
       <h1 className="font-[family-name:var(--font-serif-kr)] text-2xl text-primary-green">
         궁합 심층
       </h1>
       <p className="mt-1 text-sm text-text-soft">
-        {hongyeon.name} · {hongyeon.greeting}
+        {yeonri.name} · {yeonri.greeting}
       </p>
     </>
   );

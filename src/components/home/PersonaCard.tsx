@@ -7,7 +7,10 @@ import { ACCESS_LABEL, type Product } from "@/lib/persona/products";
 const GLYPHS: Record<PersonaId, string> = {
   dalzigi: "🏮",
   seoon: "📜",
+  byeori: "⚒️",
   hongyeon: "🧵",
+  yeonri: "🌿",
+  onsae: "🪿",
   geumo: "🐦‍⬛",
 };
 
