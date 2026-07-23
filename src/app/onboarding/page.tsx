@@ -9,8 +9,10 @@ import type { InterpretationSection } from "@/lib/interpret/types";
 import { saveProfile } from "./actions";
 import { saveDraft, loadDraft, clearDraft, isCompleteDraft, type Draft } from "./draft";
 import SajuChart from "@/components/profile/SajuChart";
+import PersonaIntro from "@/components/persona/PersonaIntro";
 import Choice from "@/components/ui/Choice";
 import PickerInput from "@/components/ui/PickerInput";
+import { PERSONAS } from "@/lib/persona/personas";
 
 interface Result {
   ctx: ProfileContext;
@@ -97,6 +99,12 @@ export default function OnboardingPage() {
 
   return (
     <main className="flex min-h-dvh flex-col p-6">
+      <PersonaIntro
+        personaId="dalzigi"
+        eyebrow={`🏮 ${PERSONAS.dalzigi.name} · 오늘의운세`}
+        line={PERSONAS.dalzigi.homeLine}
+        src="/videos/dalzigi-intro.mp4"
+      />
       <Progress step={step} total={3} />
 
       <div key={step} className="mt-8 flex-1 fade-rise">
