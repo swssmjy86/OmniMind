@@ -68,33 +68,34 @@ describe("PersonaIntro", () => {
     await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
   });
 
-  it("움직임 줄이기(prefers-reduced-motion) 사용자는 자동재생 대신 ▶ 버튼을 본다", async () => {
+  it("움직임 줄이기(prefers-reduced-motion) 설정과 무관하게 자동재생한다 — 인트로는 핵심 콘텐츠", async () => {
     const original = window.matchMedia;
     window.matchMedia = vi.fn().mockReturnValue({ matches: true }) as unknown as typeof window.matchMedia;
     try {
       render(<PersonaIntro {...PROPS} />);
-      // 오버레이는 뜨되 자동재생하지 않고 ▶ 버튼을 준다.
-      expect(await screen.findByRole("dialog")).toBeInTheDocument();
-      expect(screen.getByRole("button", { name: "인사 영상 재생" })).toBeInTheDocument();
+      const dialog = await screen.findByRole("dialog");
+      expect(dialog.querySelector("video")!.autoplay).toBe(true);
+      expect(screen.queryByRole("button", { name: "인사 영상 재생" })).not.toBeInTheDocument();
     } finally {
       window.matchMedia = original;
     }
   });
 
   it("▶ 버튼으로 재생을 시작하면 버튼이 사라진다", async () => {
-    const original = window.matchMedia;
-    window.matchMedia = vi.fn().mockReturnValue({ matches: true }) as unknown as typeof window.matchMedia;
+    const play = vi
+      .spyOn(window.HTMLMediaElement.prototype, "play")
+      .mockRejectedValue(new DOMException("NotAllowedError")); // 모든 자동재생 차단 환경
     try {
       render(<PersonaIntro {...PROPS} />);
       const dialog = await screen.findByRole("dialog");
-      fireEvent.click(screen.getByRole("button", { name: "인사 영상 재생" }));
+      fireEvent.click(await screen.findByRole("button", { name: "인사 영상 재생" }));
       // jsdom은 play()가 실제 재생을 일으키지 않으므로 play 이벤트를 직접 흘린다.
       fireEvent.play(dialog.querySelector("video")!);
       await waitFor(() =>
         expect(screen.queryByRole("button", { name: "인사 영상 재생" })).not.toBeInTheDocument(),
       );
     } finally {
-      window.matchMedia = original;
+      play.mockRestore();
     }
   });
 
@@ -163,17 +164,18 @@ describe("PersonaIntro", () => {
   });
 
   it("▶ 버튼 재생은 사용자 제스처이므로 소리를 켠 채 시작한다", async () => {
-    const original = window.matchMedia;
-    window.matchMedia = vi.fn().mockReturnValue({ matches: true }) as unknown as typeof window.matchMedia;
+    const play = vi
+      .spyOn(window.HTMLMediaElement.prototype, "play")
+      .mockRejectedValue(new DOMException("NotAllowedError")); // 모든 자동재생 차단 환경
     try {
       render(<PersonaIntro {...PROPS} />);
       const dialog = await screen.findByRole("dialog");
       const video = dialog.querySelector("video")!;
-      fireEvent.click(screen.getByRole("button", { name: "인사 영상 재생" }));
+      fireEvent.click(await screen.findByRole("button", { name: "인사 영상 재생" }));
       expect(video.muted).toBe(false);
       expect(screen.getByRole("button", { name: "🔊 소리 끄기" })).toBeInTheDocument();
     } finally {
-      window.matchMedia = original;
+      play.mockRestore();
     }
   });
 });

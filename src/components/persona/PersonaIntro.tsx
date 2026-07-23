@@ -26,16 +26,18 @@ interface Props {
  * 브라우저가 가장 확실하게 허용하는 경로다. 그 위에서 소리 승격을 시도한다:
  * ①소리 켠 play()가 허용되면 소리 ON → ②거부되면 음소거 재생 유지 + 소리 켜기 버튼 →
  * ③무음 자동재생마저 차단된 환경(인앱 브라우저·iOS 저전력 모드 등)은 첫 프레임 정지
- * 화면 + ▶ 버튼(탭은 사용자 제스처라 소리 켠 재생 가능). 움직임 줄이기 설정 사용자는
- * 자동재생 없이 ③으로 시작한다. 영상이 끝나거나, 건너뛰기를 누르거나, 영상 로드에
- * 실패하면 조용히 사라진다 — 끝까지 본 경우에만 onComplete를 부른다.
+ * 화면 + ▶ 버튼(탭은 사용자 제스처라 소리 켠 재생 가능). 인트로는 장식이 아닌 핵심
+ * 콘텐츠라 움직임 줄이기(prefers-reduced-motion) 설정과 무관하게 자동재생한다 — 모바일
+ * 접근성 설정(애니메이션 제거·배터리 세이버)이 켜진 기기에서 자동재생이 막히던 원인.
+ * 영상이 끝나거나, 건너뛰기를 누르거나, 영상 로드에 실패하면 조용히 사라진다 —
+ * 끝까지 본 경우에만 onComplete를 부른다.
  */
 export default function PersonaIntro({ personaId, eyebrow, line, src, onComplete, onClose }: Props) {
   const [visible, setVisible] = useState(false);
   const [closing, setClosing] = useState(false);
   // 무음 자동재생이 기본이므로 음소거로 시작 — 소리 승격이 허용되는 환경에서만 켠다.
   const [muted, setMuted] = useState(true);
-  // 자동재생 대신 ▶ 버튼을 보여줘야 하는 상태 — 움직임 줄이기 설정 또는 자동재생 차단.
+  // 자동재생 대신 ▶ 버튼을 보여줘야 하는 상태 — 무음 재생까지 거부된 환경에서만.
   const [needsTap, setNeedsTap] = useState(false);
   const [playing, setPlaying] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -48,11 +50,7 @@ export default function PersonaIntro({ personaId, eyebrow, line, src, onComplete
 
   useEffect(() => {
     // 페이지가 한 프레임 먼저 그려진 뒤 오버레이를 띄운다(동기 setState 금지 규칙과도 맞다).
-    const t = setTimeout(() => {
-      // 접근성 — 움직임을 줄이고 싶은 사용자에게 자동재생을 들이밀지 않는다(직접 ▶는 가능).
-      setNeedsTap(window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false);
-      setVisible(true);
-    }, 200);
+    const t = setTimeout(() => setVisible(true), 200);
     return () => clearTimeout(t);
   }, [personaId]);
 
@@ -130,9 +128,8 @@ export default function PersonaIntro({ personaId, eyebrow, line, src, onComplete
           }}
           src={src}
           // 무음 자동재생은 선언적 속성 조합이 가장 확실하다. 음소거 해제는 프로퍼티로만
-          // 다루고 이 prop은 상수로 둔다(React가 되돌리지 않도록). 움직임 줄이기
-          // 사용자는 자동재생하지 않는다(▶ 버튼 경로).
-          autoPlay={!needsTap}
+          // 다루고 이 prop은 상수로 둔다(React가 되돌리지 않도록).
+          autoPlay
           muted
           playsInline
           preload="auto"
