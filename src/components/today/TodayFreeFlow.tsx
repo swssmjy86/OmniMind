@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import PersonaIntro from "@/components/persona/PersonaIntro";
 import TodayInputSheet from "./TodayInputSheet";
 import TodayTeaser from "./TodayTeaser";
 import { TODAY_BIRTH_KEY, parseTodayBirth, type TodayBirth } from "@/lib/today/birth-store";
@@ -15,6 +16,9 @@ import type { AstroEvent } from "@/lib/kasi/astro-events";
  * "개인화 한 줄"만 돌려받는다 — 계산은 여전히 서버에만 있다.
  * localStorage는 마운트 후(useEffect)에만 읽는다 — 시트 표시 여부는 구조 차이라
  * 초기화식에서 읽으면 하이드레이션 불일치가 난다.
+ * intro가 있으면 페르소나 인트로 영상을 이 컴포넌트가 직접 띄운다 — 입력 시트를
+ * 영상과 겹쳐 깔지 않고, 영상이 걷힌 다음(완주·건너뛰기 무관)에 팝업으로 띄우기 위한
+ * 조율이 필요해서다(페이지는 서버 컴포넌트라 콜백을 넘길 수 없다).
  */
 export default function TodayFreeFlow({
   headline,
@@ -24,6 +28,7 @@ export default function TodayFreeFlow({
   lucky,
   sky,
   astroEvents,
+  intro,
 }: {
   headline: string;
   mind: string;
@@ -32,8 +37,11 @@ export default function TodayFreeFlow({
   lucky: string;
   sky: { moon: string; riseSet: string; altitude: string };
   astroEvents?: AstroEvent[] | null;
+  intro?: { personaId: string; eyebrow: string; line: string; src: string };
 }) {
   const [ready, setReady] = useState(false);
+  // 인트로가 있으면 그 오버레이가 걷힌 뒤에야 입력 시트를 띄운다.
+  const [introDone, setIntroDone] = useState(!intro);
   const [birth, setBirth] = useState<TodayBirth | null>(null);
   const [personal, setPersonal] = useState<string | null>(null);
   useEffect(() => {
@@ -58,6 +66,7 @@ export default function TodayFreeFlow({
 
   return (
     <>
+      {intro && <PersonaIntro {...intro} onClose={() => setIntroDone(true)} />}
       <section className="persona-card mt-5 rounded-card bg-warm-surface p-6">
         <span aria-hidden className="persona-star" style={{ top: "12%", right: "10%" }} />
         <span aria-hidden className="persona-star" style={{ top: "26%", right: "24%" }} />
@@ -101,7 +110,7 @@ export default function TodayFreeFlow({
 
       <TodayTeaser />
 
-      {ready && !birth && <TodayInputSheet onSaved={setBirth} />}
+      {ready && introDone && !birth && <TodayInputSheet onSaved={setBirth} />}
       {ready && birth && (
         <button
           type="button"

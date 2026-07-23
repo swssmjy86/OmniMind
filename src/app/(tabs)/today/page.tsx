@@ -164,18 +164,14 @@ export default async function TodayPage() {
 
   return (
     <main className="fade-rise p-6">
-      <PersonaIntro
-        personaId="dalzigi"
-        eyebrow={`🏮 ${PERSONAS.dalzigi.name} · 오늘의운세`}
-        line={PERSONAS.dalzigi.homeLine}
-        src="/videos/dalzigi-intro.mp4"
-      />
       <h1 className="font-[family-name:var(--font-serif-kr)] text-2xl text-primary-green">
         오늘의운세
       </h1>
       <p className="mt-1 text-sm text-text-soft">
         <span aria-hidden>🏮</span> {PERSONAS.dalzigi.homeLine}
       </p>
+      {/* 인트로 영상은 TodayFreeFlow가 직접 띄운다 — 입력 시트를 영상이 걷힌 뒤에
+          팝업으로 띄우는 조율이 필요해서(서버 컴포넌트라 콜백을 못 넘긴다). */}
       <TodayFreeFlow
         headline={guide.headline}
         mind={guide.mind}
@@ -184,6 +180,12 @@ export default async function TodayPage() {
         lucky={guide.lucky}
         sky={guide.skyLines}
         astroEvents={astroEvents}
+        intro={{
+          personaId: "dalzigi",
+          eyebrow: `🏮 ${PERSONAS.dalzigi.name} · 오늘의운세`,
+          line: PERSONAS.dalzigi.homeLine,
+          src: "/videos/dalzigi-intro.mp4",
+        }}
       />
     </main>
   );

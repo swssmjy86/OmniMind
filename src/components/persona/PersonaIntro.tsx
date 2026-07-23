@@ -14,6 +14,9 @@ interface Props {
   src: string;
   /** 영상이 끝까지 재생됐을 때 호출 — 건너뛰기·로드 실패에는 부르지 않는다 */
   onComplete?: () => void;
+  /** 오버레이가 사라질 때 호출 — 완주·건너뛰기·로드 실패·타임아웃 등 사유 무관.
+   *  "영상이 걷힌 다음에 보여줄 것"(입력 팝업 등)을 여는 용도. */
+  onClose?: () => void;
 }
 
 /**
@@ -25,7 +28,7 @@ interface Props {
  * 사용자는 자동재생 없이 ③으로 시작한다. 영상이 끝나거나, 건너뛰기를 누르거나,
  * 영상 로드에 실패하면 조용히 사라진다 — 끝까지 본 경우에만 onComplete를 부른다.
  */
-export default function PersonaIntro({ personaId, eyebrow, line, src, onComplete }: Props) {
+export default function PersonaIntro({ personaId, eyebrow, line, src, onComplete, onClose }: Props) {
   const [visible, setVisible] = useState(false);
   const [closing, setClosing] = useState(false);
   // 소리 켠 자동재생을 우선 시도하므로 켠 상태로 시작 — 차단되면 폴백에서 끈다.
@@ -34,6 +37,12 @@ export default function PersonaIntro({ personaId, eyebrow, line, src, onComplete
   const [needsTap, setNeedsTap] = useState(false);
   const [playing, setPlaying] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  // onClose 최신값은 ref로 든다 — close가 prop에 반응적이 되면 15초 워치독 이펙트가
+  // close를 의존성으로 요구해, 부모 리렌더마다 타이머가 리셋되기 때문.
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     // 페이지가 한 프레임 먼저 그려진 뒤 오버레이를 띄운다(동기 setState 금지 규칙과도 맞다).
@@ -74,7 +83,10 @@ export default function PersonaIntro({ personaId, eyebrow, line, src, onComplete
 
   function close() {
     setClosing(true);
-    setTimeout(() => setVisible(false), 300);
+    setTimeout(() => {
+      setVisible(false);
+      onCloseRef.current?.();
+    }, 300);
   }
 
   function toggleSound() {

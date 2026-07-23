@@ -52,6 +52,22 @@ describe("PersonaIntro", () => {
     expect(onComplete).not.toHaveBeenCalled();
   });
 
+  it("onClose는 닫힘 사유와 무관하게 불린다 — 완주", async () => {
+    const onClose = vi.fn();
+    render(<PersonaIntro {...PROPS} onClose={onClose} />);
+    const dialog = await screen.findByRole("dialog");
+    fireEvent.ended(dialog.querySelector("video")!);
+    await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
+  });
+
+  it("onClose는 닫힘 사유와 무관하게 불린다 — 건너뛰기", async () => {
+    const onClose = vi.fn();
+    render(<PersonaIntro {...PROPS} onClose={onClose} />);
+    await screen.findByRole("dialog");
+    fireEvent.click(screen.getByRole("button", { name: "인사 영상 건너뛰기" }));
+    await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
+  });
+
   it("움직임 줄이기(prefers-reduced-motion) 사용자는 자동재생 대신 ▶ 버튼을 본다", async () => {
     const original = window.matchMedia;
     window.matchMedia = vi.fn().mockReturnValue({ matches: true }) as unknown as typeof window.matchMedia;
