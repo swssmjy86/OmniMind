@@ -30,6 +30,21 @@ describe("onboarding draft", () => {
     expect(loadDraft()).toBeNull();
   });
 
+  it("보조축(mbti·blood) — 저장 왕복·하위 호환·형식 오류", () => {
+    // 필드 없는 구버전 draft도 그대로 읽힌다(하위 호환)
+    saveDraft(draft);
+    expect(loadDraft()).toEqual(draft);
+    // 새 필드 왕복
+    const withTraits: Draft = { ...draft, mbti: "ENFP", blood: "A" };
+    saveDraft(withTraits);
+    expect(loadDraft()).toEqual(withTraits);
+    // 형식 오류는 draft 전체를 버린다(다른 필드와 같은 방어 규칙)
+    localStorage.setItem("om_onboarding_draft", JSON.stringify({ ...draft, blood: "C" }));
+    expect(loadDraft()).toBeNull();
+    localStorage.setItem("om_onboarding_draft", JSON.stringify({ ...draft, mbti: 12 }));
+    expect(loadDraft()).toBeNull();
+  });
+
   it("clearDraft로 지운다", () => {
     saveDraft(draft);
     clearDraft();

@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { isPremium, UNLIMITED, FREE_FOR_ALL, GUEST_READING_ACCESS } from "@/lib/consult/quota";
-import { readingInputHash, READING_TEMPLATE_VERSION } from "@/lib/readings/hash";
+import { readingInputHash, withTraits, READING_TEMPLATE_VERSION } from "@/lib/readings/hash";
+import { profileTraits, traitsMissing } from "@/lib/readings/profile-traits";
 import { ensureCurrentProfile } from "@/lib/readings/ensure-profile";
 import {
   isCreditReadingProduct, readingSectionTitles,
@@ -16,6 +17,7 @@ import { PRODUCTS } from "@/lib/persona/products";
 import { PERSONAS } from "@/lib/persona/personas";
 import GuestReadingView from "@/components/saju/GuestReadingView";
 import LoginRequiredNotice from "@/components/saju/LoginRequiredNotice";
+import ProfileTraitsGate from "@/components/saju/ProfileTraitsGate";
 import ReadingPeek from "@/components/saju/ReadingPeek";
 import UnlockReading from "@/components/saju/UnlockReading";
 import ShareSheet from "@/components/share/ShareSheet";
@@ -95,12 +97,24 @@ export default async function CreditReadingPage({
     );
   }
 
+  // 보조축(MBTI·혈액형) 미입력 — 풀이 대신 입력 시트 관문(2026-07-23 스펙).
+  if (traitsMissing(profile)) {
+    return (
+      <main className="fade-rise p-6">
+        {header}
+        <ProfileTraitsGate personaId={meta.personaId} />
+      </main>
+    );
+  }
+
   const now = new Date();
   const ctx = await ensureCurrentProfile(supabase, profile);
   const t = toKstParts(now);
   const age = Math.max(0, t.y - Number(profile.birth_date.slice(0, 4)));
   const season = ctx.daeun ? currentDaeun(ctx.daeun, age) : null;
-  const hash = readingInputHash(ctx, season?.ganzhi ?? "none", READING_TEMPLATE_VERSION);
+  const hash = readingInputHash(
+    withTraits(ctx, profileTraits(profile)), season?.ganzhi ?? "none", READING_TEMPLATE_VERSION,
+  );
 
   // 재열람 — 캐시 히트는 차감 없이 바로 렌더(P9 §6.2)
   const { data: cached } = await supabase

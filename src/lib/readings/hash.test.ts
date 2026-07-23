@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { readingInputHash, stableStringify } from "./hash";
+import { readingInputHash, stableStringify, withTraits } from "./hash";
 
 describe("풀이 캐시 키 (2단계 스펙 §3)", () => {
   it("stableStringify — 키 순서가 달라도 같은 문자열", () => {
@@ -20,6 +20,18 @@ describe("풀이 캐시 키 (2단계 스펙 §3)", () => {
     expect(readingInputHash({ x: 2 }, "경오")).not.toBe(base);
     expect(readingInputHash({ x: 1 }, "신미")).not.toBe(base); // 대운 경계 → 자연 재생성
     expect(readingInputHash({ x: 1 }, "none")).not.toBe(base);
+  });
+
+  it("withTraits — 보조축이 없으면 ctx 그대로(기존 캐시 유지), 있으면 키가 갈린다", () => {
+    const ctx = { x: 1 };
+    // 없음/빈 값 → 래핑하지 않아 기존 해시와 동일
+    expect(readingInputHash(withTraits(ctx, null), "경오")).toBe(readingInputHash(ctx, "경오"));
+    expect(readingInputHash(withTraits(ctx, { mbti: null, blood: null }), "경오"))
+      .toBe(readingInputHash(ctx, "경오"));
+    // 있음 → 다른 키, 값이 다르면 또 다른 키
+    const a = readingInputHash(withTraits(ctx, { mbti: "ENFP", blood: "A" }), "경오");
+    expect(a).not.toBe(readingInputHash(ctx, "경오"));
+    expect(readingInputHash(withTraits(ctx, { mbti: "ISTJ", blood: "A" }), "경오")).not.toBe(a);
   });
 
   it("템플릿 버전 — 기본값 1은 v1 시절(버전 필드 없음) 해시와 동일, 2 이상만 재생성 유발", () => {

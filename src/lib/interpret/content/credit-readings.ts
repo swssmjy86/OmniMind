@@ -17,6 +17,7 @@ import { dominantCategory, type TenGodCategory } from "./ten-gods";
 import { ELEMENT_BALANCE_TEXT } from "./elements";
 import { daeunSeasonBody } from "./chongun";
 import { strengthText, patternsText } from "./strength";
+import { traitsText, type Traits } from "./traits";
 
 export type CreditReadingProduct = "career" | "love" | "wealth" | "marriage";
 export const CREDIT_READING_PRODUCTS: CreditReadingProduct[] = [
@@ -203,12 +204,15 @@ export function readingSectionTitles(product: CreditReadingProduct): string[] {
   ];
 }
 
-/** 4종 공통 조립 — ①~④, 담당 페르소나 말투로. LLM 문단(⑤)은 액션이 성공 시에만 덧붙인다. */
+/** 4종 공통 조립 — ①~④, 담당 페르소나 말투로. LLM 문단(⑤)은 액션이 성공 시에만 덧붙인다.
+ *  traits(MBTI·혈액형)는 선택 — 있으면 보조축 섹션에 수식 문장이 더해진다(위계 §3: 결론은
+ *  팔자가 이미 냈고, 겉으로 드러나는 방식만 덧그린다). 없으면 기존과 완전히 동일(폴백). */
 export function assembleCreditReading(
   product: CreditReadingProduct,
   ctx: ProfileContext,
   nickname: string,
   age: number | null,
+  traits?: Traits | null,
 ): InterpretationSection[] {
   const voice = PRODUCT_VOICE[product];
   const cat = dominantCategory(ctx.tenGods);
@@ -218,14 +222,16 @@ export function assembleCreditReading(
   const examples = product === "career"
     ? ` 예를 들면 ${CAREER_EXAMPLES[cat].join("·")} 같은 자리 — 거기서 결이 서요.`
     : "";
+  const aux = [
+    AUX_TEXT[product][ctx.strength],
+    ELEMENT_CLOSE[voice][ctx.elements.dominant],
+    traitsText(traits, voice),
+  ].filter((t): t is string => t !== null).join(" ");
   return [
     { title: KEY_TITLE[product], body: `${address(nickname, voice)}${KEY_TEXT[product][cat]} ${structure}${examples}` },
     { title: ELEMENTS_TITLE, body: ELEMENT_BALANCE_TEXT(ctx.elements, voice) },
     { title: SEASON_TITLE, body: `${FLOW_INTRO[product]} ${daeunSeasonBody(ctx, age, voice)}` },
-    {
-      title: AUX_TITLE[voice],
-      body: `${AUX_TEXT[product][ctx.strength]} ${ELEMENT_CLOSE[voice][ctx.elements.dominant]}`,
-    },
+    { title: AUX_TITLE[voice], body: aux },
   ];
 }
 

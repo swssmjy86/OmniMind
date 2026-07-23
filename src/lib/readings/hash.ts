@@ -30,6 +30,20 @@ export const READING_TEMPLATE_VERSION = 2;
  * templateVersion 기본값 1은 해시에 넣지 않는다 — v1 시절(필드 없던 때) 해시와 동일하게
  * 유지되어, 문구가 안 바뀐 상품의 기존 캐시·후기가 그대로 살아 있다.
  */
+/**
+ * 보조축(MBTI·혈액형)을 캐시 키 입력에 섞는다 — **실제 값이 있을 때만** 래핑한다.
+ * 아직 안 넣은 사용자의 해시는 기존과 동일해 캐시·후기가 살아 있고, 입력하는 순간
+ * 해시가 바뀌어 보조 문장이 담긴 풀이로 자연 재생성된다(templateVersion 기본값과 같은 원리).
+ */
+export function withTraits(
+  ctx: unknown,
+  traits: { mbti?: string | null; blood?: string | null } | null | undefined,
+): unknown {
+  const mbti = traits?.mbti ?? null;
+  const blood = traits?.blood ?? null;
+  return mbti || blood ? { ctx, traits: { mbti, blood } } : ctx;
+}
+
 export function readingInputHash(ctx: unknown, season: string, templateVersion = 1): string {
   return createHash("sha256")
     .update(stableStringify({

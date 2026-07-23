@@ -2,7 +2,8 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { GUEST_READING_ACCESS } from "@/lib/consult/quota";
-import { readingInputHash } from "@/lib/readings/hash";
+import { readingInputHash, withTraits } from "@/lib/readings/hash";
+import { profileTraits, traitsMissing } from "@/lib/readings/profile-traits";
 import { ensureCurrentProfile } from "@/lib/readings/ensure-profile";
 import { assembleChongun } from "@/lib/interpret/content/chongun";
 import { PROFILE_CONTEXT_VERSION } from "@/lib/engine/index";
@@ -12,6 +13,7 @@ import { PERSONAS } from "@/lib/persona/personas";
 import SajuChart from "@/components/profile/SajuChart";
 import GuestReadingView from "@/components/saju/GuestReadingView";
 import LoginRequiredNotice from "@/components/saju/LoginRequiredNotice";
+import ProfileTraitsGate from "@/components/saju/ProfileTraitsGate";
 import ShareSheet from "@/components/share/ShareSheet";
 import ReviewPrompt from "@/components/reviews/ReviewPrompt";
 import ReviewHighlights from "@/components/reviews/ReviewHighlights";
@@ -28,8 +30,8 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 /**
- * 총운 풀이 — 로그인 전용(GUEST_READING_ACCESS=false, 비로그인 서비스는 오늘의운세뿐).
- * 비로그인: 로그인 안내 / 로그인·프로필 없음: 온보딩 유도 /
+ * 총운 풀이 — 비로그인: 게스트 뷰(입력 시트 → 즉시 계산, GUEST_READING_ACCESS) /
+ * 로그인·프로필 없음: 온보딩 유도 / 로그인+프로필·보조축 없음: 특성 시트 관문 /
  * 로그인+프로필: readings 캐시 경유(같은 입력이면 재생성 없음 — P9 §6.2).
  */
 export default async function ChongunPage() {
@@ -87,13 +89,25 @@ export default async function ChongunPage() {
     );
   }
 
-  const ctx = await ensureCurrentProfile(supabase, profile);
+  // 보조축(MBTI·혈액형) 미입력 — 풀이 대신 입력 시트 관문(2026-07-23 스펙).
+  if (traitsMissing(profile)) {
+    return (
+      <main className="fade-rise p-6">
+        {header}
+        <ProfileTraitsGate personaId="seoon" />
+      </main>
+    );
+  }
 
-  // 현재 대운 간지 — 캐시 키에 포함(대운이 바뀌면 자연 재생성, 스펙 §3)
+  const ctx = await ensureCurrentProfile(supabase, profile);
+  const traits = profileTraits(profile);
+
+  // 현재 대운 간지 — 캐시 키에 포함(대운이 바뀌면 자연 재생성, 스펙 §3). 보조축도 값이
+  // 있을 때만 키에 섞인다(withTraits) — 과거 캐시·후기를 지키는 조건부 래핑.
   const t = toKstParts(new Date());
   const age = Math.max(0, t.y - Number(profile.birth_date.slice(0, 4)));
   const season = ctx.daeun ? currentDaeun(ctx.daeun, age) : null;
-  const hash = readingInputHash(ctx, season?.ganzhi ?? "none");
+  const hash = readingInputHash(withTraits(ctx, traits), season?.ganzhi ?? "none");
 
   // 캐시 조회 → 없으면 조립해 insert(P9 §6.2). 조회·저장 실패는 조용히 새 조립으로 폴백.
   let sections: InterpretationSection[] | null = null;
@@ -109,7 +123,7 @@ export default async function ChongunPage() {
   }
 
   if (!sections) {
-    sections = assembleChongun(ctx, profile.nickname, age);
+    sections = assembleChongun(ctx, profile.nickname, age, traits);
     const { data: inserted } = await supabase.from("readings").insert({
       user_id: user!.id, product: "chongun", input_hash: hash,
       context_version: PROFILE_CONTEXT_VERSION, sections,

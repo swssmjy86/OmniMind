@@ -2,7 +2,8 @@
 
 import { createServerSupabase } from "@/lib/supabase/server";
 import { readingAccess, UNLIMITED, isPremium } from "@/lib/consult/quota";
-import { readingInputHash, READING_TEMPLATE_VERSION } from "./hash";
+import { readingInputHash, withTraits, READING_TEMPLATE_VERSION } from "./hash";
+import { profileTraits } from "./profile-traits";
 import { ensureCurrentProfile } from "./ensure-profile";
 // 공용 머니 패스는 일반 모듈 — "use server" 파일의 export는 전부 네트워크 노출 액션이 되므로
 // 내부 헬퍼를 이 파일에서 export하지 않는다(최종 리뷰 반영).
@@ -64,7 +65,10 @@ export async function unlockReading(productRaw: string): Promise<UnlockResult> {
     const t = toKstParts(now);
     const age = Math.max(0, t.y - Number(profile.birth_date.slice(0, 4)));
     const season = ctx.daeun ? currentDaeun(ctx.daeun, age) : null;
-    const hash = readingInputHash(ctx, season?.ganzhi ?? "none", READING_TEMPLATE_VERSION);
+    const traits = profileTraits(profile);
+    const hash = readingInputHash(
+      withTraits(ctx, traits), season?.ganzhi ?? "none", READING_TEMPLATE_VERSION,
+    );
 
     const remainingNow = premium ? UNLIMITED : credits;
 
@@ -81,7 +85,7 @@ export async function unlockReading(productRaw: string): Promise<UnlockResult> {
       };
     }
 
-    const sections = assembleCreditReading(product, ctx, profile.nickname, age);
+    const sections = assembleCreditReading(product, ctx, profile.nickname, age, traits);
 
     // LLM 개인화(긴 서술형) — 무료 모델 기본(월 고정비 0원 원칙). OPENROUTER_PREMIUM_MODEL을
     // 유효한 모델로 설정하면 premium: true를 더해 더 빠른 유료 모델·더 큰 예산을 쓸 수 있다.
