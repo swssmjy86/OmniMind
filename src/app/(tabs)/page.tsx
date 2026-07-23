@@ -67,26 +67,7 @@ export default async function HomePage() {
       </div>
       <p className="mt-1 text-sm text-text-soft">오늘 밤도 당신의 이야기를 켜 두었어요.</p>
 
-      {/* 6종 풀이 그리드 — 클릭하면 사주팔자 탭으로(확정 결정: 홈 → 사주팔자 이동) */}
-      <section className="mt-6" aria-label="풀이 종류">
-        <div className="grid grid-cols-2 gap-3">
-          {grid.map((p) => (
-            <Link
-              key={p.id}
-              href="/saju"
-              className="press rounded-card bg-warm-surface p-4"
-            >
-              <p className="font-[family-name:var(--font-serif-kr)] text-lg text-primary-green">
-                {p.title}
-              </p>
-              <p className="mt-1 text-xs text-text-soft">{p.tagline}</p>
-              <p className="mt-2 text-[11px] text-moon-gold">{ACCESS_LABEL[p.access]}</p>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* 프로필 없으면 개인화 유도 */}
+      {/* 프로필 없으면 개인화 유도 — 그리드보다 먼저(홈 목업: CTA가 첫 카드) */}
       {!profile && (
         <section className="mt-6 rounded-card border border-accent-coral/30 bg-warm-surface p-5">
           <p className="text-text-soft">
@@ -110,6 +91,25 @@ export default async function HomePage() {
         </section>
       )}
 
+      {/* 6종 풀이 그리드 — 클릭하면 사주팔자 탭으로(확정 결정: 홈 → 사주팔자 이동) */}
+      <section className="mt-8" aria-label="풀이 종류">
+        <div className="grid grid-cols-2 gap-3">
+          {grid.map((p) => (
+            <Link
+              key={p.id}
+              href="/saju"
+              className="press rounded-card border border-text-soft/20 bg-warm-surface p-4"
+            >
+              <p className="font-[family-name:var(--font-serif-kr)] text-lg text-primary-green">
+                {p.title}
+              </p>
+              <p className="mt-1 text-xs text-text-soft">{p.tagline}</p>
+              <p className="mt-2 text-[11px] text-accent-coral">{ACCESS_LABEL[p.access]}</p>
+            </Link>
+          ))}
+        </div>
+      </section>
+
       {/* 고객리뷰 — 실제 코멘트 후기 3개 이상일 때만(P9 §5.2) */}
       <ReviewHighlights
         summary={homeSummary}
@@ -117,14 +117,14 @@ export default async function HomePage() {
         sub="실제로 풀이를 열어본 분들의 이야기예요."
       />
 
-      {/* 자주묻는질문 발췌 3문항 */}
+      {/* 자주묻는질문 발췌 5문항 */}
       <section className="mt-8" aria-label="자주 묻는 질문">
         <h2 className="font-[family-name:var(--font-serif-kr)] text-lg text-primary-green">
           자주 묻는 질문
         </h2>
         <div className="mt-3 flex flex-col gap-2">
-          {FAQ_ITEMS.slice(0, 3).map((item) => (
-            <details key={item.q} className="rounded-card bg-warm-surface p-4">
+          {FAQ_ITEMS.slice(0, 5).map((item) => (
+            <details key={item.q} className="rounded-card border border-text-soft/20 bg-warm-surface p-4">
               <summary className="cursor-pointer text-sm font-medium text-text-main">
                 {item.q}
               </summary>
