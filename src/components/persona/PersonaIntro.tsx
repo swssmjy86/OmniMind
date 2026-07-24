@@ -14,9 +14,16 @@ interface Props {
   src: string;
   /** 영상이 끝까지 재생됐을 때 호출 — 건너뛰기·로드 실패에는 부르지 않는다 */
   onComplete?: () => void;
-  /** 오버레이가 사라질 때 호출 — 완주·건너뛰기·로드 실패·타임아웃 등 사유 무관.
-   *  "영상이 걷힌 다음에 보여줄 것"(입력 팝업 등)을 여는 용도. */
+  /** 오버레이가 사라질 때(또는 holdOnEnd로 배경이 될 때) 호출 — 완주·건너뛰기·로드 실패·
+   *  타임아웃 등 사유 무관. "영상이 걷힌 다음에 보여줄 것"(입력 팝업 등)을 여는 용도. */
   onClose?: () => void;
+  /** 완주·건너뛰기 시 사라지는 대신 마지막 프레임을 **뒷 배경으로 유지**한다(2026-07-24
+   *  오늘의운세 워크플로우 — 영상 위로 입력 팝업이 뜬다). 배경이 된 뒤 release가 참이
+   *  되면 그때 페이드아웃한다. 로드 실패·재생 정지 타임아웃은 배경으로 남길 프레임이
+   *  없거나 어긋난 상태라 이 옵션과 무관하게 그냥 닫힌다. */
+  holdOnEnd?: boolean;
+  /** holdOnEnd로 배경이 된 오버레이를 걷어낼 신호 — 입력 팝업이 닫힌 뒤 참으로. */
+  release?: boolean;
 }
 
 /**
@@ -32,9 +39,14 @@ interface Props {
  * 영상이 끝나거나, 건너뛰기를 누르거나, 영상 로드에 실패하면 조용히 사라진다 —
  * 끝까지 본 경우에만 onComplete를 부른다.
  */
-export default function PersonaIntro({ personaId, eyebrow, line, src, onComplete, onClose }: Props) {
+export default function PersonaIntro({
+  personaId, eyebrow, line, src, onComplete, onClose, holdOnEnd, release,
+}: Props) {
   const [visible, setVisible] = useState(false);
   const [closing, setClosing] = useState(false);
+  // holdOnEnd: 완주·건너뛰기 뒤 마지막 프레임이 배경으로 남은 상태 — 컨트롤은 숨고,
+  // z-index가 입력 시트 아래로 내려가며, 포인터도 통과시킨다.
+  const [held, setHeld] = useState(false);
   // 무음 자동재생이 기본이므로 음소거로 시작 — 소리 승격이 허용되는 환경에서만 켠다.
   const [muted, setMuted] = useState(true);
   // 자동재생 대신 ▶ 버튼을 보여줘야 하는 상태 — 무음 재생까지 거부된 환경에서만.
@@ -76,11 +88,17 @@ export default function PersonaIntro({ personaId, eyebrow, line, src, onComplete
 
   // 영상이 멈춰버려도 오버레이가 화면을 계속 덮지 않도록 상한을 둔다(영상 8초 + 여유).
   // 재생이 시작된 뒤부터 잰다 — ▶ 버튼을 기다리는 정지 화면은 사용자가 직접 닫을 때까지 유지.
+  // 배경 모드(held)로 넘어간 뒤에는 의도적으로 남아 있는 것이므로 타임아웃을 걸지 않는다.
   useEffect(() => {
-    if (!playing) return;
+    if (!playing || held) return;
     const t = setTimeout(close, 15_000);
     return () => clearTimeout(t);
-  }, [playing]);
+  }, [playing, held]);
+
+  // 배경으로 남은 오버레이는 부모가 release로 걷어낸다(입력 팝업이 닫힌 뒤).
+  useEffect(() => {
+    if (held && release) close();
+  }, [held, release]);
 
   function close() {
     setClosing(true);
@@ -88,6 +106,21 @@ export default function PersonaIntro({ personaId, eyebrow, line, src, onComplete
       setVisible(false);
       onCloseRef.current?.();
     }, 300);
+  }
+
+  /** 완주·건너뛰기 종착 — holdOnEnd면 현재 프레임에서 멈춰 배경이 되고, 아니면 닫힌다. */
+  function finish() {
+    if (!holdOnEnd) {
+      close();
+      return;
+    }
+    try {
+      videoRef.current?.pause?.();
+    } catch {
+      // jsdom 등 pause() 미구현 환경 무시
+    }
+    setHeld(true);
+    onCloseRef.current?.(); // 입력 팝업 등 "다음 것"은 배경 위로 바로 뜬다
   }
 
   function toggleSound() {
@@ -102,14 +135,15 @@ export default function PersonaIntro({ personaId, eyebrow, line, src, onComplete
   // 아무리 올려도 포털 시트(입력 팝업) 아래 깔린다 — 같은 body 레벨로 포털해 확실히 위에 얹는다.
   return createPortal(
     <div
-      role="dialog"
-      aria-label={`${eyebrow} 인사 영상`}
-      onClick={close}
-      // 입력 시트(z-50)보다 위 — Tailwind 임의값 클래스 대신 인라인로 확실히 얹는다.
-      style={{ zIndex: 60 }}
+      // 배경 모드에서는 대화상자가 아니라 장식 — 역할·클릭 닫기를 걷고 포인터를 통과시킨다.
+      {...(held ? { "aria-hidden": true } : { role: "dialog", "aria-label": `${eyebrow} 인사 영상` })}
+      onClick={held ? undefined : finish}
+      // 재생 중엔 입력 시트(z-50)보다 위, 배경 모드에선 시트 아래(z-40) —
+      // Tailwind 임의값 클래스 대신 인라인로 확실히 얹는다.
+      style={{ zIndex: held ? 40 : 60 }}
       className={`fixed inset-y-0 left-1/2 flex w-full max-w-[var(--shell-width)] -translate-x-1/2 items-center justify-center bg-black/70 p-4 transition-opacity duration-300 lg:max-w-[var(--shell-width-lg)] ${
         closing ? "opacity-0" : "opacity-100"
-      }`}
+      } ${held ? "pointer-events-none" : ""}`}
     >
       {/* 스토리 뷰 — 카드 전체가 영상이고 헤더·자막은 그라데이션 위에 겹쳐 올린다.
           카드 폭 = 화면 폭·높이 중 작은 쪽에 9:16으로 맞춰 화면을 거의 꽉 채운다.
@@ -139,12 +173,12 @@ export default function PersonaIntro({ personaId, eyebrow, line, src, onComplete
           }}
           onEnded={() => {
             onComplete?.();
-            close();
+            finish();
           }}
           onError={close}
           className="aspect-[9/16] w-full object-cover"
         />
-        {needsTap && (
+        {!held && needsTap && (
           <button
             onClick={() => {
               // 탭은 사용자 제스처 — 소리 켠 재생이 허용된다.
@@ -164,25 +198,29 @@ export default function PersonaIntro({ personaId, eyebrow, line, src, onComplete
             ▶
           </button>
         )}
-        <div className="absolute inset-x-0 top-0 flex items-center justify-between bg-gradient-to-b from-black/60 to-transparent px-4 pb-8 pt-3">
-          <p className="text-xs text-white/80">{eyebrow}</p>
-          <button
-            onClick={close}
-            className="press text-xs text-white/80 underline"
-            aria-label="인사 영상 건너뛰기"
-          >
-            건너뛰기
-          </button>
-        </div>
-        <div className="absolute inset-x-0 bottom-0 flex flex-col items-center gap-2 bg-gradient-to-t from-black/70 to-transparent px-4 pb-4 pt-10">
-          <button
-            onClick={toggleSound}
-            className="press rounded-full bg-black/50 px-3 py-1.5 text-xs text-white"
-          >
-            {muted ? "🔇 소리 켜기" : "🔊 소리 끄기"}
-          </button>
-          <p className="text-center text-sm leading-relaxed text-white">{line}</p>
-        </div>
+        {!held && (
+          <div className="absolute inset-x-0 top-0 flex items-center justify-between bg-gradient-to-b from-black/60 to-transparent px-4 pb-8 pt-3">
+            <p className="text-xs text-white/80">{eyebrow}</p>
+            <button
+              onClick={finish}
+              className="press text-xs text-white/80 underline"
+              aria-label="인사 영상 건너뛰기"
+            >
+              건너뛰기
+            </button>
+          </div>
+        )}
+        {!held && (
+          <div className="absolute inset-x-0 bottom-0 flex flex-col items-center gap-2 bg-gradient-to-t from-black/70 to-transparent px-4 pb-4 pt-10">
+            <button
+              onClick={toggleSound}
+              className="press rounded-full bg-black/50 px-3 py-1.5 text-xs text-white"
+            >
+              {muted ? "🔇 소리 켜기" : "🔊 소리 끄기"}
+            </button>
+            <p className="text-center text-sm leading-relaxed text-white">{line}</p>
+          </div>
+        )}
       </div>
     </div>,
     document.body,

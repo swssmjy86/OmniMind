@@ -125,12 +125,20 @@ export default function TodayFreeFlow({
     };
   }, [birth]);
 
+  // 인트로 영상은 완주·건너뛰기 뒤 마지막 프레임을 배경으로 유지하고(holdOnEnd), 그 위로
+  // 입력 시트가 뜬다(2026-07-24 워크플로우). 입력이 저장되면(시트가 닫히면) 배경을 걷는다.
+  const introProps = {
+    holdOnEnd: true,
+    release: introDone && Boolean(birth) && !forcedOpen,
+    onClose: () => setIntroDone(true),
+  };
+
   // 버퍼링 화면 — 입력 완료 직후 개인화가 준비되는 동안 카드 자리를 대신한다.
   // forcedOpen(홈 "나를 알아보기" 경유)일 땐 입력 시트가 우선이라 버퍼링으로 가리지 않는다.
   if (birth && loadingExtras && !forcedOpen) {
     return (
       <>
-        {intro && <PersonaIntro {...intro} onClose={() => setIntroDone(true)} />}
+        {intro && <PersonaIntro {...intro} {...introProps} />}
         <section
           role="status"
           className="persona-card mt-5 rounded-card bg-warm-surface p-8 text-center"
@@ -157,7 +165,7 @@ export default function TodayFreeFlow({
 
   return (
     <>
-      {intro && <PersonaIntro {...intro} onClose={() => setIntroDone(true)} />}
+      {intro && <PersonaIntro {...intro} {...introProps} />}
       <section className="persona-card fade-rise mt-5 rounded-card bg-warm-surface p-6">
         <span aria-hidden className="persona-star" style={{ top: "12%", right: "10%" }} />
         <span aria-hidden className="persona-star" style={{ top: "26%", right: "24%" }} />
