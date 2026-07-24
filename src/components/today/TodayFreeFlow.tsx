@@ -85,6 +85,8 @@ export default function TodayFreeFlow({
   const [forcedOpen, setForcedOpen] = useState(Boolean(forceInput));
   const [birth, setBirth] = useState<TodayBirth | null>(null);
   const [extras, setExtras] = useState<GuestDailyExtras | null>(null);
+  // 입력 직후 개인화(서버 계산 + LLM)를 기다리는 동안 — 카드 대신 버퍼링 화면을 띄운다.
+  const [loadingExtras, setLoadingExtras] = useState(false);
   useEffect(() => {
     // 마운트 후 1회만 localStorage를 읽어 시트 표시 여부를 정한다(위 주석 참고) —
     // 외부 스토어를 구독하는 게 아니라 최초 1회 동기화라 set-state-in-effect 휴리스틱의
@@ -100,27 +102,63 @@ export default function TodayFreeFlow({
       setExtras(null);
       return;
     }
-    // 같은 날짜·같은 생일이면 저장분 재사용 — LLM 재호출 없음(무료 쿼터 보호).
+    // 같은 날짜·같은 생일이면 저장분 재사용 — LLM 재호출 없음(무료 쿼터 보호), 버퍼링도 없음.
     const cached = loadCachedExtras(birth);
     if (cached) {
       setExtras(cached);
       return;
     }
     let cancelled = false;
-    computeGuestDailyExtras(birth.birthDate, birth.birthTime).then((e) => {
-      if (cancelled || !e) return;
-      setExtras(e);
-      saveCachedExtras(birth, e);
-    });
+    setLoadingExtras(true);
+    computeGuestDailyExtras(birth.birthDate, birth.birthTime)
+      .then((e) => {
+        if (cancelled || !e) return;
+        setExtras(e);
+        saveCachedExtras(birth, e);
+      })
+      .finally(() => {
+        // 실패해도 공통 카드로 진행한다(개인화만 조용히 생략 — §8 폴백 정신).
+        if (!cancelled) setLoadingExtras(false);
+      });
     return () => {
       cancelled = true;
     };
   }, [birth]);
 
+  // 버퍼링 화면 — 입력 완료 직후 개인화가 준비되는 동안 카드 자리를 대신한다.
+  // forcedOpen(홈 "나를 알아보기" 경유)일 땐 입력 시트가 우선이라 버퍼링으로 가리지 않는다.
+  if (birth && loadingExtras && !forcedOpen) {
+    return (
+      <>
+        {intro && <PersonaIntro {...intro} onClose={() => setIntroDone(true)} />}
+        <section
+          role="status"
+          className="persona-card mt-5 rounded-card bg-warm-surface p-8 text-center"
+        >
+          <span aria-hidden className="persona-star" style={{ top: "16%", right: "14%" }} />
+          <span aria-hidden className="persona-star" style={{ top: "30%", right: "30%" }} />
+          <span aria-hidden className="persona-star" style={{ top: "20%", left: "16%" }} />
+          <p aria-hidden className="animate-pulse text-4xl">🏮</p>
+          <p className="mt-4 font-[family-name:var(--font-serif-kr)] text-lg text-primary-green">
+            달지기가 오늘의 기운을 읽고 있어요…
+          </p>
+          <p className="mt-1 text-sm text-text-soft">
+            당신의 여덟 글자에 등불을 비추는 중이에요. 잠시만 기다려 주세요.
+          </p>
+          <div aria-hidden className="mt-6 space-y-2">
+            <div className="teaser-bar h-3 w-11/12 mx-auto animate-pulse rounded-full bg-text-soft/15" />
+            <div className="teaser-bar h-3 w-4/5 mx-auto animate-pulse rounded-full bg-text-soft/15" />
+            <div className="teaser-bar h-3 w-2/3 mx-auto animate-pulse rounded-full bg-text-soft/15" />
+          </div>
+        </section>
+      </>
+    );
+  }
+
   return (
     <>
       {intro && <PersonaIntro {...intro} onClose={() => setIntroDone(true)} />}
-      <section className="persona-card mt-5 rounded-card bg-warm-surface p-6">
+      <section className="persona-card fade-rise mt-5 rounded-card bg-warm-surface p-6">
         <span aria-hidden className="persona-star" style={{ top: "12%", right: "10%" }} />
         <span aria-hidden className="persona-star" style={{ top: "26%", right: "24%" }} />
         <span aria-hidden className="persona-star" style={{ top: "16%", right: "38%" }} />
