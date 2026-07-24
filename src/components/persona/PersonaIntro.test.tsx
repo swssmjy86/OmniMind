@@ -68,6 +68,38 @@ describe("PersonaIntro", () => {
     await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
   });
 
+  it("holdOnEnd — 완주하면 사라지는 대신 마지막 프레임이 배경으로 남는다(컨트롤 숨김·onClose 호출)", async () => {
+    const onClose = vi.fn();
+    render(<PersonaIntro {...PROPS} holdOnEnd onClose={onClose} />);
+    const dialog = await screen.findByRole("dialog");
+    fireEvent.ended(dialog.querySelector("video")!);
+    // 대화상자 역할은 걷히지만(배경은 장식) 영상 프레임은 남아 있다.
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(document.querySelector("video")).not.toBeNull();
+    expect(screen.queryByRole("button", { name: "인사 영상 건너뛰기" })).not.toBeInTheDocument();
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("holdOnEnd — 건너뛰기도 배경으로 남고 onComplete는 부르지 않는다", async () => {
+    const onComplete = vi.fn();
+    render(<PersonaIntro {...PROPS} holdOnEnd onComplete={onComplete} />);
+    await screen.findByRole("dialog");
+    fireEvent.click(screen.getByRole("button", { name: "인사 영상 건너뛰기" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(document.querySelector("video")).not.toBeNull();
+    expect(onComplete).not.toHaveBeenCalled();
+  });
+
+  it("holdOnEnd — 배경이 된 뒤 release가 참이 되면 그때 페이드아웃으로 걷힌다", async () => {
+    const { rerender } = render(<PersonaIntro {...PROPS} holdOnEnd />);
+    const dialog = await screen.findByRole("dialog");
+    fireEvent.ended(dialog.querySelector("video")!);
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(document.querySelector("video")).not.toBeNull();
+    rerender(<PersonaIntro {...PROPS} holdOnEnd release />);
+    await waitFor(() => expect(document.querySelector("video")).toBeNull());
+  });
+
   it("움직임 줄이기(prefers-reduced-motion) 설정과 무관하게 자동재생한다 — 인트로는 핵심 콘텐츠", async () => {
     const original = window.matchMedia;
     window.matchMedia = vi.fn().mockReturnValue({ matches: true }) as unknown as typeof window.matchMedia;

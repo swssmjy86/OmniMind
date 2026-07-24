@@ -58,6 +58,29 @@ describe("TodayFreeFlow — 비로그인 오늘의운세 개인화(블러 해제
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
   });
 
+  it("영상이 걷힌 뒤에도 마지막 프레임이 배경으로 남고, 입력을 저장하면 배경이 걷힌다", async () => {
+    const intro = {
+      personaId: "dalzigi",
+      eyebrow: "🏮 달지기 · 오늘의운세",
+      line: "한 줄",
+      src: "/videos/dalzigi-intro.mp4",
+    };
+    vi.mocked(computeGuestDailyExtras).mockResolvedValue(extras);
+    render(<TodayFreeFlow {...props} intro={intro} />);
+    const dialog = await screen.findByRole("dialog");
+    fireEvent.ended(dialog.querySelector("video")!);
+    // 시트가 떠 있는 동안 영상 프레임은 배경으로 남아 있다.
+    expect(await screen.findByText("태어난 날을 알려주실래요?")).toBeInTheDocument();
+    expect(document.querySelector("video")).not.toBeNull();
+    // 생년월일 저장 → 시트 닫힘 → 배경도 걷힌다.
+    fireEvent.change(document.querySelector('input[type="date"]')!, {
+      target: { value: "1990-06-15" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "오늘의 기운 보기" }));
+    await waitFor(() => expect(document.querySelector("video")).toBeNull());
+    expect(await screen.findByText(/달빛이 다듬은 이야기예요/)).toBeInTheDocument();
+  });
+
   it("인트로를 건너뛰어도 입력 시트는 뜬다", async () => {
     const intro = {
       personaId: "dalzigi",
