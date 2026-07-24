@@ -1,14 +1,13 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import GuestReadingView from "./GuestReadingView";
-import { loadDraft, saveDraft, isCompleteDraft } from "@/app/onboarding/draft";
+import { loadDraft, saveDraft } from "@/app/onboarding/draft";
 import { computeGuestChongun, computeGuestCreditReading } from "@/lib/readings/guest-actions";
 import { computeProfile } from "@/lib/engine";
 
 vi.mock("@/app/onboarding/draft", () => ({
   loadDraft: vi.fn(),
   saveDraft: vi.fn(),
-  isCompleteDraft: vi.fn(),
 }));
 vi.mock("@/lib/readings/guest-actions", () => ({
   computeGuestChongun: vi.fn(),
@@ -32,44 +31,56 @@ describe("GuestReadingView — 게스트 총운/사주상품 뷰 (입력 시트 
     expect(computeGuestChongun).not.toHaveBeenCalled();
   });
 
-  it("draft가 불완전하면(isCompleteDraft false) 입력 시트가 뜬다", async () => {
+  it("입력이 완비된 draft여도 항상 시트가 먼저 뜨고 자동 계산하지 않는다", async () => {
     vi.mocked(loadDraft).mockReturnValue(draft);
-    vi.mocked(isCompleteDraft).mockReturnValue(false);
     render(<GuestReadingView product="chongun" title="총운" />);
+    // 시트가 뜬다 — 완비된 draft라도 건너뛰지 않는다(2026-07-24 관문 규칙).
     expect(await screen.findByRole("button", { name: "풀이 보기" })).toBeInTheDocument();
+    // 제출 전에는 어떤 풀이도 계산하지 않는다.
+    expect(computeGuestChongun).not.toHaveBeenCalled();
+    expect(screen.queryByText("사주 명식")).not.toBeInTheDocument();
   });
 
   it("사주 입력은 완전해도 MBTI·혈액형이 없으면 입력 시트가 뜬다", async () => {
     vi.mocked(loadDraft).mockReturnValue({ ...draft, mbti: null, blood: null });
-    vi.mocked(isCompleteDraft).mockReturnValue(true);
     render(<GuestReadingView product="career" title="직업운" />);
     expect(await screen.findByRole("button", { name: "풀이 보기" })).toBeInTheDocument();
     expect(computeGuestCreditReading).not.toHaveBeenCalled();
   });
 
-  it("입력이 완비된 draft면 시트 없이 총운 섹션과 SajuChart를 렌더한다", async () => {
+  it("완비된 draft로 채워진 시트에서 '풀이 보기'를 누르면 그 값으로 총운을 계산·렌더한다", async () => {
     vi.mocked(loadDraft).mockReturnValue(draft);
-    vi.mocked(isCompleteDraft).mockReturnValue(true);
     vi.mocked(computeGuestChongun).mockResolvedValue({
       ok: true, ctx, sections: [{ title: "당신을 만나서", body: "다인님, 반가워요." }],
     });
     render(<GuestReadingView product="chongun" title="총운" />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "풀이 보기" }));
+
     expect(await screen.findByText("당신을 만나서")).toBeInTheDocument();
     expect(screen.getByText("사주 명식")).toBeInTheDocument(); // SajuChart 표식
     expect(screen.queryByRole("button", { name: "풀이 보기" })).not.toBeInTheDocument();
+    expect(computeGuestChongun).toHaveBeenCalledWith(
+      expect.objectContaining({ birthDate: "1995-08-20", mbti: "ENFP", blood: "A" }),
+    );
     expect(computeGuestCreditReading).not.toHaveBeenCalled();
   });
 
-  it("career 상품은 computeGuestCreditReading을 부르고 SajuChart는 없다", async () => {
+  it("career 상품은 제출 시 computeGuestCreditReading을 부르고 SajuChart는 없다", async () => {
     vi.mocked(loadDraft).mockReturnValue(draft);
-    vi.mocked(isCompleteDraft).mockReturnValue(true);
     vi.mocked(computeGuestCreditReading).mockResolvedValue({
       ok: true, ctx, sections: [{ title: "일의 결", body: "다인님, 일에서..." }],
     });
     render(<GuestReadingView product="career" title="직업운" />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "풀이 보기" }));
+
     expect(await screen.findByText("일의 결")).toBeInTheDocument();
     expect(screen.queryByText("사주 명식")).not.toBeInTheDocument();
-    expect(computeGuestCreditReading).toHaveBeenCalledWith("career", draft);
+    expect(computeGuestCreditReading).toHaveBeenCalledWith(
+      "career",
+      expect.objectContaining({ birthDate: "1995-08-20", mbti: "ENFP", blood: "A" }),
+    );
   });
 
   it("시트 제출 — draft 저장 후 그 값으로 계산한다", async () => {
@@ -101,9 +112,11 @@ describe("GuestReadingView — 게스트 총운/사주상품 뷰 (입력 시트 
 
   it("액션이 실패하면 부드러운 오류 안내를 보여준다", async () => {
     vi.mocked(loadDraft).mockReturnValue(draft);
-    vi.mocked(isCompleteDraft).mockReturnValue(true);
     vi.mocked(computeGuestChongun).mockResolvedValue({ ok: false });
     render(<GuestReadingView product="chongun" title="총운" />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "풀이 보기" }));
+
     await waitFor(() =>
       expect(screen.getByText(/지금은 풀이를 준비하지 못했어요/)).toBeInTheDocument(),
     );
@@ -111,11 +124,13 @@ describe("GuestReadingView — 게스트 총운/사주상품 뷰 (입력 시트 
 
   it("로그인하면 더 받을 수 있다는 안내 문구가 있다(전환 유도)", async () => {
     vi.mocked(loadDraft).mockReturnValue(draft);
-    vi.mocked(isCompleteDraft).mockReturnValue(true);
     vi.mocked(computeGuestChongun).mockResolvedValue({
       ok: true, ctx, sections: [{ title: "타고난 결", body: "..." }],
     });
     render(<GuestReadingView product="chongun" title="총운" />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "풀이 보기" }));
+
     expect(await screen.findByText(/로그인하면/)).toBeInTheDocument();
   });
 });

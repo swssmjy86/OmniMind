@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { loadDraft, saveDraft, isCompleteDraft, type Draft } from "@/app/onboarding/draft";
+import { loadDraft, saveDraft, type Draft } from "@/app/onboarding/draft";
 import { computeGuestChongun, computeGuestCreditReading } from "@/lib/readings/guest-actions";
 import type { CreditReadingProduct } from "@/lib/interpret/content/credit-readings";
-import { normalizeMbti } from "@/lib/interpret/content/traits";
 import { PRODUCT_PERSONA } from "@/lib/persona/products";
 import ReadingInputSheet, { type ReadingSheetValues } from "@/components/saju/ReadingInputSheet";
 import SajuChart from "@/components/profile/SajuChart";
@@ -15,16 +14,11 @@ import type { InterpretationSection } from "@/lib/interpret/types";
 
 type Status = "loading" | "input" | "ready" | "error";
 
-/** 시트를 띄워야 하는 draft 상태인지 — 사주 입력 미비 또는 보조축(MBTI·혈액형) 미입력. */
-function needsInput(draft: Draft | null): boolean {
-  return (
-    !draft || !isCompleteDraft(draft) || !normalizeMbti(draft.mbti) || !draft.blood
-  );
-}
-
 /**
- * 총운/사주상품(직업·연애·재물·결혼) 게스트 뷰 — "풀이 보러 가기"를 누르는 순간 필요한
- * 입력(생년월일·시간·MBTI·혈액형)이 없으면 입력 시트가 뜬다(2026-07-23 스펙). 입력은
+ * 총운/사주상품(직업·연애·재물·결혼) 게스트 뷰 — "풀이 보러 가기"를 누르면 **항상 입력
+ * 시트가 먼저 뜬다**(2026-07-24 결정). 저장된 draft가 완비돼 있어도 시트를 건너뛰지 않고,
+ * 값을 미리 채운 채 띄워 사용자가 '풀이 보기'를 눌러야 계산이 돈다 — 입력을 받지 않으면
+ * 어떤 풀이도 계산·표시하지 않는다(빈 localStorage로 자동 진행하던 경로 제거). 입력은
  * localStorage draft에만 저장하고 매번 새로 계산한다(저장·캐시 없음). LLM 개인화 문단은
  * 없다 — guest-actions.ts가 애초에 호출하지 않는다(로그인 시 받는 보너스로 남겨둠).
  */
@@ -54,21 +48,15 @@ export default function GuestReadingView({
   };
 
   useEffect(() => {
-    // 마운트 후 1회만 localStorage를 읽어 상태를 정한다(외부 스토어 구독이 아니라 최초 1회
-    // 동기화라 set-state-in-effect 휴리스틱의 대상이 아니다 — today/TodayFreeFlow.tsx와 동일 근거).
+    // 마운트 후 1회만 localStorage를 읽어 draft를 시트에 미리 채운다(외부 스토어 구독이
+    // 아니라 최초 1회 동기화라 set-state-in-effect 휴리스틱의 대상이 아니다 —
+    // today/TodayFreeFlow.tsx와 동일 근거). 입력이 완비돼 있어도 자동 계산하지 않고 항상
+    // 시트를 띄운다 — '입력받지 않으면 동작하지 않는다'는 관문 규칙(2026-07-24).
     const d = loadDraft();
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setDraft(d);
-    if (needsInput(d)) {
-      setStatus("input");
-      return;
-    }
-    let cancelled = false;
-    (async () => {
-      if (!cancelled) await compute(d!);
-    })();
-    return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setStatus("input");
   }, [product]);
 
   const onSheetSubmit = async (v: ReadingSheetValues) => {
