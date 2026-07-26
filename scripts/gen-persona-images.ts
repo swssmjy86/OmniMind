@@ -48,7 +48,9 @@ const FACE_IN_CROP = 0.4;
 const SRC_DIR = "docs/png";
 const OUT_DIR = "public/images/persona";
 
-/** 전신컷 폭 — 모바일 셸 폭(~430px)의 2배수(레티나)면 충분하다. */
+/** 전신컷 폭 상한 — 모바일 셸 폭(~430px)의 2배수(레티나)면 충분하다. 확대는 하지 않으므로
+ *  (withoutEnlargement) 이보다 작은 원본은 크기 그대로 재인코딩만 된다. 현 원본 768px가
+ *  이 경우라, 지금 나오는 전신컷은 768×1376이다. */
 const FULL_WIDTH = 864;
 /** 아바타 한 변 — 카드 원형이 56px이라 레티나 3배수까지 여유. */
 const AVATAR_SIZE = 192;
