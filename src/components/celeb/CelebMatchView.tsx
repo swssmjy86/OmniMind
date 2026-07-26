@@ -186,12 +186,29 @@ export default function CelebMatchView({
   );
 }
 
-/** 공개 정보 기반이라는 한계를 밝히는 고지 — 결과 화면과 목록 화면 모두에 둔다. */
+/**
+ * 어떤 한계 위에서 본 풀이인지 밝히는 고지 — 결과 화면과 목록 화면 모두에 둔다.
+ * celebrities.ts의 수록 원칙 세 가지(시각 미상 · 1900년 이후 · 해외 시차)를 사용자 말로 옮긴 것이라,
+ * 그 원칙이 바뀌면 이 문구도 함께 고쳐야 한다.
+ */
 function Notice() {
   return (
-    <p className="mt-6 rounded-card bg-warm-surface p-4 text-xs leading-relaxed text-text-soft">
-      널리 공개된 생년월일만 썼어요. 태어난 시각은 알려지지 않아 시주 없이 세 기둥으로만 보았고,
-      해외에서 태어난 분은 시차로 하루 차이가 날 수 있어요. 가볍게 재미로 읽어주세요.
-    </p>
+    <div className="mt-6 rounded-card bg-warm-surface p-4 text-xs leading-relaxed text-text-soft">
+      <p className="text-text-main">이 풀이를 읽기 전에</p>
+      <ul className="mt-2 list-disc space-y-1 pl-4">
+        <li>
+          널리 공개된 생년월일만 썼어요. 태어난 시각은 알려진 적이 없어, 시주 없이 년·월·일
+          세 기둥으로만 보았어요.
+        </li>
+        <li>
+          사주를 세우는 절기 자료가 1900년부터라, 그 뒤에 태어난 분들만 모셨어요.
+          그보다 앞선 시대의 인물은 아쉽지만 여덟 글자를 세울 수 없어요.
+        </li>
+        <li>
+          바다 건너에서 태어난 분은 시차 때문에 일주가 하루 어긋날 수 있어요.
+        </li>
+      </ul>
+      <p className="mt-2">그러니 가볍게, 재미로 읽어주시면 좋겠어요.</p>
+    </div>
   );
 }
