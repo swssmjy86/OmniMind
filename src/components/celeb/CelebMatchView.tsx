@@ -6,7 +6,7 @@ import ReviewPrompt from "@/components/reviews/ReviewPrompt";
 import { unlockMatchDeep } from "@/lib/readings/actions";
 import { computeGuestMatchDeep } from "@/lib/readings/guest-actions";
 import {
-  CELEBRITIES, CELEB_CATEGORIES, CELEB_REGIONS,
+  CELEB_CATEGORIES, CELEB_REGIONS, celebritiesIn,
   type CelebCategory, type CelebRegion, type Celebrity,
 } from "@/lib/celeb/celebrities";
 import type { Draft } from "@/app/onboarding/draft";
@@ -107,7 +107,7 @@ export default function CelebMatchView({
     );
   }
 
-  const list = CELEBRITIES.filter((c) => c.region === region && c.category === category);
+  const list = celebritiesIn(region, category);
 
   return (
     <div className="mt-5">
