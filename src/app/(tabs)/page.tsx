@@ -139,6 +139,13 @@ export default async function HomePage() {
 
       <AdSlot />
 
+      {/* 보관함은 하단 탭에서 유명인 궁합에 자리를 내주었다(2026-07-26) — 진입점을 여기에 둔다. */}
+      {user && (
+        <Link href="/archive" className="mt-6 block text-center text-sm text-text-soft underline">
+          지난 기록 보기 (보관함)
+        </Link>
+      )}
+
       {user && (
         <form action={signOut} className="mt-8 text-center">
           <button className="press text-sm text-text-soft underline">

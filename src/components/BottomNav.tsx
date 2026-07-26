@@ -7,7 +7,9 @@ const tabs = [
   { href: "/", label: "홈", emoji: "🌿" },
   { href: "/today", label: "오늘의운세", emoji: "🏮" },
   { href: "/saju", label: "사주팔자", emoji: "🌙" },
-  { href: "/archive", label: "보관함", emoji: "📦" },
+  // 보관함(/archive)이 쓰던 자리 — 라우트는 그대로 살아 있고, 오늘의운세 하단과 홈의
+  // "지난 기록 보기" 링크로 들어간다(2026-07-26).
+  { href: "/celeb", label: "유명인궁합", emoji: "💞" },
 ];
 
 export default function BottomNav() {
