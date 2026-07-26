@@ -182,7 +182,7 @@ export async function unlockMatchDeep(raw: unknown): Promise<UnlockResult> {
     const match = computeDeepMatch(ctx, partnerCtx, input.mode);
     const sections = assembleDeepMatch({
       match, myElement: ctx.dayMaster.element,
-      myName: profile.nickname, partnerName: "상대",
+      myName: profile.nickname, partnerName: input.partnerName ?? "상대",
     });
 
     // LLM 개인화(긴 서술형) — 무료 모델 기본. 실패하면 아래 폴백으로.

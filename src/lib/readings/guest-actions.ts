@@ -10,7 +10,8 @@
 // 공유 LLM 무료 풀을 반복 호출할 수 있는 새 어뷰징 창구를 만들지 않기 위해서다.
 import type { Draft } from "@/app/onboarding/draft";
 import { computeProfile } from "@/lib/engine/index";
-import { computeDeepMatch, isMatchModeSlug, SLUG_TO_MODE } from "@/lib/engine/match";
+import { computeDeepMatch } from "@/lib/engine/match";
+import { parseMatchDeepInput } from "./match-input";
 import { toKstParts } from "@/lib/engine/kst";
 import { assembleChongun } from "@/lib/interpret/content/chongun";
 import {
@@ -86,27 +87,19 @@ export async function computeGuestMatchDeep(
   myDraft: Draft,
   raw: unknown,
 ): Promise<UnlockResult> {
-  if (raw === null || typeof raw !== "object") return { ok: false, reason: "invalid" };
-  const d = raw as Record<string, unknown>;
-  if (typeof d.birthDate !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(d.birthDate))
-    return { ok: false, reason: "invalid" };
-  if (typeof d.timeUnknown !== "boolean") return { ok: false, reason: "invalid" };
-  let birthTime: string | null = null;
-  if (!d.timeUnknown) {
-    if (typeof d.birthTime !== "string") return { ok: false, reason: "invalid" };
-    const t = /^(\d{2}):(\d{2})$/.exec(d.birthTime);
-    if (!t || Number(t[1]) > 23 || Number(t[2]) > 59) return { ok: false, reason: "invalid" };
-    birthTime = d.birthTime;
-  }
-  if (typeof d.mode !== "string" || !isMatchModeSlug(d.mode)) return { ok: false, reason: "invalid" };
-  const mode = SLUG_TO_MODE[d.mode];
+  // 검증은 로그인 경로와 같은 순수 함수를 쓴다 — 규칙이 갈라지지 않도록 한 곳에만 둔다.
+  const input = parseMatchDeepInput(raw);
+  if (!input) return { ok: false, reason: "invalid" };
 
   try {
     const ctx = profileFromDraft(myDraft);
-    const partnerCtx = computeProfile({ birthDate: d.birthDate, birthTime, timeUnknown: d.timeUnknown });
-    const match = computeDeepMatch(ctx, partnerCtx, mode);
+    const partnerCtx = computeProfile({
+      birthDate: input.birthDate, birthTime: input.birthTime, timeUnknown: input.timeUnknown,
+    });
+    const match = computeDeepMatch(ctx, partnerCtx, input.mode);
     const sections = assembleDeepMatch({
-      match, myElement: ctx.dayMaster.element, myName: myDraft.nickname, partnerName: "상대",
+      match, myElement: ctx.dayMaster.element, myName: myDraft.nickname,
+      partnerName: input.partnerName ?? "상대",
     });
     return { ok: true, sections, usedCredit: false, remaining: 0, readingId: null };
   } catch {
