@@ -11,6 +11,7 @@ import {
   cardQuery,
   parseCardParams,
   dailyCardQuery,
+  dailyCardQueryFromParams,
   dailyCardParams,
   dailyCopyFromParams,
   parseDailyCardParams,
@@ -213,6 +214,23 @@ describe("오늘의 나 카드 — dailyCardQuery ↔ parseDailyCardParams", () 
     const c = dailyCopyFromParams(dailyCardParams(ctx, guide));
     expect(checkTone(c.cta)).toEqual([]);
     expect(checkTone(c.slogan)).toEqual([]);
+  });
+
+  // 비로그인 오늘의운세(TodayFreeFlow)는 ProfileContext 없이 이 경로로 같은 카드를 만든다.
+  it("dailyCardQueryFromParams는 dailyCardQuery와 같은 쿼리를 만든다", () => {
+    const llm = "오늘은 한 걸음만 천천히 내디뎌 보아요.";
+    expect(dailyCardQueryFromParams(dailyCardParams(ctx, guide, llm))).toBe(
+      dailyCardQuery(ctx, guide, llm),
+    );
+    expect(dailyCardQueryFromParams(dailyCardParams(ctx, guide))).toBe(dailyCardQuery(ctx, guide));
+  });
+
+  it("params 경유 쿼리도 parseDailyCardParams를 통과한다", () => {
+    const p = dailyCardParams(ctx, guide);
+    const parsed = parseDailyCardParams(new URLSearchParams(dailyCardQueryFromParams(p)));
+    expect(parsed).not.toBeNull();
+    expect(parsed!.dm).toBe(ctx.dayMaster.stem);
+    expect(parsed!.headline).toBe(guide.headline);
   });
 });
 
