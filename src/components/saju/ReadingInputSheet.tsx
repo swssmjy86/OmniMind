@@ -2,10 +2,12 @@
 
 import { useState } from "react";
 import { createPortal } from "react-dom";
+import Image from "next/image";
 import PickerInput from "@/components/ui/PickerInput";
 import Choice from "@/components/ui/Choice";
 import { PERSONAS, type PersonaId } from "@/lib/persona/personas";
 import { PERSONA_GLYPHS } from "@/components/home/PersonaCard";
+import { PERSONA_IMAGES } from "@/lib/persona/images";
 import { isBloodType, type BloodType } from "@/lib/interpret/content/traits";
 
 export interface ReadingSheetValues {
@@ -81,9 +83,26 @@ export default function ReadingInputSheet({
     <div className="today-input-sheet-overlay fixed inset-y-0 left-1/2 z-50 flex w-full max-w-[var(--shell-width)] -translate-x-1/2 items-end justify-center lg:max-w-[var(--shell-width-lg)]">
       <div aria-hidden className="absolute inset-0 bg-black/50" />
       <div className="fade-rise relative max-h-[85dvh] w-full max-w-[var(--shell-width)] overflow-y-auto rounded-t-[28px] bg-warm-base p-6 pb-[calc(2rem+env(safe-area-inset-bottom))] lg:max-w-[var(--shell-width-lg)]">
-        <p className="text-xs text-text-soft">
-          <span aria-hidden>{PERSONA_GLYPHS[persona.id]}</span> {persona.name} · {persona.title}
-        </p>
+        <div className="flex items-center gap-2.5">
+          {/* 아바타 일러스트 — 로드 전·실패 시 뒤의 글리프가 자리를 지킨다(PersonaCard와 동일). */}
+          <span
+            aria-hidden
+            className="relative grid size-9 shrink-0 place-items-center overflow-hidden rounded-full bg-warm-surface text-base"
+          >
+            {PERSONA_GLYPHS[persona.id]}
+            <Image
+              src={PERSONA_IMAGES[persona.id].avatar}
+              alt=""
+              width={36}
+              height={36}
+              unoptimized
+              className="absolute inset-0 size-9 object-cover"
+            />
+          </span>
+          <p className="text-xs text-text-soft">
+            {persona.name} · {persona.title}
+          </p>
+        </div>
         <h2 className="mt-1 font-[family-name:var(--font-serif-kr)] text-xl text-primary-green">
           {mode === "full" ? "당신의 이야기를 조금 들려주실래요?" : "두 조각만 더 알려주실래요?"}
         </h2>
