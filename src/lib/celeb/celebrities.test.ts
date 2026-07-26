@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { computeProfile } from "@/lib/engine";
 import { checkTone } from "@/lib/interpret/tone-guard";
 import {
-  CELEBRITIES, CELEB_CATEGORIES, CELEB_MIN_YEAR, findCelebrity, celebritiesByCategory,
+  CELEBRITIES, CELEB_CATEGORIES, CELEB_REGIONS, CELEB_MIN_YEAR, findCelebrity, celebritiesIn,
 } from "./celebrities";
 
 describe("유명인 목록", () => {
@@ -23,11 +23,25 @@ describe("유명인 목록", () => {
     }
   });
 
-  it("카테고리는 모두 정의된 값이고, 빈 카테고리가 없다", () => {
-    const known = new Set(CELEB_CATEGORIES.map((c) => c.id));
-    for (const c of CELEBRITIES) expect(known.has(c.category), c.name).toBe(true);
-    for (const cat of CELEB_CATEGORIES) {
-      expect(celebritiesByCategory(cat.id).length, cat.label).toBeGreaterThan(0);
+  // 화면은 지역 × 갈래 두 축으로 좁힌다 — 어느 조합이든 비면 빈 목록이 그대로 노출된다.
+  it("지역 × 갈래 조합이 하나도 비지 않는다", () => {
+    const regions = new Set(CELEB_REGIONS.map((r) => r.id));
+    const cats = new Set(CELEB_CATEGORIES.map((c) => c.id));
+    for (const c of CELEBRITIES) {
+      expect(regions.has(c.region), c.name).toBe(true);
+      expect(cats.has(c.category), c.name).toBe(true);
+    }
+    for (const r of CELEB_REGIONS) {
+      for (const cat of CELEB_CATEGORIES) {
+        expect(celebritiesIn(r.id, cat.id).length, `${r.label}·${cat.label}`).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  // 근대 한국인은 공식 기록이 음력인 경우가 많아 담지 않기로 했다(수록 원칙 5).
+  it("국내 인물은 음력 기록 위험이 큰 시대(1950년 이전)를 담지 않는다", () => {
+    for (const c of CELEBRITIES.filter((x) => x.region === "kr")) {
+      expect(Number(c.birthDate.slice(0, 4)), c.name).toBeGreaterThanOrEqual(1950);
     }
   });
 

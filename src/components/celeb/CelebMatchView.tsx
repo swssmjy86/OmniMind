@@ -6,7 +6,8 @@ import ReviewPrompt from "@/components/reviews/ReviewPrompt";
 import { unlockMatchDeep } from "@/lib/readings/actions";
 import { computeGuestMatchDeep } from "@/lib/readings/guest-actions";
 import {
-  CELEBRITIES, CELEB_CATEGORIES, type CelebCategory, type Celebrity,
+  CELEBRITIES, CELEB_CATEGORIES, CELEB_REGIONS,
+  type CelebCategory, type CelebRegion, type Celebrity,
 } from "@/lib/celeb/celebrities";
 import type { Draft } from "@/app/onboarding/draft";
 import type { InterpretationSection } from "@/lib/interpret/types";
@@ -33,6 +34,7 @@ export default function CelebMatchView({
   unlimited: boolean;
   myDraft?: Draft | null;
 }) {
+  const [region, setRegion] = useState<CelebRegion>("kr");
   const [category, setCategory] = useState<CelebCategory>("music");
   const [picked, setPicked] = useState<Celebrity | null>(null);
   const [mode, setMode] = useState<string | null>(null);
@@ -105,11 +107,29 @@ export default function CelebMatchView({
     );
   }
 
-  const list = CELEBRITIES.filter((c) => c.category === category);
+  const list = CELEBRITIES.filter((c) => c.region === region && c.category === category);
 
   return (
     <div className="mt-5">
-      <div className="flex flex-wrap gap-2">
+      {/* 지역 먼저, 갈래로 좁힌다 — 두 축 모두 고르면 목록이 한 화면에 들어온다. */}
+      <div className="grid grid-cols-2 gap-2">
+        {CELEB_REGIONS.map((r) => (
+          <Choice
+            key={r.id}
+            small
+            selected={region === r.id}
+            onClick={() => {
+              setRegion(r.id);
+              setPicked(null);
+            }}
+            unselectedBg="bg-warm-surface"
+          >
+            {r.label}
+          </Choice>
+        ))}
+      </div>
+
+      <div className="mt-2 flex flex-wrap gap-2">
         {CELEB_CATEGORIES.map((c) => (
           <Choice
             key={c.id}
