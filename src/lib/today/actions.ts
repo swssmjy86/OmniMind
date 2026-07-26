@@ -16,6 +16,9 @@ export interface GuestDailyExtras {
   zodiac: { animal: string; line: string } | null;
   /** AI가 다듬은 오늘의 이야기 — 무료 LLM 1회 시도, 실패하면 null(카드 생략, §8). */
   story: string | null;
+  /** 내 일간(천간·오행) — 화면에는 쓰지 않고 공유 카드의 장식 한자(dm/el)에만 쓴다.
+   *  이 필드가 생기기 전 하루 캐시에는 없을 수 있어 선택으로 둔다(없으면 카드만 생략). */
+  dayMaster?: { stem: string; element: string };
 }
 
 /**
@@ -56,6 +59,7 @@ export async function computeGuestDailyExtras(
       personal: guide.personal ?? null,
       zodiac: guide.zodiacSign ?? null,
       story,
+      dayMaster: { stem: ctx.dayMaster.stem, element: ctx.dayMaster.element },
     };
   } catch {
     return null; // 형식이 어긋나도 무료 공통 화면은 그대로 유지

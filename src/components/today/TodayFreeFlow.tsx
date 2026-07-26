@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import PersonaIntro from "@/components/persona/PersonaIntro";
+import ShareSheet from "@/components/share/ShareSheet";
 import TodayInputSheet from "./TodayInputSheet";
+import { dailyCardQueryFromParams } from "@/lib/share/card-copy";
 import { TODAY_BIRTH_KEY, parseTodayBirth, type TodayBirth } from "@/lib/today/birth-store";
 import { computeGuestDailyExtras, type GuestDailyExtras } from "@/lib/today/actions";
 import type { AstroEvent } from "@/lib/kasi/astro-events";
@@ -163,6 +165,28 @@ export default function TodayFreeFlow({
     );
   }
 
+  // 공유 카드 — 사주 풀이 5종과 동일하게 결과 아래에 붙인다(2026-07-26). 화면에 보이는
+  // 문구를 그대로 담는다(§동기화 원칙). 일간(dayMaster)은 카드 장식 한자에 필수라, 개인화가
+  // 실패했거나 이 필드가 없던 옛 하루 캐시면 카드만 조용히 생략한다(§8 폴백).
+  const cardQuery =
+    birth && extras?.dayMaster
+      ? dailyCardQueryFromParams({
+          dm: extras.dayMaster.stem,
+          el: extras.dayMaster.element,
+          headline,
+          mind,
+          personal: extras.personal,
+          color,
+          keyword,
+          lucky,
+          sky: [sky.moon, sky.riseSet, sky.altitude].join("\n"),
+          zodiac: extras.zodiac
+            ? `${extras.zodiac.animal}띠인 당신에게 — ${extras.zodiac.line}`
+            : null,
+          llm: extras.story,
+        })
+      : null;
+
   return (
     <>
       {intro && <PersonaIntro {...intro} {...introProps} />}
@@ -217,6 +241,8 @@ export default function TodayFreeFlow({
           </div>
         )}
       </section>
+
+      {cardQuery && <ShareSheet query={cardQuery} via="daily" label="오늘의 나 카드" />}
 
       {/* 예전 블러 티저 자리 — 이제 위 카드로 전부 공개. 로그인은 저장 보너스로만 유도. */}
       <p className="mt-4 text-center text-xs text-text-soft">

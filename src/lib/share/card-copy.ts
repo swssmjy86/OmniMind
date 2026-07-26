@@ -185,9 +185,13 @@ export function dailyCopyFromParams(p: DailyCardParams): DailyCardCopy {
   };
 }
 
-/** /api/card?mode=daily 쿼리 문자열. */
-export function dailyCardQuery(ctx: ProfileContext, guide: DailyGuide, llmParagraph?: string | null): string {
-  const p = dailyCardParams(ctx, guide, llmParagraph);
+/**
+ * /api/card?mode=daily 쿼리 문자열 — 이미 조립된 파라미터에서 만든다.
+ * 비로그인 오늘의운세(TodayFreeFlow)는 클라이언트 컴포넌트라 `ProfileContext`를 가질 수
+ * 없다(엔진은 서버 전용). 서버가 내려준 값만으로 같은 카드를 만들 수 있도록 쿼리 조립만
+ * 떼어 둔다 — 쿼리 스키마와 출력 문자열은 dailyCardQuery와 완전히 동일하다.
+ */
+export function dailyCardQueryFromParams(p: DailyCardParams): string {
   const sp = new URLSearchParams({
     mode: "daily",
     dm: p.dm,
@@ -203,6 +207,11 @@ export function dailyCardQuery(ctx: ProfileContext, guide: DailyGuide, llmParagr
   if (p.zodiac) sp.set("zodiac", p.zodiac);
   if (p.llm) sp.set("llm", p.llm);
   return sp.toString();
+}
+
+/** /api/card?mode=daily 쿼리 문자열(로그인 경로 — 프로필 컨텍스트에서 바로). */
+export function dailyCardQuery(ctx: ProfileContext, guide: DailyGuide, llmParagraph?: string | null): string {
+  return dailyCardQueryFromParams(dailyCardParams(ctx, guide, llmParagraph));
 }
 
 /** 쿼리 파라미터 검증·파싱. 길이 초과·필드 누락·일간↔오행 불일치면 null. */
