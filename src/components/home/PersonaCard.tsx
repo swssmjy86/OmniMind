@@ -26,9 +26,10 @@ export default function PersonaCard({ product }: { product: Product }) {
   const inner = (
     <>
       {/* 전신 일러스트 — 카드 우측을 채우고 좌측 가장자리는 카드 배경색으로 녹아든다.
+          z -2: 달빛 스윕(::before, z -1)이 일러스트 위·본문 아래를 스치게 하는 층서.
           unoptimized — 이미 webp로 줄여 커밋한 파일이라 Vercel 이미지 최적화 쿼터를
           쓸 이유가 없다(월 고정비 0원 원칙). */}
-      <span aria-hidden className="absolute inset-y-0 right-0 w-3/5">
+      <span aria-hidden className="absolute inset-y-0 right-0 z-[-2] w-3/5">
         <Image
           src={PERSONA_IMAGES[persona.id].full}
           alt=""
@@ -39,12 +40,12 @@ export default function PersonaCard({ product }: { product: Product }) {
         <span className="absolute inset-0 bg-[linear-gradient(to_right,var(--warm-surface)_0%,color-mix(in_srgb,var(--warm-surface)_55%,transparent)_38%,transparent_66%)]" />
       </span>
 
-      {/* 별 3개 — 장식이라 스크린리더에서 숨긴다. 일러스트 위에서 반짝이도록 z를 올린다. */}
-      <span aria-hidden className="persona-star z-[1]" style={{ top: "14%", right: "12%" }} />
-      <span aria-hidden className="persona-star z-[1]" style={{ top: "30%", right: "28%" }} />
-      <span aria-hidden className="persona-star z-[1]" style={{ top: "18%", right: "42%" }} />
+      {/* 별 3개 — 장식이라 스크린리더에서 숨긴다 */}
+      <span aria-hidden className="persona-star" style={{ top: "14%", right: "12%" }} />
+      <span aria-hidden className="persona-star" style={{ top: "30%", right: "28%" }} />
+      <span aria-hidden className="persona-star" style={{ top: "18%", right: "42%" }} />
 
-      <div className="relative z-[2] flex min-h-44 flex-col p-5">
+      <div className="flex min-h-44 flex-col p-5">
         <div className="flex items-center gap-4">
           {/* 원형 배지 — 얼굴은 우측 전신컷이 맡으므로 여기는 페르소나 상징 글리프 */}
           <span

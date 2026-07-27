@@ -104,12 +104,12 @@ export default async function HomePage() {
               href="/saju"
               className="press flex items-center justify-between gap-3 rounded-card border border-text-soft/20 bg-warm-surface p-4"
             >
-              <span className="min-w-0">
+              <div className="min-w-0">
                 <p className="font-[family-name:var(--font-serif-kr)] text-lg text-primary-green">
                   {p.title}
                 </p>
                 <p className="mt-1 text-xs text-text-soft">{p.tagline}</p>
-              </span>
+              </div>
               {/* 담당 페르소나 얼굴 — 로드 전·실패 시 뒤의 글리프가 자리를 지킨다.
                   unoptimized — 이미 webp로 줄여 커밋한 파일(월 고정비 0원 원칙). */}
               <span
