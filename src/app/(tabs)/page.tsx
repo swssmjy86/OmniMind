@@ -50,6 +50,10 @@ export default async function HomePage() {
   const grid = PRODUCTS.filter((p) => p.id !== "today");
   const homeSummary = await homeReviewHighlights();
 
+  // 달지기 배너 멘트 — SSOT(personas.ts homeLine)를 문장 경계에서 두 줄로 나눈다.
+  // 둘째 문장은 moon-gold 강조. homeLine이 한 문장이 되면 둘째 줄은 자연히 사라진다.
+  const [dalzigiLine1, dalzigiLine2] = PERSONAS.dalzigi.homeLine.split(/(?<=\.)\s+/);
+
   return (
     <main className="fade-rise p-6">
       <div className="flex items-baseline justify-between">
@@ -78,7 +82,7 @@ export default async function HomePage() {
       {!profile && (
         <Link
           href="/today?input=1"
-          className="press relative isolate mt-6 flex min-h-44 flex-col justify-center overflow-hidden rounded-card border border-accent-coral/30 bg-warm-surface p-5"
+          className="press relative isolate mt-6 flex min-h-44 flex-col overflow-hidden rounded-card border border-accent-coral/30 bg-warm-surface p-5"
         >
           {/* 배경 — 카드 전면 밤 장면(isolate + z -1). 얼굴은 우측 상단 빈 구간
               (좌측 기준 scale이라 왼쪽 가장자리 공백 없음). unoptimized — 커밋된
@@ -104,7 +108,14 @@ export default async function HomePage() {
             </p>
           ) : (
             <p className="max-w-[70%] text-[15px] font-medium leading-relaxed text-text-main">
-              &ldquo;{PERSONAS.dalzigi.homeLine}&rdquo;
+              &ldquo;{dalzigiLine1}
+              {dalzigiLine2 && (
+                <>
+                  <br />
+                  <span className="text-moon-gold">{dalzigiLine2}</span>
+                </>
+              )}
+              &rdquo;
             </p>
           )}
         </Link>
