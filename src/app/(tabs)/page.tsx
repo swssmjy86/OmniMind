@@ -73,26 +73,20 @@ export default async function HomePage() {
       {/* 프로필 없으면 개인화 유도 — 그리드보다 먼저(홈 목업: CTA가 첫 카드) */}
       {!profile && (
         <section className="relative isolate mt-6 overflow-hidden rounded-card border border-accent-coral/30 bg-warm-surface p-5">
-          {/* 달지기 배경 — 오늘의운세(/today)로 이끄는 카드라 그 문지기가 우측에서 맞이한다.
-              배너 카드(PersonaCard)와 같은 문법: isolate + 일러스트 z -1, 좌측은 카드
-              배경색으로 녹아들고 우측도 옅은 베일을 남겨 본문·링크 가독성을 지킨다.
+          {/* 달지기 배경 — 오늘의운세(/today)로 이끄는 카드라 그 문지기가 맞이한다.
+              카드 전면에 밤 장면을 깔고(isolate + z -1), 좌→우 그라데이션 베일로
+              본문 가독성을 지킨다. 세로 크롭 49%는 얼굴이 버튼 위 빈 공간에 오는 지점.
               unoptimized — 커밋된 webp라 이미지 최적화 쿼터 불필요(월 고정비 0원 원칙). */}
-          <span aria-hidden className="absolute inset-y-0 right-0 z-[-1] w-2/5 overflow-hidden">
+          <span aria-hidden className="absolute inset-0 z-[-1]">
             <Image
               src={PERSONA_IMAGES.dalzigi.full}
               alt=""
               fill
               unoptimized
               className="object-cover"
-              /* 전신컷 폭이 좁은 스트립에 통째로 맞으면 얼굴이 너무 작다 — 얼굴(이미지
-                 55%, 47%) 기준으로 확대하고 살짝 올려, 버튼 위 빈 공간에 얼굴이 오게 한다. */
-              style={{
-                objectPosition: PERSONA_IMAGES.dalzigi.fullPosition,
-                transform: "scale(1.75) translateY(-13%)",
-                transformOrigin: "55% 47%",
-              }}
+              style={{ objectPosition: "50% 49%" }}
             />
-            <span className="absolute inset-0 bg-[linear-gradient(to_right,var(--warm-surface)_0%,color-mix(in_srgb,var(--warm-surface)_55%,transparent)_45%,color-mix(in_srgb,var(--warm-surface)_20%,transparent)_100%)]" />
+            <span className="absolute inset-0 bg-[linear-gradient(to_right,color-mix(in_srgb,var(--warm-surface)_92%,transparent)_0%,color-mix(in_srgb,var(--warm-surface)_55%,transparent)_45%,color-mix(in_srgb,var(--warm-surface)_18%,transparent)_100%)]" />
           </span>
           <p className="max-w-[75%] text-text-soft">
             {user ? (
