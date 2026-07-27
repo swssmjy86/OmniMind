@@ -13,14 +13,18 @@ import type { PersonaId } from "./personas";
 export interface PersonaImage {
   avatar: string;
   full: string;
+  /** 배너 카드가 세로 전신컷을 가로 창으로 크롭할 때의 CSS object-position.
+   *  일러스트마다 얼굴 높이가 다르다(상단 ~20% · 중단 ~50%) — 고정 크롭이면
+   *  얼굴이 카드 밖으로 잘리는 페르소나가 생겨, 얼굴이 창 중앙에 오도록 개별 지정. */
+  fullPosition: string;
 }
 
 export const PERSONA_IMAGES: Record<PersonaId, PersonaImage> = {
-  dalzigi: { avatar: "/images/persona/dalzigi-avatar.webp", full: "/images/persona/dalzigi.webp" },
-  seoon: { avatar: "/images/persona/seoon-avatar.webp", full: "/images/persona/seoon.webp" },
-  byeori: { avatar: "/images/persona/byeori-avatar.webp", full: "/images/persona/byeori.webp" },
-  hongyeon: { avatar: "/images/persona/hongyeon-avatar.webp", full: "/images/persona/hongyeon.webp" },
-  yeonri: { avatar: "/images/persona/yeonri-avatar.webp", full: "/images/persona/yeonri.webp" },
-  onsae: { avatar: "/images/persona/onsae-avatar.webp", full: "/images/persona/onsae.webp" },
-  geumo: { avatar: "/images/persona/geumo-avatar.webp", full: "/images/persona/geumo.webp" },
+  dalzigi: { avatar: "/images/persona/dalzigi-avatar.webp", full: "/images/persona/dalzigi.webp", fullPosition: "50% 45%" },
+  seoon: { avatar: "/images/persona/seoon-avatar.webp", full: "/images/persona/seoon.webp", fullPosition: "50% 45%" },
+  byeori: { avatar: "/images/persona/byeori-avatar.webp", full: "/images/persona/byeori.webp", fullPosition: "50% 20%" },
+  hongyeon: { avatar: "/images/persona/hongyeon-avatar.webp", full: "/images/persona/hongyeon.webp", fullPosition: "50% 40%" },
+  yeonri: { avatar: "/images/persona/yeonri-avatar.webp", full: "/images/persona/yeonri.webp", fullPosition: "50% 50%" },
+  onsae: { avatar: "/images/persona/onsae-avatar.webp", full: "/images/persona/onsae.webp", fullPosition: "50% 38%" },
+  geumo: { avatar: "/images/persona/geumo-avatar.webp", full: "/images/persona/geumo.webp", fullPosition: "50% 20%" },
 };
