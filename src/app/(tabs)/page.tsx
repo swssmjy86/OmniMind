@@ -74,8 +74,9 @@ export default async function HomePage() {
       {!profile && (
         <section className="relative isolate mt-6 overflow-hidden rounded-card border border-accent-coral/30 bg-warm-surface p-5">
           {/* 달지기 배경 — 오늘의운세(/today)로 이끄는 카드라 그 문지기가 맞이한다.
-              카드 전면에 밤 장면을 깔고(isolate + z -1), 좌→우 그라데이션 베일로
-              본문 가독성을 지킨다. 세로 크롭 49%는 얼굴이 버튼 위 빈 공간에 오는 지점.
+              카드 전면에 밤 장면을 깔고(isolate + z -1), 본문·버튼은 좌측 컬럼에 모아
+              우측을 비워 둔다 — 불투명 버튼이 얼굴을 가리지 않도록 얼굴을 우측 빈
+              구간으로 옮긴 배치(scale 1.3, 좌측 기준이라 왼쪽 가장자리 공백 없음).
               unoptimized — 커밋된 webp라 이미지 최적화 쿼터 불필요(월 고정비 0원 원칙). */}
           <span aria-hidden className="absolute inset-0 z-[-1]">
             <Image
@@ -84,29 +85,36 @@ export default async function HomePage() {
               fill
               unoptimized
               className="object-cover"
-              style={{ objectPosition: "50% 49%" }}
+              style={{
+                objectPosition: "50% 48%",
+                transform: "scale(1.3)",
+                transformOrigin: "0% 48%",
+              }}
             />
-            <span className="absolute inset-0 bg-[linear-gradient(to_right,color-mix(in_srgb,var(--warm-surface)_92%,transparent)_0%,color-mix(in_srgb,var(--warm-surface)_55%,transparent)_45%,color-mix(in_srgb,var(--warm-surface)_18%,transparent)_100%)]" />
+            <span className="absolute inset-0 bg-[linear-gradient(to_right,color-mix(in_srgb,var(--warm-surface)_92%,transparent)_0%,color-mix(in_srgb,var(--warm-surface)_50%,transparent)_50%,color-mix(in_srgb,var(--warm-surface)_8%,transparent)_100%)]" />
           </span>
-          <p className="max-w-[75%] text-text-soft">
-            {user ? (
-              <>반가워요. 이제 <span className="text-text-main">당신의 조각들</span>을 이어볼까요?</>
-            ) : (
-              <>나의 사주로 <span className="text-text-main">더 깊은 오늘</span>을 받아볼까요?</>
-            )}
-          </p>
-          {/* ?input=1 — 인트로 영상이 걷힌 뒤 생년월일 팝업을 (이미 저장돼 있어도) 띄운다 */}
-          <Link
-            href="/today?input=1"
-            className="press mt-4 block w-full rounded-card bg-accent-coral py-3.5 text-center font-medium text-white"
-          >
-            나를 알아보기 ✨
-          </Link>
-          {!user && (
-            <Link href="/login" className="mt-3 block text-center text-sm text-text-soft underline">
-              이미 함께했던 분이라면 — 다시 이어보기 (로그인)
+          {/* 본문 좌측 컬럼 — 우측 ~38%는 달지기 몫으로 비워 둔다 */}
+          <div className="max-w-[62%]">
+            <p className="text-text-soft">
+              {user ? (
+                <>반가워요. 이제 <span className="text-text-main">당신의 조각들</span>을 이어볼까요?</>
+              ) : (
+                <>나의 사주로 <span className="text-text-main">더 깊은 오늘</span>을 받아볼까요?</>
+              )}
+            </p>
+            {/* ?input=1 — 인트로 영상이 걷힌 뒤 생년월일 팝업을 (이미 저장돼 있어도) 띄운다 */}
+            <Link
+              href="/today?input=1"
+              className="press mt-4 block w-full rounded-card bg-accent-coral py-3.5 text-center font-medium text-white"
+            >
+              나를 알아보기 ✨
             </Link>
-          )}
+            {!user && (
+              <Link href="/login" className="mt-3 block text-center text-sm text-text-soft underline">
+                이미 함께했던 분이라면 — 다시 이어보기 (로그인)
+              </Link>
+            )}
+          </div>
         </section>
       )}
 
