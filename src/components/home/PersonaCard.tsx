@@ -35,7 +35,8 @@ export default function PersonaCard({ product }: { product: Product }) {
           alt=""
           fill
           unoptimized
-          className="object-cover object-[50%_15%]"
+          className="object-cover"
+          style={{ objectPosition: PERSONA_IMAGES[persona.id].fullPosition }}
         />
         <span className="absolute inset-0 bg-[linear-gradient(to_right,var(--warm-surface)_0%,color-mix(in_srgb,var(--warm-surface)_55%,transparent)_38%,transparent_66%)]" />
       </span>
@@ -69,7 +70,7 @@ export default function PersonaCard({ product }: { product: Product }) {
           &ldquo;{persona.homeLine}&rdquo;
         </p>
 
-        <p className="persona-cta mt-auto pt-3 text-right text-[15px] text-moon-gold [text-shadow:0_1px_12px_var(--warm-surface)]">
+        <p className="persona-cta mt-auto pt-3 text-right text-[15px] text-moon-gold">
           {soon ? "곧 만나요" : "풀이 보러 가기 →"}
         </p>
       </div>

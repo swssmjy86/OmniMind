@@ -354,9 +354,15 @@ body {
   0%, 6% { opacity: 0; transform: translateY(4px); }
   24%, 100% { opacity: 1; transform: translateY(0); }
 }
-/* CTA 은은한 펄스 — 2.5s(50%) 이후 한 번 부드럽게 밝아졌다 돌아온다 */
+/* CTA 은은한 펄스 — 2.5s(50%) 이후 한 번 부드럽게 밝아졌다 돌아온다.
+   헤일로: CTA는 밝은 일러스트(해·등불) 위에 얹히므로 배경색 다층 글로우로 가독성을 지킨다. */
 .persona-cta {
   animation: persona-cta-pulse 5s ease-in-out infinite;
+  text-shadow:
+    0 0 2px var(--warm-surface),
+    0 0 6px var(--warm-surface),
+    0 0 14px var(--warm-surface),
+    0 1px 24px var(--warm-surface);
 }
 @keyframes persona-cta-pulse {
   0%, 50% { opacity: 0.85; }
