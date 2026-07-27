@@ -1,8 +1,11 @@
 import Link from "next/link";
+import Image from "next/image";
 import { redirect } from "next/navigation";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { currentMilestone, isMilestoneToday } from "@/lib/interpret/milestone";
 import { PRODUCTS } from "@/lib/persona/products";
+import { PERSONA_IMAGES } from "@/lib/persona/images";
+import { PERSONA_GLYPHS } from "@/components/home/PersonaCard";
 import { FAQ_ITEMS } from "@/app/faq/page";
 import AdSlot from "@/components/ads/AdSlot";
 import ReviewHighlights from "@/components/reviews/ReviewHighlights";
@@ -99,12 +102,30 @@ export default async function HomePage() {
             <Link
               key={p.id}
               href="/saju"
-              className="press rounded-card border border-text-soft/20 bg-warm-surface p-4"
+              className="press flex items-center justify-between gap-3 rounded-card border border-text-soft/20 bg-warm-surface p-4"
             >
-              <p className="font-[family-name:var(--font-serif-kr)] text-lg text-primary-green">
-                {p.title}
-              </p>
-              <p className="mt-1 text-xs text-text-soft">{p.tagline}</p>
+              <div className="min-w-0">
+                <p className="font-[family-name:var(--font-serif-kr)] text-lg text-primary-green">
+                  {p.title}
+                </p>
+                <p className="mt-1 text-xs text-text-soft">{p.tagline}</p>
+              </div>
+              {/* 담당 페르소나 얼굴 — 로드 전·실패 시 뒤의 글리프가 자리를 지킨다.
+                  unoptimized — 이미 webp로 줄여 커밋한 파일(월 고정비 0원 원칙). */}
+              <span
+                aria-hidden
+                className="relative grid size-11 shrink-0 place-items-center overflow-hidden rounded-full bg-warm-base text-xl"
+              >
+                {PERSONA_GLYPHS[p.personaId]}
+                <Image
+                  src={PERSONA_IMAGES[p.personaId].avatar}
+                  alt=""
+                  width={44}
+                  height={44}
+                  unoptimized
+                  className="absolute inset-0 size-11 object-cover"
+                />
+              </span>
             </Link>
           ))}
         </div>
