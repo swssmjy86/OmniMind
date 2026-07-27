@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { currentMilestone, isMilestoneToday } from "@/lib/interpret/milestone";
 import { PRODUCTS } from "@/lib/persona/products";
+import { PERSONAS } from "@/lib/persona/personas";
 import { PERSONA_IMAGES } from "@/lib/persona/images";
 import { PERSONA_GLYPHS } from "@/components/home/PersonaCard";
 import { FAQ_ITEMS } from "@/app/faq/page";
@@ -71,13 +72,17 @@ export default async function HomePage() {
       <p className="mt-1 text-sm text-text-soft">오늘 밤도 당신의 이야기를 켜 두었어요.</p>
 
       {/* 프로필 없으면 개인화 유도 — 그리드보다 먼저(홈 목업: CTA가 첫 카드) */}
+      {/* 달지기 배너(2026-07-28) — 버튼 없이 카드 전체가 오늘의운세 입구다. 밤 장면이
+          그대로 흐르고 달지기의 홈 멘트만 얹는다(문구 SSOT는 personas.ts homeLine).
+          ?input=1 — 인트로 영상이 걷힌 뒤 생년월일 팝업을 (이미 저장돼 있어도) 띄운다. */}
       {!profile && (
-        <section className="relative isolate mt-6 flex min-h-44 flex-col overflow-hidden rounded-card border border-accent-coral/30 bg-warm-surface p-5">
-          {/* 달지기 배경 — 오늘의운세(/today)로 이끄는 카드라 그 문지기가 맞이한다.
-              카드 전면에 밤 장면을 깔고(isolate + z -1), 카드를 배너 높이(min-h-44)로
-              키워 전폭 버튼 위에 얼굴이 들어갈 공간을 확보한다 — 얼굴은 우측 상단
-              빈 구간(좌측 기준 scale이라 왼쪽 가장자리 공백 없음).
-              unoptimized — 커밋된 webp라 이미지 최적화 쿼터 불필요(월 고정비 0원 원칙). */}
+        <Link
+          href="/today?input=1"
+          className="press relative isolate mt-6 flex min-h-44 flex-col justify-center overflow-hidden rounded-card border border-accent-coral/30 bg-warm-surface p-5"
+        >
+          {/* 배경 — 카드 전면 밤 장면(isolate + z -1). 얼굴은 우측 상단 빈 구간
+              (좌측 기준 scale이라 왼쪽 가장자리 공백 없음). unoptimized — 커밋된
+              webp라 이미지 최적화 쿼터 불필요(월 고정비 0원 원칙). */}
           <span aria-hidden className="absolute inset-0 z-[-1]">
             <Image
               src={PERSONA_IMAGES.dalzigi.full}
@@ -93,21 +98,16 @@ export default async function HomePage() {
             />
             <span className="absolute inset-0 bg-[linear-gradient(to_right,color-mix(in_srgb,var(--warm-surface)_92%,transparent)_0%,color-mix(in_srgb,var(--warm-surface)_50%,transparent)_50%,color-mix(in_srgb,var(--warm-surface)_8%,transparent)_100%)]" />
           </span>
-          <p className="max-w-[70%] text-text-soft">
-            {user ? (
-              <>반가워요. 이제 <span className="text-text-main">당신의 조각들</span>을 이어볼까요?</>
-            ) : (
-              <>나의 사주로 <span className="text-text-main">더 깊은 오늘</span>을 받아볼까요?</>
-            )}
-          </p>
-          {/* ?input=1 — 인트로 영상이 걷힌 뒤 생년월일 팝업을 (이미 저장돼 있어도) 띄운다 */}
-          <Link
-            href="/today?input=1"
-            className="press mt-auto block w-full rounded-card bg-accent-coral py-3.5 text-center font-medium text-white"
-          >
-            나를 알아보기 ✨
-          </Link>
-        </section>
+          {user ? (
+            <p className="max-w-[70%] text-text-soft">
+              반가워요. 이제 <span className="text-text-main">당신의 조각들</span>을 이어볼까요?
+            </p>
+          ) : (
+            <p className="max-w-[70%] text-[15px] font-medium leading-relaxed text-text-main">
+              &ldquo;{PERSONAS.dalzigi.homeLine}&rdquo;
+            </p>
+          )}
+        </Link>
       )}
 
       {/* 6종 풀이 그리드 — 클릭하면 사주팔자 탭으로(확정 결정: 홈 → 사주팔자 이동) */}
