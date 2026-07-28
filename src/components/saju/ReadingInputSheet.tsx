@@ -119,7 +119,7 @@ export default function ReadingInputSheet({
               <PickerInput type="date" value={birthDate} onChange={setBirthDate} placeholder="생년월일을 선택해 주세요" />
             </div>
 
-            <label className="mt-4 block text-sm text-text-soft">태어난 시간 (모르면 비워두세요)</label>
+            <label className="mt-4 block text-sm text-text-soft">태어난 시간</label>
             <div className="mt-1">
               <PickerInput type="time" value={birthTime} onChange={setBirthTime} placeholder="알면 더 깊어져요" />
             </div>
