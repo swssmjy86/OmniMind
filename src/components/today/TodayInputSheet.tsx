@@ -23,7 +23,7 @@ export default function TodayInputSheet({
   const [birthTime, setBirthTime] = useState("");
   const [gender, setGender] = useState<"male" | "female" | null>(null);
 
-  const canSubmit = /^\d{4}-\d{2}-\d{2}$/.test(birthDate);
+  const canSubmit = /^\d{4}-\d{2}-\d{2}$/.test(birthDate) && /^\d{2}:\d{2}$/.test(birthTime);
 
   const submit = () => {
     const b: TodayBirth = { birthDate, birthTime, gender };
@@ -56,9 +56,9 @@ export default function TodayInputSheet({
           <PickerInput type="date" value={birthDate} onChange={setBirthDate} placeholder="생년월일을 선택해 주세요" />
         </div>
 
-        <label className="mt-4 block text-sm text-text-soft">태어난 시간 (선택)</label>
+        <label className="mt-4 block text-sm text-text-soft">태어난 시간</label>
         <div className="mt-1">
-          <PickerInput type="time" value={birthTime} onChange={setBirthTime} placeholder="알면 더 정확해져요" />
+          <PickerInput type="time" value={birthTime} onChange={setBirthTime} placeholder="태어난 시간을 선택해 주세요" />
         </div>
 
         <label className="mt-4 block text-sm text-text-soft">성별 (선택)</label>

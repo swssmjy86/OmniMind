@@ -76,6 +76,9 @@ describe("TodayFreeFlow — 비로그인 오늘의운세 개인화(블러 해제
     fireEvent.change(document.querySelector('input[type="date"]')!, {
       target: { value: "1990-06-15" },
     });
+    fireEvent.change(document.querySelector('input[type="time"]')!, {
+      target: { value: "23:30" },
+    });
     fireEvent.click(screen.getByRole("button", { name: "오늘의 기운 보기" }));
     await waitFor(() => expect(document.querySelector("video")).toBeNull());
     expect(await screen.findByText(/달빛이 다듬은 이야기예요/)).toBeInTheDocument();
