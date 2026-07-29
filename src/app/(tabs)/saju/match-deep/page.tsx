@@ -3,7 +3,10 @@ import type { Metadata } from "next";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { isPremium, FREE_FOR_ALL, GUEST_READING_ACCESS } from "@/lib/consult/quota";
 import { PERSONAS } from "@/lib/persona/personas";
+import { PERSONA_IMAGES } from "@/lib/persona/images";
+import { PERSONA_GLYPHS } from "@/components/home/PersonaCard";
 import GuestMatchDeepGate from "@/components/saju/GuestMatchDeepGate";
+import PersonaImageIntro from "@/components/persona/PersonaImageIntro";
 import LoginRequiredNotice from "@/components/saju/LoginRequiredNotice";
 import MatchDeepForm from "@/components/saju/MatchDeepForm";
 import ReviewPrompt from "@/components/reviews/ReviewPrompt";
@@ -26,6 +29,13 @@ export default async function MatchDeepPage() {
   const yeonri = PERSONAS.yeonri;
   const header = (
     <>
+      <PersonaImageIntro
+        personaId="yeonri"
+        eyebrow={`${PERSONA_GLYPHS.yeonri} ${yeonri.name} · 궁합 심층`}
+        line={yeonri.greeting}
+        image={PERSONA_IMAGES.yeonri.full}
+        imagePosition={PERSONA_IMAGES.yeonri.fullPosition}
+      />
       <h1 className="font-[family-name:var(--font-serif-kr)] text-2xl text-primary-green">
         궁합 심층
       </h1>

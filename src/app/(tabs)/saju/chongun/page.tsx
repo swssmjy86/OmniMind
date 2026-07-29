@@ -10,8 +10,10 @@ import { PROFILE_CONTEXT_VERSION } from "@/lib/engine/index";
 import { currentDaeun } from "@/lib/engine/daeun";
 import { toKstParts } from "@/lib/engine/kst";
 import { PERSONAS } from "@/lib/persona/personas";
+import { PERSONA_IMAGES } from "@/lib/persona/images";
 import SajuChart from "@/components/profile/SajuChart";
 import GuestReadingView from "@/components/saju/GuestReadingView";
+import PersonaImageIntro from "@/components/persona/PersonaImageIntro";
 import LoginRequiredNotice from "@/components/saju/LoginRequiredNotice";
 import ProfileTraitsGate from "@/components/saju/ProfileTraitsGate";
 import ShareSheet from "@/components/share/ShareSheet";
@@ -41,6 +43,13 @@ export default async function ChongunPage() {
   const seoon = PERSONAS.seoon;
   const header = (
     <>
+      <PersonaImageIntro
+        personaId="seoon"
+        eyebrow={`📜 ${seoon.name} · 총운`}
+        line={seoon.greeting}
+        image={PERSONA_IMAGES.seoon.full}
+        imagePosition={PERSONA_IMAGES.seoon.fullPosition}
+      />
       <h1 className="font-[family-name:var(--font-serif-kr)] text-2xl text-primary-green">
         총운
       </h1>

@@ -15,7 +15,10 @@ import { currentDaeun } from "@/lib/engine/daeun";
 import { toKstParts } from "@/lib/engine/kst";
 import { PRODUCTS } from "@/lib/persona/products";
 import { PERSONAS } from "@/lib/persona/personas";
+import { PERSONA_IMAGES } from "@/lib/persona/images";
+import { PERSONA_GLYPHS } from "@/components/home/PersonaCard";
 import GuestReadingView from "@/components/saju/GuestReadingView";
+import PersonaImageIntro from "@/components/persona/PersonaImageIntro";
 import LoginRequiredNotice from "@/components/saju/LoginRequiredNotice";
 import ProfileTraitsGate from "@/components/saju/ProfileTraitsGate";
 import ReadingPeek from "@/components/saju/ReadingPeek";
@@ -49,6 +52,13 @@ export default async function CreditReadingPage({
 
   const header = (
     <>
+      <PersonaImageIntro
+        personaId={persona.id}
+        eyebrow={`${PERSONA_GLYPHS[persona.id]} ${persona.name} · ${meta.title}`}
+        line={persona.greeting}
+        image={PERSONA_IMAGES[persona.id].full}
+        imagePosition={PERSONA_IMAGES[persona.id].fullPosition}
+      />
       <h1 className="font-[family-name:var(--font-serif-kr)] text-2xl text-primary-green">
         {meta.title}
       </h1>
