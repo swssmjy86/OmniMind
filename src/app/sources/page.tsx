@@ -44,8 +44,8 @@ export default function SourcesPage() {
         </h2>
         <p className="mt-3 text-sm leading-relaxed text-text-main">
           풀이는 전통 명리 이론의 체계(일간·오행·십성·대운·12운성)에 기반하지만,
-          문장은 옴니마인드가 써요. 특정 고전 문헌을 문장별 전거로 표기하지 않아요 —
-          그렇게 보이도록 지어낸 인용은 이 페이지의 존재 이유를 무너뜨리니까요.
+          문장은 옴니마인드가 직접 써요. 문장마다 고전 문헌을 인용 표기하지는 않아요 —
+          실제로 참고하지 않은 출처를 단 것처럼 보이게 하고 싶지 않아서예요.
         </p>
         <p className="mt-3 text-sm leading-relaxed text-text-main">
           다만 이 체계 자체가 어디서 왔는지는 알려드릴 수 있어요. 오행·음양 사상은

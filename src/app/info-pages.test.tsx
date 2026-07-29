@@ -23,7 +23,7 @@ describe("/sources (§7 출처)", () => {
 
   it("해석의 한계를 정직하게 고지한다 — 문장은 옴니마인드가 쓴다", () => {
     render(<SourcesPage />);
-    expect(screen.getByText(/문장은 옴니마인드가 써요/)).toBeInTheDocument();
+    expect(screen.getByText(/문장은 옴니마인드가 직접 써요/)).toBeInTheDocument();
   });
 
   it("명리학의 문화적 뿌리(여씨춘추·회남자)를 밝히되, 문장별 전거가 아님을 재확인한다", () => {
@@ -31,7 +31,7 @@ describe("/sources (§7 출처)", () => {
     expect(screen.getByText(/여씨춘추/)).toBeInTheDocument();
     expect(screen.getByText(/회남자/)).toBeInTheDocument();
     // 문장별 전거 표기가 아니라는 기존 원칙과 같은 섹션에서 이어져야 모순되지 않는다.
-    expect(screen.getByText(/문장별 전거로 표기하지 않아요/)).toBeInTheDocument();
+    expect(screen.getByText(/고전 문헌을 인용 표기하지는 않아요/)).toBeInTheDocument();
   });
 });
 
@@ -77,10 +77,9 @@ describe("/terms · /privacy (§9.3 개발 단계 초안)", () => {
     expect(screen.getAllByText(/참고용/).length).toBeGreaterThan(0);
   });
 
-  it("개인정보처리방침 — 국외이전(OpenRouter·Gemini·Vercel)을 실제대로 고지한다", () => {
+  it("개인정보처리방침 — 국외이전(OpenRouter·Vercel)을 실제대로 고지한다", () => {
     render(<PrivacyPage />);
     expect(screen.getByText(/OpenRouter/)).toBeInTheDocument();
-    expect(screen.getByText(/Google Gemini/)).toBeInTheDocument();
     expect(screen.getByText(/Vercel/)).toBeInTheDocument();
     expect(screen.getByText(/토스페이먼츠/)).toBeInTheDocument();
   });

@@ -4,12 +4,13 @@ export const metadata: Metadata = { title: "개인정보처리방침 — 옴니�
 
 // §9.3 개인정보처리방침 — 실제 코드 실사 기준 초안. 국외이전 항목이 핵심이다:
 // 고민 텍스트·사주 프로필 맥락이 LLM 제공자(미국)로 실제로 전송된다
-// (openrouter-provider.ts, gemini-provider.ts). 일반 템플릿에는 이 항목이 통째로 빠진다.
+// (openrouter-provider.ts만 실제 호출됨 — gemini-provider.ts는 미사용 코드).
+// 일반 템플릿에는 이 항목이 통째로 빠진다.
 const SECTIONS: { title: string; body: string[] }[] = [
   {
     title: "1. 수집하는 정보",
     body: [
-      "프로필 생성 시: 생년월일시, 성별(선택), 닉네임.",
+      "프로필 생성 시: 생년월일시, 성별(선택), MBTI, 혈액형, 닉네임.",
       "소셜 로그인 시: 카카오 또는 Google 계정의 닉네임·프로필 사진·이메일.",
       "서비스 이용 시: 고민·채팅으로 입력한 텍스트, 결제 기록(주문번호·상품·금액).",
     ],
@@ -24,7 +25,7 @@ const SECTIONS: { title: string; body: string[] }[] = [
   {
     title: "3. 국외 이전",
     body: [
-      "AI 문장 생성: OpenRouter(미국), Google Gemini(미국). 고민·채팅 텍스트와 사주 프로필 맥락이 문장 생성을 위해 전송됩니다. 전송된 데이터는 문장 생성 목적으로만 사용됩니다.",
+      "AI 문장 생성: OpenRouter(미국). 고민·채팅 텍스트와 사주 프로필 맥락이 문장 생성을 위해 전송되며, OpenRouter는 요청 상황에 따라 해외 AI 모델(Google, Anthropic 등)로 라우팅할 수 있습니다. 전송된 데이터는 문장 생성 목적으로만 사용됩니다.",
       "소셜 로그인(Google): Google 인증 절차가 Google(미국) 서버를 경유합니다.",
       "호스팅: Vercel(미국). 서비스 요청이 Vercel 인프라를 경유합니다.",
     ],
