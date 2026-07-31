@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { loadDraft, isCompleteDraft, type Draft } from "@/app/onboarding/draft";
 import { UNLIMITED } from "@/lib/consult/quota";
 import CelebMatchView from "./CelebMatchView";
+import CelebInputSheet from "./CelebInputSheet";
 
 type Status = "loading" | "no-draft" | "ready";
 
@@ -34,18 +34,22 @@ export default function GuestCelebGate() {
   }
 
   if (status === "no-draft") {
+    // 예전엔 /onboarding으로 보냈지만, 이제 오늘의운세와 같은 입력 팝업으로 여기서 바로 받는다.
+    // 저장되면 draft가 채워지며 곧장 궁합 화면으로 넘어간다(시트는 닫힌다).
     return (
-      <section className="mt-6 rounded-card border border-accent-coral/30 bg-warm-surface p-5">
-        <p className="text-text-soft">
-          맞춰보려면 먼저 <span className="text-text-main">당신의 여덟 글자</span>가 필요해요.
-        </p>
-        <Link
-          href="/onboarding"
-          className="press mt-4 block w-full rounded-card bg-accent-coral py-3.5 text-center font-medium text-white"
-        >
-          나를 알아보기 ✨
-        </Link>
-      </section>
+      <>
+        <section className="mt-6 rounded-card border border-accent-coral/30 bg-warm-surface p-5">
+          <p className="text-text-soft">
+            맞춰보려면 먼저 <span className="text-text-main">당신의 여덟 글자</span>가 필요해요.
+          </p>
+        </section>
+        <CelebInputSheet
+          onSaved={(d) => {
+            setDraft(d);
+            setStatus("ready");
+          }}
+        />
+      </>
     );
   }
 
