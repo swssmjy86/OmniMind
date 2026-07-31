@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createServerSupabase } from "@/lib/supabase/server";
+import ProfileNeeded from "@/components/profile/ProfileNeeded";
 import MatchForm from "@/components/match/MatchForm";
 import { SLUG_TO_MODE, type MatchMe } from "@/lib/engine/match";
 import type { ProfileRow, ConnectionRow } from "@/lib/db/types";
@@ -26,20 +27,10 @@ export default async function MatchPage() {
 
   if (!profile) {
     return (
-      <main className="p-6">
-        <h1 className="font-[family-name:var(--font-serif-kr)] text-2xl text-primary-green">
-          우리의 조합
-        </h1>
-        <p className="mt-4 text-text-soft">
-          두 사람의 결을 이으려면, 먼저 당신의 결부터 알아야 해요.
-        </p>
-        <Link
-          href="/onboarding"
-          className="press mt-6 block w-full rounded-card bg-accent-coral py-3.5 text-center font-medium text-on-accent"
-        >
-          나를 알아보기 ✨
-        </Link>
-      </main>
+      <ProfileNeeded
+        title="우리의 조합"
+        message="두 사람의 결을 이으려면, 먼저 당신의 결부터 알아야 해요."
+      />
     );
   }
 

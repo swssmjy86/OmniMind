@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { createServerSupabase } from "@/lib/supabase/server";
+import ProfileNeeded from "@/components/profile/ProfileNeeded";
 import { toKstParts, kstPartsToInstant } from "@/lib/engine/kst";
 import { consultAccess } from "@/lib/consult/quota";
 import ConcernRoom, { type PastAdvice } from "@/components/concern/ConcernRoom";
@@ -26,21 +26,11 @@ export default async function ConcernPage() {
 
   if (!profile) {
     return (
-      <main className="p-6">
-        <h1 className="font-[family-name:var(--font-serif-kr)] text-2xl text-primary-green">고민</h1>
-        <p className="mt-4 text-text-soft">
-          마음이 흔들리는 순간, 함께 생각해드릴게요. 먼저 당신의 결을 알아야 더 깊이 도울 수 있어요.
-        </p>
-        <p className="mt-2 text-xs text-text-soft">
-          로그인하면 하루 한 번, 고민 상담을 무료로 나눌 수 있어요.
-        </p>
-        <Link
-          href="/onboarding"
-          className="press mt-6 block w-full rounded-card bg-accent-coral py-3.5 text-center font-medium text-on-accent"
-        >
-          나를 알아보기 ✨
-        </Link>
-      </main>
+      <ProfileNeeded
+        title="고민"
+        message="마음이 흔들리는 순간, 함께 생각해드릴게요. 먼저 당신의 결을 알아야 더 깊이 도울 수 있어요."
+        note="로그인하면 하루 한 번, 고민 상담을 무료로 나눌 수 있어요."
+      />
     );
   }
 

@@ -10,6 +10,7 @@ import {
   isCreditReadingProduct, readingSectionTitles,
 } from "@/lib/interpret/content/credit-readings";
 import { unlockReading } from "@/lib/readings/actions";
+import ProfileNeeded from "@/components/profile/ProfileNeeded";
 import { PROFILE_CONTEXT_VERSION } from "@/lib/engine/index";
 import { currentDaeun } from "@/lib/engine/daeun";
 import { toKstParts } from "@/lib/engine/kst";
@@ -90,20 +91,14 @@ export default async function CreditReadingPage({
 
   if (!profile) {
     return (
-      <main className="fade-rise p-6">
-        {header}
-        <section className="mt-6 rounded-card border border-accent-coral/30 bg-warm-surface p-5">
-          <p className="text-text-soft">
+      <ProfileNeeded
+        header={header}
+        message={
+          <>
             이 풀이를 열려면 먼저 <span className="text-text-main">당신의 여덟 글자</span>가 필요해요.
-          </p>
-          <Link
-            href="/onboarding"
-            className="press mt-4 block w-full rounded-card bg-accent-coral py-3.5 text-center font-medium text-on-accent"
-          >
-            나를 알아보기 ✨
-          </Link>
-        </section>
-      </main>
+          </>
+        }
+      />
     );
   }
 

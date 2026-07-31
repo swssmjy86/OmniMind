@@ -1,5 +1,5 @@
-import Link from "next/link";
 import type { Metadata } from "next";
+import ProfileNeeded from "@/components/profile/ProfileNeeded";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { isPremium, FREE_FOR_ALL, GUEST_READING_ACCESS } from "@/lib/consult/quota";
 import { PERSONAS } from "@/lib/persona/personas";
@@ -49,20 +49,14 @@ export default async function CelebPage() {
 
   if (!profile) {
     return (
-      <main className="fade-rise p-6">
-        {header}
-        <section className="mt-6 rounded-card border border-accent-coral/30 bg-warm-surface p-5">
-          <p className="text-text-soft">
+      <ProfileNeeded
+        header={header}
+        message={
+          <>
             맞춰보려면 먼저 <span className="text-text-main">당신의 여덟 글자</span>가 필요해요.
-          </p>
-          <Link
-            href="/onboarding"
-            className="press mt-4 block w-full rounded-card bg-accent-coral py-3.5 text-center font-medium text-on-accent"
-          >
-            나를 알아보기 ✨
-          </Link>
-        </section>
-      </main>
+          </>
+        }
+      />
     );
   }
 
