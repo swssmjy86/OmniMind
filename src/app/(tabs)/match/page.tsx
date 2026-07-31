@@ -3,6 +3,12 @@ import { createServerSupabase } from "@/lib/supabase/server";
 import MatchForm from "@/components/match/MatchForm";
 import { SLUG_TO_MODE, type MatchMe } from "@/lib/engine/match";
 import type { ProfileRow, ConnectionRow } from "@/lib/db/types";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "궁합 — 옴니마인드",
+  description: "너와 나의 결이 어떻게 만나는지 — 사주로 두 사람의 사이를 살펴봐요.",
+};
 
 export const dynamic = "force-dynamic";
 
@@ -29,7 +35,7 @@ export default async function MatchPage() {
         </p>
         <Link
           href="/onboarding"
-          className="press mt-6 block w-full rounded-card bg-accent-coral py-3.5 text-center font-medium text-white"
+          className="press mt-6 block w-full rounded-card bg-accent-coral py-3.5 text-center font-medium text-on-accent"
         >
           나를 알아보기 ✨
         </Link>

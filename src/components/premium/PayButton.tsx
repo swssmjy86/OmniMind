@@ -30,7 +30,7 @@ export default function PayButton() {
         setNotice(
           order.reason === "auth"
             ? "로그인이 풀렸어요. 다시 로그인 후 이어볼까요?"
-            : "주문을 준비하지 못했어요. 잠시 후 다시 시도해주세요.",
+            : "주문을 준비하지 못했어요. 잠시 뒤 다시 시도해 주세요.",
         );
         return;
       }
@@ -48,7 +48,7 @@ export default function PayButton() {
       // 결제창 닫기(USER_CANCEL)는 오류가 아니다 — 조용히 돌아온다.
       const code = (e as { code?: string })?.code;
       if (code !== "USER_CANCEL") {
-        setNotice("결제창을 여는 데 문제가 있었어요. 잠시 후 다시 시도해주세요.");
+        setNotice("결제창을 여는 데 문제가 있었어요. 잠시 뒤 다시 시도해 주세요.");
       }
     } finally {
       setPending(false);
@@ -60,7 +60,7 @@ export default function PayButton() {
       <button
         onClick={pay}
         disabled={pending}
-        className="press w-full rounded-card bg-accent-coral py-3.5 font-medium text-white disabled:opacity-60"
+        className="press w-full rounded-card bg-accent-coral py-3.5 font-medium text-on-accent disabled:opacity-60"
       >
         {pending ? "결제로 잇는 중…" : "30일 이용권 시작하기"}
       </button>

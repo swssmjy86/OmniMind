@@ -31,7 +31,7 @@ export default function ThemeToggle() {
   };
 
   return (
-    <div className="theme-toggle pointer-events-none fixed left-1/2 top-0 z-40 flex w-full max-w-[var(--shell-width)] -translate-x-1/2 justify-end p-3 lg:max-w-[var(--shell-width-lg)]">
+    <div className="theme-toggle safe-pt pointer-events-none fixed left-1/2 top-0 z-40 flex w-full max-w-[var(--shell-width)] -translate-x-1/2 justify-end p-3 lg:max-w-[var(--shell-width-lg)]">
       <button
         type="button"
         onClick={cycle}

@@ -34,6 +34,6 @@ export async function confirmTossPayment(input: {
     }
     return { ok: true, raw: body ?? {} };
   } catch {
-    return { ok: false, code: "NETWORK", message: "결제 승인 요청이 닿지 못했어요. 잠시 후 다시 시도해주세요." };
+    return { ok: false, code: "NETWORK", message: "결제 승인 요청이 닿지 못했어요. 잠시 뒤 다시 시도해 주세요." };
   }
 }

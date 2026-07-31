@@ -103,7 +103,8 @@ export default function MindChat({
         )}
       </header>
 
-      <div className="flex-1 space-y-3 overflow-y-auto px-6 pb-4">
+      {/* 새 응답·"살피는 중" 상태를 스크린리더가 읽도록 라이브 리전으로. */}
+      <div className="flex-1 space-y-3 overflow-y-auto px-6 pb-4" aria-live="polite" aria-atomic="false">
         {messages.length === 0 && (
           <Bubble role="assistant">안녕하세요, {nickname}님. 오늘 마음은 어떠세요?</Bubble>
         )}
@@ -161,7 +162,7 @@ function Bubble({
       {!mine && onDelete && <DeleteButton onClick={onDelete} />}
       <div
         className={`max-w-[80%] rounded-card px-4 py-2.5 leading-relaxed ${
-          mine ? "bg-accent-coral text-white" : "bg-warm-surface text-text-main"
+          mine ? "bg-accent-coral text-on-accent" : "bg-warm-surface text-text-main"
         }`}
       >
         {children}

@@ -70,7 +70,7 @@ export default function ContactForm({ defaultEmail }: { defaultEmail: string }) 
       <button
         type="submit"
         disabled={!canSubmit}
-        className="press rounded-card bg-accent-coral py-3.5 font-medium text-white disabled:opacity-40"
+        className="press rounded-card bg-accent-coral py-3.5 font-medium text-on-accent disabled:opacity-40"
       >
         {pending ? "보내는 중…" : "보내기"}
       </button>

@@ -4,6 +4,12 @@ import { toKstParts } from "@/lib/engine/kst";
 import { consultAccess } from "@/lib/consult/quota";
 import MindChat from "@/components/chat/MindChat";
 import type { ProfileRow, ChatMessageRow } from "@/lib/db/types";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "마음 챗 — 옴니마인드",
+  description: "나의 사주·성향을 기억한 채 곁에서 이야기를 들어주는 대화 동반자.",
+};
 
 export const dynamic = "force-dynamic";
 
@@ -30,7 +36,7 @@ export default async function MindPage() {
         </p>
         <Link
           href="/onboarding"
-          className="press mt-6 block w-full rounded-card bg-accent-coral py-3.5 text-center font-medium text-white"
+          className="press mt-6 block w-full rounded-card bg-accent-coral py-3.5 text-center font-medium text-on-accent"
         >
           나를 알아보기 ✨
         </Link>

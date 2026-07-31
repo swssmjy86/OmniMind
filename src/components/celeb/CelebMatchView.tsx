@@ -189,12 +189,12 @@ export default function CelebMatchView({
             type="button"
             disabled={!mode || pending}
             onClick={open}
-            className="press mt-5 w-full rounded-card bg-accent-coral py-3.5 font-medium text-white disabled:opacity-40"
+            className="press mt-5 w-full rounded-card bg-accent-coral py-3.5 font-medium text-on-accent disabled:opacity-40"
           >
             {pending ? "두 사람의 결을 살펴보는 중…" : "맞춰보기 ✨"}
           </button>
           {error && (
-            <p className="mt-2 text-center text-sm text-accent-coral">
+            <p role="alert" className="mt-2 text-center text-sm text-accent-coral">
               지금은 풀이가 어려워요. 잠시 뒤 다시 시도해 주세요.
             </p>
           )}

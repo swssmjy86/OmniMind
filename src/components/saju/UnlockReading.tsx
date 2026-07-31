@@ -50,7 +50,7 @@ export default function UnlockReading({
         </p>
         <Link
           href="/premium/credits"
-          className="press mt-4 block w-full rounded-card bg-accent-coral py-3.5 font-medium text-white"
+          className="press mt-4 block w-full rounded-card bg-accent-coral py-3.5 font-medium text-on-accent"
         >
           크레딧 채우기
         </Link>
@@ -73,7 +73,7 @@ export default function UnlockReading({
         type="button"
         onClick={open}
         disabled={pending}
-        className="press w-full rounded-card bg-accent-coral py-3.5 font-medium text-white disabled:opacity-40"
+        className="press w-full rounded-card bg-accent-coral py-3.5 font-medium text-on-accent disabled:opacity-40"
       >
         {pending ? "풀이를 준비하는 중…" : unlimited ? "지금 열어보기 ✨" : "크레딧 1개로 열기 ✨"}
       </button>

@@ -42,7 +42,7 @@ export default function GuestMatchDeepGate() {
         </p>
         <Link
           href="/onboarding"
-          className="press mt-4 block w-full rounded-card bg-accent-coral py-3.5 text-center font-medium text-white"
+          className="press mt-4 block w-full rounded-card bg-accent-coral py-3.5 text-center font-medium text-on-accent"
         >
           나를 알아보기 ✨
         </Link>

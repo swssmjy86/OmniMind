@@ -9,6 +9,12 @@ import { profileCardQuery } from "@/lib/share/card-copy";
 import SajuChart from "@/components/profile/SajuChart";
 import ShareSheet from "@/components/share/ShareSheet";
 import type { ProfileRow, InterpretationRow } from "@/lib/db/types";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "나의 조각 — 옴니마인드",
+  description: "사주·별자리·MBTI·혈액형을 하나로 이은, 온전한 나의 프로필.",
+};
 
 export default async function MePage() {
   const supabase = await createServerSupabase();
@@ -52,7 +58,7 @@ export default async function MePage() {
           </p>
           <Link
             href="/onboarding"
-            className="press mt-6 block w-full rounded-card bg-accent-coral py-3.5 text-center font-medium text-white"
+            className="press mt-6 block w-full rounded-card bg-accent-coral py-3.5 text-center font-medium text-on-accent"
           >
             나를 알아보기 ✨
           </Link>

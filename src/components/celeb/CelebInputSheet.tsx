@@ -70,7 +70,7 @@ export default function CelebInputSheet({
           type="button"
           disabled={!canSubmit}
           onClick={submit}
-          className="press mt-6 w-full rounded-card bg-accent-coral py-3.5 font-medium text-white disabled:opacity-40"
+          className="press mt-6 w-full rounded-card bg-accent-coral py-3.5 font-medium text-on-accent disabled:opacity-40"
         >
           궁합 맞춰보기
         </button>

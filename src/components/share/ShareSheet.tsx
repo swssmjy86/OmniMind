@@ -111,7 +111,7 @@ export default function ShareSheet({ query, via, label }: Props) {
       <div className="mt-4 grid grid-cols-2 gap-2">
         <button
           onClick={share}
-          className="press rounded-card bg-accent-coral py-3 text-center font-medium text-white"
+          className="press rounded-card bg-accent-coral py-3 text-center font-medium text-on-accent"
         >
           공유하기
         </button>
@@ -138,7 +138,7 @@ export default function ShareSheet({ query, via, label }: Props) {
       </div>
       {pdfError && (
         <p className="mt-2 text-center text-sm text-accent-coral">
-          PDF를 만들지 못했어요. 잠시 후 다시 시도해주세요.
+          PDF를 만들지 못했어요. 잠시 뒤 다시 시도해 주세요.
         </p>
       )}
     </section>

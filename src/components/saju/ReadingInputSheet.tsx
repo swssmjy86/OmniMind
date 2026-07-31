@@ -168,7 +168,7 @@ export default function ReadingInputSheet({
           type="button"
           disabled={!canSubmit}
           onClick={submit}
-          className="press mt-6 w-full rounded-card bg-accent-coral py-3.5 font-medium text-white disabled:opacity-40"
+          className="press mt-6 w-full rounded-card bg-accent-coral py-3.5 font-medium text-on-accent disabled:opacity-40"
         >
           {busy ? "결을 읽는 중…" : "풀이 보기"}
         </button>

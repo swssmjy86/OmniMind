@@ -24,7 +24,7 @@ export default function CreditPayButton({ pkg }: { pkg: CreditPackage }) {
         setNotice(
           order.reason === "auth"
             ? "로그인이 풀렸어요. 다시 로그인 후 이어볼까요?"
-            : "주문을 준비하지 못했어요. 잠시 후 다시 시도해주세요.",
+            : "주문을 준비하지 못했어요. 잠시 뒤 다시 시도해 주세요.",
         );
         return;
       }
@@ -41,7 +41,7 @@ export default function CreditPayButton({ pkg }: { pkg: CreditPackage }) {
     } catch (e) {
       const code = (e as { code?: string })?.code;
       if (code !== "USER_CANCEL") {
-        setNotice("결제창을 여는 데 문제가 있었어요. 잠시 후 다시 시도해주세요.");
+        setNotice("결제창을 여는 데 문제가 있었어요. 잠시 뒤 다시 시도해 주세요.");
       }
     } finally {
       setPending(false);
