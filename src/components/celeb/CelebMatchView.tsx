@@ -146,6 +146,12 @@ export default function CelebMatchView({
         ))}
       </div>
 
+      {list.length === 0 && (
+        <p className="mt-4 rounded-card bg-warm-surface p-5 text-center text-sm text-text-soft">
+          이 조합에는 아직 준비된 인물이 없어요. 다른 갈래를 골라볼까요? 🌱
+        </p>
+      )}
+
       <ul className="mt-4 flex flex-col gap-2">
         {list.map((c) => {
           const on = picked?.id === c.id;

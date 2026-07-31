@@ -36,7 +36,7 @@ export default function ThemeToggle() {
         type="button"
         onClick={cycle}
         aria-label={`화면 모드: ${LABEL[theme]} (눌러서 전환)`}
-        className="press pointer-events-auto flex h-9 w-9 items-center justify-center rounded-full border border-text-soft/20 bg-warm-surface text-base shadow-sm"
+        className="press pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full border border-text-soft/20 bg-warm-surface text-base shadow-sm"
       >
         <span aria-hidden>{ICON[theme]}</span>
       </button>
