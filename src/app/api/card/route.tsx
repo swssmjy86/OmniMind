@@ -10,6 +10,7 @@ import {
   parseDailyCardParams, dailyCopyFromParams,
   parseProfileCardParams, profileCopyFromParams,
 } from "@/lib/share/card-copy";
+import { loadNotoSerifKR } from "@/lib/share/og-font";
 
 export const runtime = "edge";
 
@@ -33,20 +34,6 @@ const D: typeof C = {
   text: "#f0ebe2",
   softText: "#a8b0c0",
 };
-
-/** Google Fonts에서 카드에 쓰일 글자만 서브셋으로 받아온다(무료, ttf). */
-async function loadNotoSerifKR(text: string): Promise<ArrayBuffer> {
-  const css = await (
-    await fetch(
-      `https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600&text=${encodeURIComponent(text)}`,
-    )
-  ).text();
-  const m = /src: url\((.+?)\) format\('(?:opentype|truetype)'\)/.exec(css);
-  if (!m) throw new Error("폰트 소스를 찾지 못했어요");
-  const res = await fetch(m[1]);
-  if (!res.ok) throw new Error(`폰트 다운로드 실패: ${res.status}`);
-  return res.arrayBuffer();
-}
 
 function CardFrame({
   square, hanjaSize, hanja, eyebrow, children, colors = C,
@@ -407,14 +394,19 @@ export async function GET(req: Request) {
     renderTeaser(searchParams, square);
   if (!rendered) return new Response("잘못된 카드 파라미터예요", { status: 400 });
 
-  const serif = await loadNotoSerifKR(rendered.fontText);
-
-  return new ImageResponse(rendered.node, {
-    width: 1080,
-    height: rendered.height,
-    fonts: [{ name: "NotoSerifKR", data: serif, weight: 600, style: "normal" }],
-    headers: {
-      "Cache-Control": "public, max-age=31536000, immutable",
-    },
-  });
+  // 외부 폰트 로드/렌더 실패(폰트 서버 지연·정규식 미스 등)를 격리한다 — 공개
+  // 엔드포인트라 매달리거나 원인이 새면 안 된다. 실패 시 짧은 502로 수렴.
+  try {
+    const serif = await loadNotoSerifKR(rendered.fontText);
+    return new ImageResponse(rendered.node, {
+      width: 1080,
+      height: rendered.height,
+      fonts: [{ name: "NotoSerifKR", data: serif, weight: 600, style: "normal" }],
+      headers: {
+        "Cache-Control": "public, max-age=31536000, immutable",
+      },
+    });
+  } catch {
+    return new Response("카드 이미지를 만들지 못했어요", { status: 502 });
+  }
 }

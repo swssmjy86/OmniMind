@@ -19,7 +19,9 @@ export interface ToneViolation {
 const NIDA_NFD = new RegExp("\\u11B8\\u1102\\u1175\\u1103\\u1161");
 
 const RULES: { rule: string; re: RegExp; nfd?: boolean }[] = [
-  { rule: "명령형(~하세요)", re: /하세요/ },
+  // 명령형 "~하세요"만 잡되 인사말 "안녕하세요"는 제외 — 따뜻한 인사를 명령으로 오인해
+  // 정상 응답을 폐기하지 않도록(니다 규칙과 같은 오탐 방지).
+  { rule: "명령형(~하세요)", re: /(?<!안녕)하세요/ },
   { rule: "단정형 종결(~습니다/~ㅂ니다)", re: NIDA_NFD, nfd: true },
   { rule: "분석용어", re: /분석\s*결과|데이터\s*분석|진단/ },
   { rule: "공포 마케팅", re: /조심하세요|나쁜\s*기운|불행/ },

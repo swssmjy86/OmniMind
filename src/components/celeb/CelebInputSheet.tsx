@@ -35,7 +35,7 @@ export default function CelebInputSheet({
   return createPortal(
     <div className="today-input-sheet-overlay fixed inset-y-0 left-1/2 z-50 flex w-full max-w-[var(--shell-width)] -translate-x-1/2 items-end justify-center lg:max-w-[var(--shell-width-lg)]">
       <div aria-hidden className="absolute inset-0 bg-black/50" />
-      <div className="fade-rise relative max-h-[85dvh] w-full max-w-[var(--shell-width)] overflow-y-auto rounded-t-[28px] bg-warm-base p-6 pb-[calc(2rem+env(safe-area-inset-bottom))] lg:max-w-[var(--shell-width-lg)]">
+      <div role="dialog" aria-modal="true" aria-label="유명인 궁합 입력" className="fade-rise relative max-h-[85dvh] w-full max-w-[var(--shell-width)] overflow-y-auto rounded-t-[28px] bg-warm-base p-6 pb-[calc(2rem+env(safe-area-inset-bottom))] lg:max-w-[var(--shell-width-lg)]">
         <p className="text-xs text-text-soft">
           <span aria-hidden>💞</span> 연리 · 유명인 궁합
         </p>

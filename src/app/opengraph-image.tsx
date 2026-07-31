@@ -2,25 +2,12 @@
 // 상품별 공유 이미지(/api/card)와 별개로, "옴니마인드" 링크 자체의 대표 이미지다.
 // 밤 네이비 + 달빛 골드 — 앱 기본 무드(다크)와 같은 톤으로 맞춘다.
 import { ImageResponse } from "next/og";
+import { loadNotoSerifKR } from "@/lib/share/og-font";
 
 export const runtime = "edge";
 export const alt = "옴니마인드 — 모든 나를 잇다";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
-
-// 카드에 실제 쓰이는 글자만 서브셋으로 받아온다(무료, ttf).
-async function loadNotoSerifKR(text: string): Promise<ArrayBuffer> {
-  const css = await (
-    await fetch(
-      `https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600&text=${encodeURIComponent(text)}`,
-    )
-  ).text();
-  const m = /src: url\((.+?)\) format\('(?:opentype|truetype)'\)/.exec(css);
-  if (!m) throw new Error("폰트 소스를 찾지 못했어요");
-  const res = await fetch(m[1]);
-  if (!res.ok) throw new Error(`폰트 다운로드 실패: ${res.status}`);
-  return res.arrayBuffer();
-}
 
 export default async function OpengraphImage() {
   const base = "#0e1626"; // 밤 네이비
