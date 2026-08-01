@@ -4,6 +4,7 @@ import { PRODUCTS } from "@/lib/persona/products";
 import { PERSONA_IMAGES } from "@/lib/persona/images";
 import { PERSONA_GLYPHS } from "@/components/home/PersonaCard";
 import HomeGreeting from "@/components/home/HomeGreeting";
+import CheerWall from "@/components/cheer/CheerWall";
 import { FAQ_ITEMS } from "@/app/faq/page";
 import AdSlot from "@/components/ads/AdSlot";
 
@@ -71,6 +72,8 @@ export default function HomePage() {
           전체 질문 보기
         </Link>
       </section>
+
+      <CheerWall />
 
       <AdSlot />
     </main>
