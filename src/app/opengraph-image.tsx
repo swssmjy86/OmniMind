@@ -17,7 +17,29 @@ export default async function OpengraphImage() {
   const title = "모든 나를 잇다";
   const brand = "옴니마인드";
   const tagline = "사주 · 별자리 · MBTI · 혈액형, 흩어진 나의 조각을 하나로";
-  const serif = await loadNotoSerifKR(brand + title + tagline + "OmniMind命");
+
+  // 폰트 로드 실패(폰트 서버 지연·타임아웃)를 격리한다 — api/card처럼 500으로 터지지
+  // 않고, 텍스트 없는 브랜드 색 카드(폰트 불필요)로 degrade해 공유 미리보기가 최소한
+  // 브랜드 톤을 유지하게 한다.
+  let serif: ArrayBuffer;
+  try {
+    serif = await loadNotoSerifKR(brand + title + tagline + "OmniMind命");
+  } catch {
+    return new ImageResponse(
+      (
+        <div
+          style={{
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            backgroundColor: base,
+            borderBottom: `10px solid ${gold}`,
+          }}
+        />
+      ),
+      size,
+    );
+  }
 
   return new ImageResponse(
     (
