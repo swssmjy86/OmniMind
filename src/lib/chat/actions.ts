@@ -4,6 +4,12 @@ import { respond } from "@/lib/interpret/interpret";
 import type { ProfileContext } from "@/lib/engine";
 import type { ChatMsg } from "@/lib/interpret/provider";
 
+// 익명·인증 없는 LLM 프록시라 입력을 서버에서 한 번 더 제한한다 — 무료 티어 쿼터를 겨냥한
+// 증폭 남용(긴 메시지·긴 기록 반복 호출)을 줄이기 위해. 한 메시지·한 기록 항목의 상한과
+// 프롬프트에 실을 최근 대화 개수를 서버가 강제한다(클라이언트 값은 신뢰하지 않는다).
+const MESSAGE_MAX = 1000;
+const HISTORY_MAX = 10;
+
 export type SendResult =
   | { ok: true; reply: string; source: "llm" | "template" }
   | { ok: false };
@@ -19,13 +25,16 @@ export async function sendMessage(args: {
   history: ChatMsg[];
   message: string;
 }): Promise<SendResult> {
-  const text = args.message.trim();
+  const text = args.message.trim().slice(0, MESSAGE_MAX);
   if (!text) return { ok: false };
   try {
+    const history = (args.history ?? [])
+      .slice(-HISTORY_MAX)
+      .map((m) => ({ role: m.role, content: (m.content ?? "").slice(0, MESSAGE_MAX) }));
     const r = await respond({
       profile: args.profile,
       nickname: args.nickname,
-      history: args.history,
+      history,
       message: text,
     });
     return { ok: true, reply: r.text, source: r.source };

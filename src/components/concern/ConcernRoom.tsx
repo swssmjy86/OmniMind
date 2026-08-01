@@ -1,18 +1,27 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { submitConcern } from "@/lib/concern/actions";
 import { CONCERN_CATEGORIES, type ConcernCategory } from "@/lib/interpret/content/concern";
 import { CONCERN_MAX_LENGTH } from "@/lib/concern/constants";
 import { loadLog, saveLog, localId } from "@/lib/local-log";
+import { toKstParts } from "@/lib/engine/kst";
 import type { ProfileContext } from "@/lib/engine";
 import type { InterpretationSection } from "@/lib/interpret/types";
 
 const CONCERN_KEY = "om_concern_log";
+// localStorage에 무한정 쌓이지 않도록 최근 N개만 보관한다.
+const STORE_LIMIT = 100;
+
+/** 오늘(KST) 날짜 "YYYY.MM.DD" — 기록에 실제 날짜를 박아 나중에 봐도 정확하게. */
+function todayLabel(): string {
+  const t = toKstParts(new Date());
+  return `${t.y}.${String(t.mo).padStart(2, "0")}.${String(t.d).padStart(2, "0")}`;
+}
 
 export interface PastAdvice {
   id: string;
-  date: string; // "오늘" 등 표시 문자열
+  date: string; // "YYYY.MM.DD" 표시 문자열
   sections: InterpretationSection[];
 }
 
@@ -29,6 +38,12 @@ export default function ConcernRoom({
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<InterpretationSection[] | null>(null);
   const [history, setHistory] = useState<PastAdvice[]>([]);
+  // 제출 대기 중 삭제가 일어나도 새 조언 병합이 '최신' 기록 위에서 이뤄지도록 ref로 따라간다
+  // (await 전 클로저의 옛 history를 쓰면 지운 기록이 되살아난다 — 스테일 클로저 수정).
+  const historyRef = useRef<PastAdvice[]>(history);
+  useEffect(() => {
+    historyRef.current = history;
+  }, [history]);
 
   useEffect(() => {
     const stored = loadLog<PastAdvice>(CONCERN_KEY);
@@ -38,7 +53,7 @@ export default function ConcernRoom({
 
   function persist(next: PastAdvice[]) {
     setHistory(next);
-    saveLog(CONCERN_KEY, next);
+    saveLog(CONCERN_KEY, next.slice(0, STORE_LIMIT));
   }
 
   async function submit() {
@@ -51,7 +66,7 @@ export default function ConcernRoom({
     if (res.ok) {
       setResult(res.sections);
       setText("");
-      persist([{ id: localId(), date: "오늘", sections: res.sections }, ...history]);
+      persist([{ id: localId(), date: todayLabel(), sections: res.sections }, ...historyRef.current]);
     } else {
       setError("잠시 길을 잃었어요. 조금 뒤에 다시 이야기 나눠요.");
     }

@@ -8,6 +8,9 @@ import type { ProfileContext } from "@/lib/engine";
 const CHAT_KEY = "om_chat_log";
 // respond()에 넘길 최근 맥락 길이 — 너무 길면 무료 모델 토큰을 초과한다.
 const HISTORY_LIMIT = 10;
+// localStorage에 무한정 쌓이지 않도록 최근 N개만 보관한다(용량 초과로 저장이 조용히
+// 실패해 이후 대화가 통째로 사라지는 것을 막는다). 화면엔 보관분 전체를 보여준다.
+const STORE_LIMIT = 300;
 
 interface Msg {
   id: string | null; // 낙관적(전송 중) 메시지는 null — 삭제 버튼은 저장된 뒤에만
@@ -30,6 +33,13 @@ export default function MindChat({
   const [input, setInput] = useState("");
   const [pending, setPending] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+  // 전송 대기 중 삭제(전체/개별)가 일어나도 응답 병합이 '최신' 목록 위에서 이뤄지도록,
+  // 렌더된 messages를 ref로 따라간다 — await 전 클로저의 옛 messages를 쓰면 지운 기록이
+  // 되살아난다(코드리뷰 스테일 클로저 수정).
+  const messagesRef = useRef<Msg[]>(messages);
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
   // 마운트 후 1회 localStorage에서 기록을 읽는다(최초 동기화).
   useEffect(() => {
@@ -44,24 +54,27 @@ export default function MindChat({
 
   function persist(next: Msg[]) {
     setMessages(next);
-    saveLog(CHAT_KEY, next.filter((m) => m.id !== null));
+    // 저장은 확정 메시지(id 있는 것)만, 최근 STORE_LIMIT개로 제한.
+    saveLog(CHAT_KEY, next.filter((m) => m.id !== null).slice(-STORE_LIMIT));
   }
 
   async function send() {
     const text = input.trim();
     if (!text || pending) return;
     setInput("");
-    const optimistic: Msg[] = [...messages, { id: null, role: "user", content: text }];
-    setMessages(optimistic);
+    setMessages((cur) => [...cur, { id: null, role: "user", content: text }]);
     setPending(true);
-    const history = messages
+    const history = messagesRef.current
       .slice(-HISTORY_LIMIT)
       .map((m) => ({ role: m.role, content: m.content }));
     const res = await sendMessage({ profile, nickname, history, message: text });
     setPending(false);
     if (res.ok) {
+      // 낙관적(id null) 항목을 걷어낸 '현재' 목록 위에 확정 메시지를 붙인다 — 대기 중
+      // 삭제가 있었다면 그 삭제 결과가 base에 반영돼 있어 지운 기록이 되살아나지 않는다.
+      const base = messagesRef.current.filter((m) => m.id !== null);
       persist([
-        ...messages,
+        ...base,
         { id: localId(), role: "user", content: text },
         { id: localId(), role: "assistant", content: res.reply },
       ]);

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { recentCheers, submitCheer, type Cheer } from "@/lib/cheer/actions";
-import { CHEER_MAX } from "@/lib/cheer/validate";
+import { CHEER_MAX, CHEER_MIN } from "@/lib/cheer/validate";
 
 /**
  * 익명 응원 벽 — 로그인 없이 서로에게 짧은 응원을 남기고 최근 응원을 함께 본다.
@@ -14,21 +14,27 @@ export default function CheerWall() {
   const [text, setText] = useState("");
   const [pending, setPending] = useState(false);
   const [thanks, setThanks] = useState(false);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     recentCheers().then(setCheers).catch(() => {});
   }, []);
 
+  const canSend = text.trim().length >= CHEER_MIN && !pending;
+
   async function send() {
     const message = text.trim();
-    if (!message || pending) return;
+    if (message.length < CHEER_MIN || pending) return;
     setPending(true);
+    setError(false);
     const res = await submitCheer(message);
     setPending(false);
     if (res.ok) {
       setCheers((c) => [res.cheer, ...c]);
       setText("");
       setThanks(true);
+    } else {
+      setError(true);
     }
   }
 
@@ -44,7 +50,7 @@ export default function CheerWall() {
       <div className="mt-3 flex items-end gap-2">
         <textarea
           value={text}
-          onChange={(e) => { setText(e.target.value); setThanks(false); }}
+          onChange={(e) => { setText(e.target.value); setThanks(false); setError(false); }}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void send(); }
           }}
@@ -55,7 +61,7 @@ export default function CheerWall() {
         />
         <button
           onClick={() => void send()}
-          disabled={pending || !text.trim()}
+          disabled={!canSend}
           className="press shrink-0 rounded-card bg-accent-coral px-4 py-2.5 font-medium text-on-accent disabled:opacity-40"
         >
           남기기
@@ -64,6 +70,11 @@ export default function CheerWall() {
       {thanks && (
         <p role="status" className="mt-2 text-xs text-primary-green">
           응원을 남겼어요. 고마워요 🌿
+        </p>
+      )}
+      {error && (
+        <p role="alert" className="mt-2 text-xs text-accent-coral">
+          지금은 응원을 남기지 못했어요. 잠시 뒤 다시 시도해 주세요.
         </p>
       )}
 

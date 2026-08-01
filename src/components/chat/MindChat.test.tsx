@@ -59,6 +59,29 @@ describe("MindChat — 익명 로컬 기록", () => {
     expect(screen.queryByText("전체 삭제")).not.toBeInTheDocument();
   });
 
+  it("전송 대기 중 전체 삭제하면, 답이 와도 지운 기록이 되살아나지 않는다(스테일 클로저 회귀)", async () => {
+    window.localStorage.setItem(CHAT_KEY, JSON.stringify(seed));
+    let resolveSend!: (v: { ok: true; reply: string; source: "template" }) => void;
+    vi.mocked(sendMessage).mockReturnValue(
+      new Promise((r) => { resolveSend = r; }),
+    );
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    render(<MindChat nickname="달빛" profile={profile} />);
+
+    fireEvent.change(screen.getByPlaceholderText("마음을 들려주세요…"), { target: { value: "안녕" } });
+    fireEvent.click(screen.getByRole("button", { name: "보내기" }));
+    // 응답 대기 중 전체 삭제
+    fireEvent.click(screen.getByText("전체 삭제"));
+    // 이제 응답 도착
+    resolveSend({ ok: true, reply: "곁에 있을게요.", source: "template" });
+
+    expect(await screen.findByText("곁에 있을게요.")).toBeInTheDocument();
+    // 지운 기록은 되살아나지 않고, 저장소에도 없다
+    expect(screen.queryByText("오늘 좀 힘들었어요")).not.toBeInTheDocument();
+    const stored = JSON.parse(window.localStorage.getItem(CHAT_KEY) ?? "[]");
+    expect(stored.some((m: { content: string }) => m.content === "오늘 좀 힘들었어요")).toBe(false);
+  });
+
   it("보내면 프로필 맥락과 함께 sendMessage를 부르고 답을 붙인다", async () => {
     vi.mocked(sendMessage).mockResolvedValue({ ok: true, reply: "곁에 있을게요.", source: "template" });
     render(<MindChat nickname="달빛" profile={profile} />);

@@ -27,6 +27,8 @@ export async function submitConcern(args: {
 }): Promise<ConcernResult> {
   const concern = args.concern.trim().slice(0, CONCERN_MAX_LENGTH);
   if (!concern || !isConcernCategory(args.category)) return { ok: false };
+  // 클라이언트가 넘긴 프로필 맥락은 신뢰하지 않는다 — 오래된/깨진 로컬 프로필이면 조용히 실패.
+  if (!args.profile?.dayMaster?.element || !args.profile.dayMaster.stem) return { ok: false };
 
   try {
     const t = toKstParts(new Date());
