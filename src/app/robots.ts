@@ -20,7 +20,6 @@ export default function robots(): MetadataRoute.Robots {
         "/me",
         "/mind",
         "/concern",
-        "/match",
       ],
     },
     sitemap: `${base}/sitemap.xml`,

@@ -17,7 +17,7 @@ export default function ProfileNeeded({
   header?: ReactNode;
   /** 온보딩으로 이끄는 안내 문구 — 페이지 맥락에 맞춰 다르게. */
   message: ReactNode;
-  /** 본문 아래·CTA 위에 붙는 작은 보조 안내(예: "로그인하면 하루 한 번 무료"). */
+  /** 본문 아래·CTA 위에 붙는 작은 보조 안내. */
   note?: ReactNode;
   /** 카드 아래 추가 요소(예: 로그아웃). */
   children?: ReactNode;
