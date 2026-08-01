@@ -6,7 +6,7 @@ import { OpenRouterProvider } from "@/lib/interpret/openrouter-provider";
 import { toKstParts } from "@/lib/engine/kst";
 import type { ProfileRow, ChatMessageRow } from "@/lib/db/types";
 import type { ChatMsg } from "@/lib/interpret/provider";
-import { consultAccess, isPremium, UNLIMITED, FREE_DAILY_CONSULT } from "@/lib/consult/quota";
+import { consultAccess, UNLIMITED, FREE_DAILY_CONSULT } from "@/lib/consult/quota";
 
 export type SendResult =
   | {
@@ -73,8 +73,10 @@ export async function sendMessage(message: string): Promise<SendResult> {
       if (typeof remainingAfter === "number") creditsAfter = remainingAfter;
     }
 
-    const premium = isPremium(profile.premium_until, now);
-    const remaining = premium
+    // 고민 상담(concern/actions.ts)과 동일하게 access.remaining을 기준으로 판정한다 —
+    // FREE_FOR_ALL(전면 무료)이면 consultAccess가 UNLIMITED를 주는데, premium(레거시 30일권)
+    // 여부로만 다시 계산하면 일반 로그인 사용자가 무제한 허용을 받고도 "0회 남음"으로 표시된다.
+    const remaining = access.remaining === UNLIMITED
       ? UNLIMITED
       : Math.max(0, FREE_DAILY_CONSULT - (used + 1)) + creditsAfter;
 

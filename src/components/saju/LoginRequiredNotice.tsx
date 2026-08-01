@@ -13,7 +13,7 @@ export default function LoginRequiredNotice({ message }: { message: string }) {
       </p>
       <Link
         href="/login"
-        className="press mt-4 block w-full rounded-card bg-accent-coral py-3.5 text-center font-medium text-white"
+        className="press mt-4 block w-full rounded-card bg-accent-coral py-3.5 text-center font-medium text-on-accent"
       >
         로그인하고 시작하기 ✨
       </Link>

@@ -129,11 +129,11 @@ export default function MatchForm({ me, nickname }: { me: MatchMe; nickname: str
             시간까지는 몰라도 괜찮아요 — 그날의 기운(일주)으로 읽어드려요.
           </span>
         </div>
-        {error && <p className="text-sm text-accent-coral">{error}</p>}
+        {error && <p role="alert" className="text-sm text-accent-coral">{error}</p>}
         <button
           onClick={compute}
           disabled={!birthDate}
-          className="press w-full rounded-card bg-accent-coral py-3.5 font-medium text-white disabled:opacity-40"
+          className="press w-full rounded-card bg-accent-coral py-3.5 font-medium text-on-accent disabled:opacity-40"
         >
           우리의 조합 잇기 ✨
         </button>

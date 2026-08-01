@@ -40,7 +40,7 @@ export default function TodayInputSheet({
       {/* 딤 배경 — 닫기 없음(입력해야 진행되는 첫 관문). today-input-sheet-overlay 클래스는
           globals.css의 :has() 훅 — 이 관문이 떠 있는 동안 ThemeToggle을 완전히 숨긴다. */}
       <div aria-hidden className="absolute inset-0 bg-black/50" />
-      <div className="fade-rise relative max-h-[85dvh] w-full max-w-[var(--shell-width)] overflow-y-auto rounded-t-[28px] bg-warm-base p-6 pb-[calc(2rem+env(safe-area-inset-bottom))] lg:max-w-[var(--shell-width-lg)]">
+      <div role="dialog" aria-modal="true" aria-label="오늘의운세 입력" className="fade-rise relative max-h-[85dvh] w-full max-w-[var(--shell-width)] overflow-y-auto rounded-t-[28px] bg-warm-base p-6 pb-[calc(2rem+env(safe-area-inset-bottom))] lg:max-w-[var(--shell-width-lg)]">
         <p className="text-xs text-text-soft">
           <span aria-hidden>🏮</span> 달지기 · 오늘의운세
         </p>
@@ -75,7 +75,7 @@ export default function TodayInputSheet({
           type="button"
           disabled={!canSubmit}
           onClick={submit}
-          className="press mt-6 w-full rounded-card bg-accent-coral py-3.5 font-medium text-white disabled:opacity-40"
+          className="press mt-6 w-full rounded-card bg-accent-coral py-3.5 font-medium text-on-accent disabled:opacity-40"
         >
           오늘의 기운 보기
         </button>

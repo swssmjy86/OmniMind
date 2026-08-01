@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import ProfileNeeded from "@/components/profile/ProfileNeeded";
 import { createServerSupabase } from "@/lib/supabase/server";
 import { currentDaeun } from "@/lib/engine/daeun";
 import { daeunSeasonText } from "@/lib/interpret/content/daeun";
@@ -9,6 +10,12 @@ import { profileCardQuery } from "@/lib/share/card-copy";
 import SajuChart from "@/components/profile/SajuChart";
 import ShareSheet from "@/components/share/ShareSheet";
 import type { ProfileRow, InterpretationRow } from "@/lib/db/types";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "나의 조각 — 옴니마인드",
+  description: "사주·별자리·MBTI·혈액형을 하나로 이은, 온전한 나의 프로필.",
+};
 
 export default async function MePage() {
   const supabase = await createServerSupabase();
@@ -40,29 +47,20 @@ export default async function MePage() {
 
   if (!profile) {
     return (
-      <main className="p-6">
-        <h1 className="font-[family-name:var(--font-serif-kr)] text-2xl text-primary-green">
-          온전한 나
-        </h1>
-        <div className="mt-4">
-          <p className="text-text-soft">
-            {user
-              ? `반가워요, ${user.user_metadata?.name ?? "당신"}님. 당신의 조각들을 이어볼까요?`
-              : "사주와 별자리를 종합해 '온전한 나'를 만나보세요."}
-          </p>
-          <Link
-            href="/onboarding"
-            className="press mt-6 block w-full rounded-card bg-accent-coral py-3.5 text-center font-medium text-white"
-          >
-            나를 알아보기 ✨
-          </Link>
-          {user && (
-            <form action={signOut} className="mt-4">
-              <button className="press text-sm text-text-soft underline">잠시 떠나기 (로그아웃)</button>
-            </form>
-          )}
-        </div>
-      </main>
+      <ProfileNeeded
+        title="온전한 나"
+        message={
+          user
+            ? `반가워요, ${user.user_metadata?.name ?? "당신"}님. 당신의 조각들을 이어볼까요?`
+            : "사주와 별자리를 종합해 '온전한 나'를 만나보세요."
+        }
+      >
+        {user && (
+          <form action={signOut} className="mt-4">
+            <button className="press text-sm text-text-soft underline">잠시 떠나기 (로그아웃)</button>
+          </form>
+        )}
+      </ProfileNeeded>
     );
   }
 

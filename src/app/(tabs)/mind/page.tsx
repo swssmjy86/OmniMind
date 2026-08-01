@@ -1,9 +1,15 @@
-import Link from "next/link";
 import { createServerSupabase } from "@/lib/supabase/server";
+import ProfileNeeded from "@/components/profile/ProfileNeeded";
 import { toKstParts } from "@/lib/engine/kst";
 import { consultAccess } from "@/lib/consult/quota";
 import MindChat from "@/components/chat/MindChat";
 import type { ProfileRow, ChatMessageRow } from "@/lib/db/types";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "마음 챗 — 옴니마인드",
+  description: "나의 사주·성향을 기억한 채 곁에서 이야기를 들어주는 대화 동반자.",
+};
 
 export const dynamic = "force-dynamic";
 
@@ -20,21 +26,11 @@ export default async function MindPage() {
 
   if (!profile) {
     return (
-      <main className="p-6">
-        <h1 className="font-[family-name:var(--font-serif-kr)] text-2xl text-primary-green">마음</h1>
-        <p className="mt-4 text-text-soft">
-          마음을 나누기 전에, 먼저 당신을 알아볼까요? 당신의 결을 알아야 더 깊이 함께할 수 있어요.
-        </p>
-        <p className="mt-2 text-xs text-text-soft">
-          로그인하면 하루 한 번, 마음 이야기를 무료로 나눌 수 있어요.
-        </p>
-        <Link
-          href="/onboarding"
-          className="press mt-6 block w-full rounded-card bg-accent-coral py-3.5 text-center font-medium text-white"
-        >
-          나를 알아보기 ✨
-        </Link>
-      </main>
+      <ProfileNeeded
+        title="마음"
+        message="마음을 나누기 전에, 먼저 당신을 알아볼까요? 당신의 결을 알아야 더 깊이 함께할 수 있어요."
+        note="로그인하면 하루 한 번, 마음 이야기를 무료로 나눌 수 있어요."
+      />
     );
   }
 

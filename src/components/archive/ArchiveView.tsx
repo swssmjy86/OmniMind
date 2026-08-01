@@ -30,7 +30,7 @@ export default function ArchiveView({
         </p>
         <Link
           href="/login"
-          className="press mt-5 block w-full rounded-card bg-accent-coral py-3.5 font-medium text-white"
+          className="press mt-5 block w-full rounded-card bg-accent-coral py-3.5 font-medium text-on-accent"
         >
           로그인하고 시작하기
         </Link>

@@ -81,7 +81,10 @@ export default function MindChat({
   }
 
   return (
-    <div className="flex h-dvh flex-col">
+    // (tabs)/layout.tsx가 pt-14(3.5rem)·pb-20(5rem)로 상단 토글·하단 탭 공간을 이미
+    // 예약한다. 여기서 h-dvh(100dvh)를 그대로 쓰면 컬럼이 그만큼 뷰포트 아래로 밀려
+    // 입력 바가 하단 탭 뒤로 숨는다 — 예약된 패딩을 뺀 높이로 정확히 채운다.
+    <div className="flex h-[calc(100dvh-3.5rem-5rem)] flex-col">
       <header className="flex items-start justify-between px-6 pt-6 pb-3">
         <div>
           <h1 className="font-[family-name:var(--font-serif-kr)] text-2xl text-primary-green">마음</h1>
@@ -103,7 +106,8 @@ export default function MindChat({
         )}
       </header>
 
-      <div className="flex-1 space-y-3 overflow-y-auto px-6 pb-4">
+      {/* 새 응답·"살피는 중" 상태를 스크린리더가 읽도록 라이브 리전으로. */}
+      <div className="flex-1 space-y-3 overflow-y-auto px-6 pb-4" aria-live="polite" aria-atomic="false">
         {messages.length === 0 && (
           <Bubble role="assistant">안녕하세요, {nickname}님. 오늘 마음은 어떠세요?</Bubble>
         )}
@@ -161,7 +165,7 @@ function Bubble({
       {!mine && onDelete && <DeleteButton onClick={onDelete} />}
       <div
         className={`max-w-[80%] rounded-card px-4 py-2.5 leading-relaxed ${
-          mine ? "bg-accent-coral text-white" : "bg-warm-surface text-text-main"
+          mine ? "bg-accent-coral text-on-accent" : "bg-warm-surface text-text-main"
         }`}
       >
         {children}

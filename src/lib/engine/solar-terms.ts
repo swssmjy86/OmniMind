@@ -1,8 +1,16 @@
 import { SOLAR_TERMS } from "./solar-terms.data";
 import { kstStringToInstant, toKstParts } from "./kst";
 
+// 지원 출생 연도(입력 검증 경계). 사용자 생년월일은 이 범위여야 한다.
 export const YEAR_MIN = 1900;
 export const YEAR_MAX = 2100;
+
+// 절기 데이터가 실제로 담고 있는 범위 — 경계 출생의 월지·대운을 세우려면 이웃 연도가
+// 필요하다(1900년 소한 이전 출생의 직전 절기 = 대설 1899, 2100년 말 출생의 다음 절기 =
+// 소한 2101). 데이터 생성기(gen-solar-terms.ts)가 이 범위로 생성한다. 노드 조회는 이 범위를
+// 허용하되, 출생 입력 검증은 여전히 YEAR_MIN~YEAR_MAX로 좁게 둔다.
+export const DATA_YEAR_MIN = 1899;
+export const DATA_YEAR_MAX = 2101;
 
 // SOLAR_TERMS 인덱스: 소한0,대한1,입춘2,우수3,경칩4,춘분5,청명6,곡우7,입하8,소만9,
 //   망종10,하지11,소서12,대서13,입추14,처서15,백로16,추분17,한로18,상강19,
@@ -12,14 +20,21 @@ export const YEAR_MAX = 2100;
 const MONTH_NODE_TERMS = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 0] as const;
 const MONTH_BRANCHES = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1] as const;
 
+/** 출생 연도 검증 — 사용자 입력이 지원 범위(1900~2100)인지. */
 export function assertYearInRange(year: number): void {
   if (year < YEAR_MIN || year > YEAR_MAX)
     throw new RangeError(`지원 연도 범위(${YEAR_MIN}~${YEAR_MAX}) 밖: ${year}`);
 }
 
+/** 절기 데이터 조회 범위(1899~2101) 검증 — 경계 출생의 이웃 연도 노드까지 허용. */
+function assertDataYearInRange(year: number): void {
+  if (year < DATA_YEAR_MIN || year > DATA_YEAR_MAX)
+    throw new RangeError(`절기 데이터 범위(${DATA_YEAR_MIN}~${DATA_YEAR_MAX}) 밖: ${year}`);
+}
+
 /** SOLAR_TERMS 순서 인덱스(0~23)의 절입 시각(절대 instant) */
 export function termInstant(year: number, orderIndex: number): Date {
-  assertYearInRange(year);
+  assertDataYearInRange(year);
   return kstStringToInstant(SOLAR_TERMS[year][orderIndex]);
 }
 
@@ -35,7 +50,7 @@ export function adjacentMonthNodes(instant: Date): { prev: Date; next: Date } {
   const t = instant.getTime();
   const times: number[] = [];
   for (const yy of [kstYear - 1, kstYear, kstYear + 1]) {
-    if (yy < YEAR_MIN || yy > YEAR_MAX) continue;
+    if (yy < DATA_YEAR_MIN || yy > DATA_YEAR_MAX) continue;
     for (const termIdx of MONTH_NODE_TERMS) times.push(termInstant(yy, termIdx).getTime());
   }
   times.sort((a, b) => a - b);
@@ -57,7 +72,7 @@ export function resolveMonth(instant: Date): { monthBranch: number; solarYear: n
   const t = instant.getTime();
   const nodes: { at: number; branch: number; solarYear: number }[] = [];
   for (const yy of [kstYear - 1, kstYear, kstYear + 1]) {
-    if (yy < YEAR_MIN || yy > YEAR_MAX) continue;
+    if (yy < DATA_YEAR_MIN || yy > DATA_YEAR_MAX) continue;
     MONTH_NODE_TERMS.forEach((termIdx, i) => {
       const at = termInstant(yy, termIdx).getTime();
       // 소한(termIdx 0, 축월)은 1월이지만 직전 절기해에 귀속

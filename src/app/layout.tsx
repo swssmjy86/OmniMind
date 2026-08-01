@@ -6,6 +6,7 @@ import IdleLogout from "@/components/auth/IdleLogout";
 import Footer from "@/components/Footer";
 import ThemeToggle from "@/components/theme/ThemeToggle";
 import { THEME_KEY } from "@/lib/theme/store";
+import { siteUrl } from "@/lib/site";
 import "./globals.css";
 
 // 첫 페인트 전에 저장된 화면 모드를 <html>에 반영 — React 하이드레이션을 기다리면
@@ -20,16 +21,50 @@ const notoSerifKr = Noto_Serif_KR({
   variable: "--font-serif-kr",
 });
 
+const SITE_URL = siteUrl();
+const TITLE = "옴니마인드 — 모든 나를 잇다";
+const DESCRIPTION =
+  "사주와 별자리… 흩어져 있던 '나'의 조각들을 하나로 이어드릴게요.";
+
 export const metadata: Metadata = {
-  title: "옴니마인드 — 모든 나를 잇다",
-  description:
-    "사주와 별자리… 흩어져 있던 '나'의 조각들을 하나로 이어드릴게요.",
+  // OG 이미지 등 상대 URL의 절대화 기준 — 없으면 next/og 상대경로가 깨지고 빌드 경고가 뜬다.
+  metadataBase: new URL(SITE_URL),
+  // 각 페이지는 "오늘의운세 — 옴니마인드"처럼 전체 제목을 직접 지정한다(기존 컨벤션).
+  title: TITLE,
+  description: DESCRIPTION,
+  applicationName: "옴니마인드",
+  // 카카오톡·SNS 링크 공유 미리보기. opengraph-image.tsx가 대표 이미지를 자동 연결한다.
+  openGraph: {
+    type: "website",
+    siteName: "옴니마인드",
+    locale: "ko_KR",
+    url: SITE_URL,
+    title: TITLE,
+    description: DESCRIPTION,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: TITLE,
+    description: DESCRIPTION,
+  },
+  // PWA — 모바일 웹 우선 서비스라 '홈 화면에 추가' 시 브랜드가 유지되도록.
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    title: "옴니마인드",
+    statusBarStyle: "black-translucent",
+  },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  // 앱 기본 무드는 다크(밤 네이비) — 주소창/상태바 색을 모드별로 맞춘다.
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f5efe6" },
+    { media: "(prefers-color-scheme: dark)", color: "#0e1626" },
+  ],
 };
 
 export default function RootLayout({

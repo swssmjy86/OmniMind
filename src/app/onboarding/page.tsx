@@ -208,7 +208,7 @@ export default function OnboardingPage() {
           <button
             disabled={!canNext}
             onClick={() => setStep((s) => s + 1)}
-            className="press flex-1 rounded-card bg-accent-coral py-3.5 font-medium text-white disabled:opacity-40"
+            className="press flex-1 rounded-card bg-accent-coral py-3.5 font-medium text-on-accent disabled:opacity-40"
           >
             다음
           </button>
@@ -317,7 +317,7 @@ function ProfileView({
               // 로그인 후 이 자리로 돌아와 자동 저장을 이어가도록 목적지를 쿠키로
               document.cookie = `om_next=${encodeURIComponent("/onboarding?resume=1")}; path=/; max-age=600; samesite=lax`;
             }}
-            className="press mt-4 block w-full rounded-card bg-accent-coral py-3.5 font-medium text-white"
+            className="press mt-4 block w-full rounded-card bg-accent-coral py-3.5 font-medium text-on-accent"
           >
             로그인하고 저장하기
           </Link>

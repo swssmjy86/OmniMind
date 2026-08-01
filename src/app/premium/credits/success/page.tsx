@@ -23,7 +23,7 @@ export default async function CreditSuccessPage({
         ? "로그인이 풀렸어요. 다시 로그인하면 결제 확인을 이어갈 수 있어요."
         : result.reason === "confirm" && "message" in result && result.message
           ? result.message
-          : "결제 확인에 문제가 있었어요. 결제가 이뤄졌다면 금액은 안전하게 보호되니, 잠시 후 다시 확인해주세요.";
+          : "결제 확인에 문제가 있었어요. 결제가 이뤄졌다면 금액은 안전하게 보호되니, 잠시 뒤 다시 확인해 주세요.";
     return (
       <main className="flex min-h-dvh flex-col items-center justify-center gap-6 p-6 text-center">
         <h1 className="font-[family-name:var(--font-serif-kr)] text-2xl text-primary-green">
@@ -32,7 +32,7 @@ export default async function CreditSuccessPage({
         <p className="text-text-soft">{message}</p>
         <Link
           href="/premium"
-          className="press block w-full rounded-card bg-accent-coral py-3.5 font-medium text-white"
+          className="press block w-full rounded-card bg-accent-coral py-3.5 font-medium text-on-accent"
         >
           다시 시도하기
         </Link>
@@ -52,7 +52,7 @@ export default async function CreditSuccessPage({
       </p>
       <Link
         href="/mind"
-        className="press block w-full rounded-card bg-accent-coral py-3.5 font-medium text-white"
+        className="press block w-full rounded-card bg-accent-coral py-3.5 font-medium text-on-accent"
       >
         마음 나누러 가기
       </Link>

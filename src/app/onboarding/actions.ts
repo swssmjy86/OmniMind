@@ -39,6 +39,11 @@ export async function saveProfile(
       gender: input.gender ?? undefined,
     });
 
+    // 템플릿 톤 검증을 DB 저장 '전에' 둔다 — 저장 후에 두면 톤 위반 throw 시
+    // 프로필 행은 이미 저장됐는데 호출자에겐 saved:false로 보고되는 모순이 생긴다.
+    const sections = assembleProfile(context, input.nickname);
+    assertTone(sections.map((s) => s.body).join("\n"));
+
     const row = {
       user_id: user.id,
       nickname: input.nickname,
@@ -57,9 +62,6 @@ export async function saveProfile(
       upErr = (await supabase.from("profiles").upsert(row)).error;
     }
     if (upErr) return { saved: false, reason: upErr.message };
-
-    const sections = assembleProfile(context, input.nickname);
-    assertTone(sections.map((s) => s.body).join("\n"));
 
     // P8 로그인 전용 — 성격·취향·색·현재/미래·네 가지 운(연애·사업·관계·금전)까지 엮은
     // 심층 리포트(무료 LLM, report 모드로 응답 예산을 크게 잡아 1회 시도). respond()가

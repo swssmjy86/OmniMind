@@ -124,11 +124,11 @@ export default function ConcernRoom({
             placeholder="어떤 고민이든 편하게 들려주세요…"
             className="w-full resize-none rounded-card border border-text-soft/30 bg-warm-surface px-4 py-3 leading-relaxed outline-none focus:border-primary-green"
           />
-          {error && <p className="text-sm text-accent-coral">{error}</p>}
+          {error && <p role="alert" className="text-sm text-accent-coral">{error}</p>}
           <button
             onClick={() => void submit()}
             disabled={pending || !text.trim()}
-            className="press w-full rounded-card bg-accent-coral py-3.5 font-medium text-white disabled:opacity-40"
+            className="press w-full rounded-card bg-accent-coral py-3.5 font-medium text-on-accent disabled:opacity-40"
           >
             {pending ? "당신의 결을 살피는 중이에요…" : "함께 생각해보기"}
           </button>

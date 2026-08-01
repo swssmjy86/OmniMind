@@ -82,7 +82,7 @@ export default function ReadingInputSheet({
   return createPortal(
     <div className="today-input-sheet-overlay fixed inset-y-0 left-1/2 z-50 flex w-full max-w-[var(--shell-width)] -translate-x-1/2 items-end justify-center lg:max-w-[var(--shell-width-lg)]">
       <div aria-hidden className="absolute inset-0 bg-black/50" />
-      <div className="fade-rise relative max-h-[85dvh] w-full max-w-[var(--shell-width)] overflow-y-auto rounded-t-[28px] bg-warm-base p-6 pb-[calc(2rem+env(safe-area-inset-bottom))] lg:max-w-[var(--shell-width-lg)]">
+      <div role="dialog" aria-modal="true" aria-label="사주 풀이 입력" className="fade-rise relative max-h-[85dvh] w-full max-w-[var(--shell-width)] overflow-y-auto rounded-t-[28px] bg-warm-base p-6 pb-[calc(2rem+env(safe-area-inset-bottom))] lg:max-w-[var(--shell-width-lg)]">
         <div className="flex items-center gap-2.5">
           {/* 아바타 일러스트 — 로드 전·실패 시 뒤의 글리프가 자리를 지킨다(PersonaCard와 동일). */}
           <span
@@ -168,7 +168,7 @@ export default function ReadingInputSheet({
           type="button"
           disabled={!canSubmit}
           onClick={submit}
-          className="press mt-6 w-full rounded-card bg-accent-coral py-3.5 font-medium text-white disabled:opacity-40"
+          className="press mt-6 w-full rounded-card bg-accent-coral py-3.5 font-medium text-on-accent disabled:opacity-40"
         >
           {busy ? "결을 읽는 중…" : "풀이 보기"}
         </button>

@@ -5,12 +5,27 @@ describe("tone-guard", () => {
   it("명령형(~하세요)을 검출한다", () => {
     expect(checkTone("지금 바로 명상을 하세요").some((v) => v.rule.includes("명령형"))).toBe(true);
   });
-  it("단정형 종결을 검출한다 — 입니다/습니다뿐 아니라 니다 어미 전반", () => {
+  it("격식체 종결(-습니다/-ㅂ니다)을 검출한다", () => {
     expect(checkTone("당신은 이런 사람입니다").length).toBeGreaterThan(0);
     expect(checkTone("좋은 하루 되었습니다").length).toBeGreaterThan(0);
     expect(checkTone("운이 좋아집니다").length).toBeGreaterThan(0);
     expect(checkTone("잘 흘러갑니다").length).toBeGreaterThan(0);
     expect(checkTone("마음이 편안해진답니다").length).toBeGreaterThan(0);
+  });
+
+  // 규칙을 정밀화한 뒤의 통과/차단 경계를 잠근다(리뷰 지적 — 완화가 무테스트였음).
+  it("인사말 '안녕하세요'는 명령형으로 오탐하지 않는다", () => {
+    expect(checkTone("안녕하세요, 다인님")).toHaveLength(0);
+    // 진짜 명령형은 여전히 검출
+    expect(checkTone("여기를 확인하세요").some((v) => v.rule.includes("명령형"))).toBe(true);
+    expect(checkTone("이름을 입력하세요").some((v) => v.rule.includes("명령형"))).toBe(true);
+  });
+  it("격식체가 아닌 '니다' 종결(아니다/지니다/다니다)은 오탐하지 않는다", () => {
+    // 앞 음절 받침이 ㅂ이 아니라 격식체가 아니다 — 정상 문장을 폐기하지 않도록 통과시킨다.
+    expect(checkTone("그건 당신 잘못이 아니에요")).toHaveLength(0);
+    expect(checkTone("이건 아니다 싶은 순간도 있죠")).toHaveLength(0);
+    expect(checkTone("따뜻함을 지니고 있어요")).toHaveLength(0);
+    expect(checkTone("자주 다니던 길이에요")).toHaveLength(0);
   });
   it("분석용어를 검출한다", () => {
     expect(checkTone("당신의 사주 분석 결과예요").length).toBeGreaterThan(0);

@@ -55,7 +55,11 @@ describe("TodayFreeFlow — 비로그인 오늘의운세 개인화(블러 해제
     // 영상 완주 → 오버레이 페이드아웃 → 그제서야 시트 등장.
     fireEvent.ended(dialog.querySelector("video")!);
     expect(await screen.findByText("태어난 날을 알려주실래요?")).toBeInTheDocument();
-    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    // 인트로 오버레이(=인사 영상 dialog)만 걷힌다 — 입력 시트도 dialog라 role만으론
+    // 구분되지 않으므로 인트로 라벨로 겨냥한다.
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog", { name: /인사 영상/ })).not.toBeInTheDocument(),
+    );
   });
 
   it("영상이 걷힌 뒤에도 마지막 프레임이 배경으로 남고, 입력을 저장하면 배경이 걷힌다", async () => {

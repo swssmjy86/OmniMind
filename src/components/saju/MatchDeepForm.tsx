@@ -65,7 +65,7 @@ export default function MatchDeepForm({
         </p>
         <Link
           href="/premium/credits"
-          className="press mt-4 block w-full rounded-card bg-accent-coral py-3.5 font-medium text-white"
+          className="press mt-4 block w-full rounded-card bg-accent-coral py-3.5 font-medium text-on-accent"
         >
           크레딧 채우기
         </Link>
@@ -102,7 +102,7 @@ export default function MatchDeepForm({
       <label className="mt-4 block">
         <span className="block text-sm text-text-soft">상대의 태어난 시간</span>
         <div className="mt-1">
-          <PickerInput type="time" value={birthTime} onChange={setBirthTime} placeholder="태어난 시각을 선택해 주세요" disabled={timeUnknown} bg="bg-warm-base" />
+          <PickerInput type="time" value={birthTime} onChange={setBirthTime} placeholder="태어난 시간을 선택해 주세요" disabled={timeUnknown} bg="bg-warm-base" />
         </div>
       </label>
       <div className="mt-2">
@@ -124,7 +124,7 @@ export default function MatchDeepForm({
         type="button"
         disabled={!canSubmit}
         onClick={open}
-        className="press mt-6 w-full rounded-card bg-accent-coral py-3.5 font-medium text-white disabled:opacity-40"
+        className="press mt-6 w-full rounded-card bg-accent-coral py-3.5 font-medium text-on-accent disabled:opacity-40"
       >
         {pending ? "풀이를 준비하는 중…" : effectiveUnlimited ? "지금 열어보기 ✨" : "크레딧 1개로 열기 ✨"}
       </button>

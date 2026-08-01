@@ -102,7 +102,7 @@ describe("ShareSheet", () => {
     fireEvent.click(screen.getByText("오늘의 나 카드 만들기 ✨"));
     fireEvent.click(screen.getByText("PDF로 저장"));
 
-    expect(await screen.findByText("PDF를 만들지 못했어요. 잠시 후 다시 시도해주세요.")).toBeInTheDocument();
+    expect(await screen.findByText("PDF를 만들지 못했어요. 잠시 뒤 다시 시도해 주세요.")).toBeInTheDocument();
     expect(screen.getByText("PDF로 저장")).not.toBeDisabled();
   });
 });

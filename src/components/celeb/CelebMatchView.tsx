@@ -146,6 +146,12 @@ export default function CelebMatchView({
         ))}
       </div>
 
+      {list.length === 0 && (
+        <p className="mt-4 rounded-card bg-warm-surface p-5 text-center text-sm text-text-soft">
+          이 조합에는 아직 준비된 인물이 없어요. 다른 갈래를 골라볼까요? 🌱
+        </p>
+      )}
+
       <ul className="mt-4 flex flex-col gap-2">
         {list.map((c) => {
           const on = picked?.id === c.id;
@@ -189,12 +195,12 @@ export default function CelebMatchView({
             type="button"
             disabled={!mode || pending}
             onClick={open}
-            className="press mt-5 w-full rounded-card bg-accent-coral py-3.5 font-medium text-white disabled:opacity-40"
+            className="press mt-5 w-full rounded-card bg-accent-coral py-3.5 font-medium text-on-accent disabled:opacity-40"
           >
             {pending ? "두 사람의 결을 살펴보는 중…" : "맞춰보기 ✨"}
           </button>
           {error && (
-            <p className="mt-2 text-center text-sm text-accent-coral">
+            <p role="alert" className="mt-2 text-center text-sm text-accent-coral">
               지금은 풀이가 어려워요. 잠시 뒤 다시 시도해 주세요.
             </p>
           )}

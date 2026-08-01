@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ipchunInstant, resolveMonth, assertYearInRange, termInstant } from "./solar-terms";
+import { ipchunInstant, resolveMonth, adjacentMonthNodes, assertYearInRange, termInstant } from "./solar-terms";
 import { toKstParts, kstStringToInstant } from "./kst";
 import { SOLAR_TERMS } from "./solar-terms.data";
 
@@ -43,9 +43,38 @@ describe("절기 테이블", () => {
     expect(winter.monthBranch).toBe(0); // 자
   });
 
-  it("범위 밖 연도는 예외", () => {
+  it("범위 밖 연도는 예외(출생 입력 검증은 1900~2100)", () => {
     expect(() => assertYearInRange(1899)).toThrow(RangeError);
     expect(() => assertYearInRange(2101)).toThrow(RangeError);
+  });
+
+  // 지원 범위 경계(1900년 초·2100년 말) — 이웃 연도 절기가 없어 월지가 한 칸 밀려
+  // 오귀속하던 버그의 회귀 방지. 데이터에 1899·2101을 포함해 바로잡았다.
+  it("1900년 소한 이전 출생은 자월(0)·전년(1899) 절기해", () => {
+    // 소한 1900 = 1900-01-06T03:04:09 KST. 그 이전은 대설 1899부터 이어진 자월.
+    const m = resolveMonth(kstStringToInstant("1900-01-01T12:00"));
+    expect(m.monthBranch).toBe(0); // 자
+    expect(m.solarYear).toBe(1899);
+  });
+
+  it("1900년 소한 경계: 직전=자월(0), 직후=축월(1)", () => {
+    const sohan = kstStringToInstant("1900-01-06T03:04:09").getTime();
+    expect(resolveMonth(new Date(sohan - 60_000)).monthBranch).toBe(0); // 자
+    expect(resolveMonth(new Date(sohan + 60_000)).monthBranch).toBe(1); // 축
+  });
+
+  it("1900년 초 출생의 대운 절입: 직전(대설 1899)이 출생 이전, 다음(소한 1900)이 이후", () => {
+    const t = kstStringToInstant("1900-01-01T12:00");
+    const { prev, next } = adjacentMonthNodes(t);
+    expect(prev.getTime()).toBeLessThan(t.getTime()); // 대설 1899 (없으면 nodes[0]로 밀려 t 이후가 됐다)
+    expect(next.getTime()).toBeGreaterThan(t.getTime()); // 소한 1900
+  });
+
+  it("2100년 대설 이후 출생은 자월(0)이고 대운 다음 절입(소한 2101)이 출생 이후", () => {
+    const t = kstStringToInstant("2100-12-31T12:00");
+    expect(resolveMonth(t).monthBranch).toBe(0); // 자
+    const { next } = adjacentMonthNodes(t);
+    expect(next.getTime()).toBeGreaterThan(t.getTime()); // 소한 2101 (없으면 마지막 노드가 t 이전이 됐다)
   });
 
   // 생성기·외부 대조가 오염된 값을 들여오는 사고 방지 —

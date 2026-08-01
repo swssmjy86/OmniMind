@@ -31,12 +31,12 @@ export default function ThemeToggle() {
   };
 
   return (
-    <div className="theme-toggle pointer-events-none fixed left-1/2 top-0 z-40 flex w-full max-w-[var(--shell-width)] -translate-x-1/2 justify-end p-3 lg:max-w-[var(--shell-width-lg)]">
+    <div className="theme-toggle safe-pt pointer-events-none fixed left-1/2 top-0 z-40 flex w-full max-w-[var(--shell-width)] -translate-x-1/2 justify-end p-3 lg:max-w-[var(--shell-width-lg)]">
       <button
         type="button"
         onClick={cycle}
         aria-label={`화면 모드: ${LABEL[theme]} (눌러서 전환)`}
-        className="press pointer-events-auto flex h-9 w-9 items-center justify-center rounded-full border border-text-soft/20 bg-warm-surface text-base shadow-sm"
+        className="press pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full border border-text-soft/20 bg-warm-surface text-base shadow-sm"
       >
         <span aria-hidden>{ICON[theme]}</span>
       </button>
