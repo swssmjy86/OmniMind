@@ -42,7 +42,8 @@ describe("speakPersonaLine", () => {
     expect(spoken[0].text).toContain("기운");
   });
 
-  it("성별에 따라 pitch가 갈린다 — 남(금오·달지기)은 낮게, 여(홍연·서온)는 높게", () => {
+  it("성별 음성이 없으면 pitch로 성별을 암시한다 — 남은 낮게, 여는 높게", () => {
+    // voices 비어 있음(성별 매칭 실패) → 보정 pitch 적용
     speakPersonaLine("geumo", "재물의 물길, 훤히 보이오.");
     speakPersonaLine("dalzigi", "오늘의 기운, 함께 볼까요?");
     speakPersonaLine("hongyeon", "실은 이미 이어져 있어.");
@@ -53,7 +54,7 @@ describe("speakPersonaLine", () => {
     expect(spoken[3].pitch).toBeGreaterThan(1); // 서온(여)
   });
 
-  it("성별에 맞는 한국어 음성을 고른다 — 남/여 음성이 둘 다 있을 때", () => {
+  it("성별에 맞는 음성이 있으면 그 음성을 고르고, pitch는 자연스럽게(왜곡 최소)", () => {
     voices = [
       { name: "Yuna", lang: "ko-KR" }, // 여성
       { name: "Microsoft InJoon", lang: "ko-KR" }, // 남성
@@ -62,6 +63,18 @@ describe("speakPersonaLine", () => {
     speakPersonaLine("hongyeon", "실은 이어져 있어."); // 여
     expect(spoken[0].voiceName).toBe("Microsoft InJoon");
     expect(spoken[1].voiceName).toBe("Yuna");
+    // 진짜 성별 음성을 찾았으니 pitch 보정을 얹지 않는다 → 1.0 근처(자연스러움)
+    expect(spoken[0].pitch).toBeGreaterThan(0.9);
+    expect(spoken[1].pitch).toBeLessThan(1.1);
+  });
+
+  it("저품질(compact) 음성보다 일반 음성을 우선한다", () => {
+    voices = [
+      { name: "Korean (Compact)", lang: "ko-KR" },
+      { name: "Yuna", lang: "ko-KR" },
+    ];
+    speakPersonaLine("seoon", "서고에 닿아 있어요."); // 여
+    expect(spoken[0].voiceName).toBe("Yuna");
   });
 
   it("빈 문자열은 발화하지 않는다", () => {
