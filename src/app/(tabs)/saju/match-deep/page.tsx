@@ -9,9 +9,6 @@ import GuestMatchDeepGate from "@/components/saju/GuestMatchDeepGate";
 import PersonaImageIntro from "@/components/persona/PersonaImageIntro";
 import LoginRequiredNotice from "@/components/saju/LoginRequiredNotice";
 import MatchDeepForm from "@/components/saju/MatchDeepForm";
-import ReviewPrompt from "@/components/reviews/ReviewPrompt";
-import ReviewHighlights from "@/components/reviews/ReviewHighlights";
-import { productReviewSummary } from "@/lib/reviews/summary";
 import type { ProfileRow, ReadingRow } from "@/lib/db/types";
 
 export const metadata: Metadata = {
@@ -96,15 +93,6 @@ export default async function MatchDeepPage() {
     .order("created_at", { ascending: false }).limit(10)
     .returns<ReadingRow[]>();
 
-  // 내 후기(지난 기록별) — 실패해도 화면은 그대로(P9 §12)
-  const pastIds = (past ?? []).map((r) => r.id);
-  const { data: myReviews } = pastIds.length
-    ? await supabase.from("reading_reviews").select("reading_id, rating, comment").in("reading_id", pastIds)
-        .returns<{ reading_id: string; rating: number; comment: string | null }[]>()
-    : { data: [] as { reading_id: string; rating: number; comment: string | null }[] };
-  const reviewsById = new Map((myReviews ?? []).map((r) => [r.reading_id, { rating: r.rating, comment: r.comment }]));
-  const matchSummary = await productReviewSummary("match");
-
   return (
     <main className="fade-rise p-6">
       {header}
@@ -129,14 +117,11 @@ export default async function MatchDeepPage() {
                     </div>
                   ))}
                 </div>
-                <ReviewPrompt readingId={r.id} initial={reviewsById.get(r.id) ?? null} />
               </details>
             ))}
           </div>
         </section>
       )}
-
-      <ReviewHighlights summary={matchSummary} heading="이 풀이의 후기" />
     </main>
   );
 }

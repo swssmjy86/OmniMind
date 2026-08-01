@@ -4,7 +4,6 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { unlockReading } from "@/lib/readings/actions";
 import type { InterpretationSection } from "@/lib/interpret/types";
-import ReviewPrompt from "@/components/reviews/ReviewPrompt";
 
 /**
  * 크레딧 풀이 열기(3단계 스펙 §4) — 성공 시 결과 섹션을 이 자리에서 렌더한다.
@@ -37,7 +36,6 @@ export default function UnlockReading({
             <p className="mt-2 leading-relaxed text-text-main">{s.body}</p>
           </section>
         ))}
-        {result.readingId && <ReviewPrompt readingId={result.readingId} />}
       </div>
     );
   }

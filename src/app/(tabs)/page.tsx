@@ -9,8 +9,6 @@ import { PERSONA_IMAGES } from "@/lib/persona/images";
 import { PERSONA_GLYPHS } from "@/components/home/PersonaCard";
 import { FAQ_ITEMS } from "@/app/faq/page";
 import AdSlot from "@/components/ads/AdSlot";
-import ReviewHighlights from "@/components/reviews/ReviewHighlights";
-import { homeReviewHighlights } from "@/lib/reviews/summary";
 import type { ProfileRow } from "@/lib/db/types";
 
 export const dynamic = "force-dynamic"; // 세션에 따라 매번 렌더
@@ -48,7 +46,6 @@ export default async function HomePage() {
   const justReached = Boolean(isMilestoneToday(companionDays));
 
   const grid = PRODUCTS.filter((p) => p.id !== "today");
-  const homeSummary = await homeReviewHighlights();
 
   // 달지기 배너 멘트 — SSOT(personas.ts homeLine)를 문장 경계에서 두 줄로 나눈다.
   // 둘째 문장은 moon-gold 강조. homeLine이 한 문장이 되면 둘째 줄은 자연히 사라진다.
@@ -156,13 +153,6 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
-
-      {/* 고객리뷰 — 실제 코멘트 후기 3개 이상일 때만(P9 §5.2) */}
-      <ReviewHighlights
-        summary={homeSummary}
-        heading="고객리뷰"
-        sub="실제로 풀이를 열어본 분들의 이야기예요."
-      />
 
       {/* 자주묻는질문 발췌 3문항 */}
       <section className="mt-8" aria-label="자주 묻는 질문">

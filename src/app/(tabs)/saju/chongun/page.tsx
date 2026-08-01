@@ -17,9 +17,6 @@ import PersonaImageIntro from "@/components/persona/PersonaImageIntro";
 import LoginRequiredNotice from "@/components/saju/LoginRequiredNotice";
 import ProfileTraitsGate from "@/components/saju/ProfileTraitsGate";
 import ShareSheet from "@/components/share/ShareSheet";
-import ReviewPrompt from "@/components/reviews/ReviewPrompt";
-import ReviewHighlights from "@/components/reviews/ReviewHighlights";
-import { productReviewSummary } from "@/lib/reviews/summary";
 import { profileCardQuery } from "@/lib/share/card-copy";
 import type { ProfileRow, ReadingRow } from "@/lib/db/types";
 import type { InterpretationSection } from "@/lib/interpret/types";
@@ -140,15 +137,6 @@ export default async function ChongunPage() {
     readingId = inserted?.id ?? null;
   }
 
-  // 내 후기(readingId 있을 때만) + 총운 후기 요약 — 둘 다 실패해도 화면은 그대로(P9 §12)
-  const [{ data: myReview }, chongunSummary] = await Promise.all([
-    readingId
-      ? supabase.from("reading_reviews").select("rating, comment")
-          .eq("reading_id", readingId).maybeSingle<{ rating: number; comment: string | null }>()
-      : Promise.resolve({ data: null }),
-    productReviewSummary("chongun"),
-  ]);
-
   return (
     <main className="fade-rise p-6">
       {header}
@@ -170,8 +158,6 @@ export default async function ChongunPage() {
         via="reading"
         label="풀이 카드"
       />
-      {readingId && <ReviewPrompt readingId={readingId} initial={myReview ?? null} />}
-      <ReviewHighlights summary={chongunSummary} heading="이 풀이의 후기" />
       <Link href="/me" className="mt-6 block text-center text-sm text-text-soft underline">
         내 프로필·공유 카드 보기
       </Link>

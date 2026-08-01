@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from "react";
 import Choice from "@/components/ui/Choice";
-import ReviewPrompt from "@/components/reviews/ReviewPrompt";
 import { unlockMatchDeep } from "@/lib/readings/actions";
 import { computeGuestMatchDeep } from "@/lib/readings/guest-actions";
 import {
@@ -84,7 +83,6 @@ export default function CelebMatchView({
             <p className="mt-2 leading-relaxed text-text-main">{s.body}</p>
           </section>
         ))}
-        {result.readingId && <ReviewPrompt readingId={result.readingId} />}
         <button
           type="button"
           onClick={reset}

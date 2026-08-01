@@ -8,7 +8,6 @@ import { unlockMatchDeep } from "@/lib/readings/actions";
 import { computeGuestMatchDeep } from "@/lib/readings/guest-actions";
 import type { Draft } from "@/app/onboarding/draft";
 import type { InterpretationSection } from "@/lib/interpret/types";
-import ReviewPrompt from "@/components/reviews/ReviewPrompt";
 
 // 엔진 import 금지(번들 보호) — 모드는 로컬 상수. 슬러그는 서버에서 검증·변환된다.
 const MODES = [
@@ -52,7 +51,6 @@ export default function MatchDeepForm({
             <p className="mt-2 leading-relaxed text-text-main">{s.body}</p>
           </section>
         ))}
-        {result.readingId && <ReviewPrompt readingId={result.readingId} />}
       </div>
     );
   }

@@ -25,9 +25,6 @@ import ProfileTraitsGate from "@/components/saju/ProfileTraitsGate";
 import ReadingPeek from "@/components/saju/ReadingPeek";
 import UnlockReading from "@/components/saju/UnlockReading";
 import ShareSheet from "@/components/share/ShareSheet";
-import ReviewPrompt from "@/components/reviews/ReviewPrompt";
-import ReviewHighlights from "@/components/reviews/ReviewHighlights";
-import { productReviewSummary } from "@/lib/reviews/summary";
 import { profileCardQuery } from "@/lib/share/card-copy";
 import type { ProfileRow, ReadingRow } from "@/lib/db/types";
 import type { InterpretationSection } from "@/lib/interpret/types";
@@ -145,15 +142,6 @@ export default async function CreditReadingPage({
   }
 
   if (sections) {
-    // 내 후기(readingId 있을 때만) + 상품 후기 요약 — 둘 다 실패해도 화면은 그대로(P9 §12)
-    const [{ data: myReview }, productSummary] = await Promise.all([
-      readingId
-        ? supabase.from("reading_reviews").select("rating, comment")
-            .eq("reading_id", readingId).maybeSingle<{ rating: number; comment: string | null }>()
-        : Promise.resolve({ data: null }),
-      productReviewSummary(product),
-    ]);
-
     return (
       <main className="fade-rise p-6">
         {header}
@@ -172,8 +160,6 @@ export default async function CreditReadingPage({
           via="reading"
           label="풀이 카드"
         />
-        {readingId && <ReviewPrompt readingId={readingId} initial={myReview ?? null} />}
-        <ReviewHighlights summary={productSummary} heading="이 풀이의 후기" />
         <Link href="/saju" className="mt-6 block text-center text-sm text-text-soft underline">
           다른 풀이 보러 가기
         </Link>
