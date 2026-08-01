@@ -62,7 +62,6 @@ describe("computeGuestMatchDeep — 게스트 궁합 심층", () => {
     if (r.ok) {
       expect(r.sections.length).toBeGreaterThan(0);
       expect(r.readingId).toBeNull();
-      expect(r.usedCredit).toBe(false);
     }
   });
 

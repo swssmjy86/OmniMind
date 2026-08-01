@@ -121,16 +121,4 @@ describe("GuestReadingView — 게스트 총운/사주상품 뷰 (입력 시트 
       expect(screen.getByText(/지금은 풀이를 준비하지 못했어요/)).toBeInTheDocument(),
     );
   });
-
-  it("로그인하면 더 받을 수 있다는 안내 문구가 있다(전환 유도)", async () => {
-    vi.mocked(loadDraft).mockReturnValue(draft);
-    vi.mocked(computeGuestChongun).mockResolvedValue({
-      ok: true, ctx, sections: [{ title: "타고난 결", body: "..." }],
-    });
-    render(<GuestReadingView product="chongun" title="총운" />);
-
-    fireEvent.click(await screen.findByRole("button", { name: "풀이 보기" }));
-
-    expect(await screen.findByText(/로그인하면/)).toBeInTheDocument();
-  });
 });

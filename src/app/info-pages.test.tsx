@@ -70,17 +70,19 @@ describe("/terms · /privacy (§9.3 개발 단계 초안)", () => {
     expect(screen.getByText(/개발 단계 초안 — 정식 오픈 전 법률 검토 예정/)).toBeInTheDocument();
   });
 
-  it("이용약관 — 환불 규정과 면책이 있다", () => {
+  it("이용약관 — 무료·무계정·면책을 고지한다", () => {
     render(<TermsPage />);
-    expect(screen.getByText(/청약철회·환불/)).toBeInTheDocument();
-    // "참고용"은 §1·§4 두 곳에 나온다 — 단일 매치 쿼리(getByText)는 던지므로 개수로 확인
+    // 익명 전환: 회원가입·로그인·결제 없이 무료 제공을 명시한다
+    expect(screen.getByText(/회원가입·로그인 없이 무료/)).toBeInTheDocument();
+    // "참고용"은 §1·면책 두 곳에 나온다 — 단일 매치 쿼리는 던지므로 개수로 확인
     expect(screen.getAllByText(/참고용/).length).toBeGreaterThan(0);
   });
 
-  it("개인정보처리방침 — 국외이전(OpenRouter·Vercel)을 실제대로 고지한다", () => {
+  it("개인정보처리방침 — 국외이전(OpenRouter·Vercel)과 로컬 저장을 실제대로 고지한다", () => {
     render(<PrivacyPage />);
     expect(screen.getByText(/OpenRouter/)).toBeInTheDocument();
     expect(screen.getByText(/Vercel/)).toBeInTheDocument();
-    expect(screen.getByText(/토스페이먼츠/)).toBeInTheDocument();
+    // 익명 전환: 결제(토스) 대신 '기기에만 저장'을 고지한다
+    expect(screen.getAllByText(/기기\(브라우저 저장소\)에만/).length).toBeGreaterThan(0);
   });
 });

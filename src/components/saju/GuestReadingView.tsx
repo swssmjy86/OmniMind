@@ -128,9 +128,6 @@ export default function GuestReadingView({
         via="reading"
         label="풀이 카드"
       />
-      <p className="mt-4 text-center text-xs text-text-soft">
-        로그인하면 이 풀이에 더 깊은 개인화 문단까지 무료로 더해드리고, 기록도 저장돼요.
-      </p>
     </>
   );
 }

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import PersonaIntro from "@/components/persona/PersonaIntro";
 import ShareSheet from "@/components/share/ShareSheet";
 import TodayInputSheet from "./TodayInputSheet";
@@ -243,11 +242,6 @@ export default function TodayFreeFlow({
       </section>
 
       {cardQuery && <ShareSheet query={cardQuery} via="daily" label="오늘의 나 카드" />}
-
-      {/* 예전 블러 티저 자리 — 이제 위 카드로 전부 공개. 로그인은 저장 보너스로만 유도. */}
-      <p className="mt-4 text-center text-xs text-text-soft">
-        <Link href="/login" className="underline">로그인</Link>하면 오늘의 기록이 보관함에 차곡차곡 쌓여요.
-      </p>
 
       {ready && introDone && (forcedOpen || !birth) && (
         <TodayInputSheet

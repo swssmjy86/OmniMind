@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { loadDraft, isCompleteDraft, type Draft } from "@/app/onboarding/draft";
-import { UNLIMITED } from "@/lib/consult/quota";
 import CelebMatchView from "./CelebMatchView";
 import CelebInputSheet from "./CelebInputSheet";
 
@@ -53,5 +52,5 @@ export default function GuestCelebGate() {
     );
   }
 
-  return <CelebMatchView remaining={UNLIMITED} unlimited myDraft={draft} />;
+  return <CelebMatchView myDraft={draft!} />;
 }

@@ -1,127 +1,25 @@
 import Link from "next/link";
 import Image from "next/image";
-import { redirect } from "next/navigation";
-import { createServerSupabase } from "@/lib/supabase/server";
-import { currentMilestone, isMilestoneToday } from "@/lib/interpret/milestone";
 import { PRODUCTS } from "@/lib/persona/products";
-import { PERSONAS } from "@/lib/persona/personas";
 import { PERSONA_IMAGES } from "@/lib/persona/images";
 import { PERSONA_GLYPHS } from "@/components/home/PersonaCard";
+import HomeGreeting from "@/components/home/HomeGreeting";
+import CheerWall from "@/components/cheer/CheerWall";
 import { FAQ_ITEMS } from "@/app/faq/page";
 import AdSlot from "@/components/ads/AdSlot";
-import ReviewHighlights from "@/components/reviews/ReviewHighlights";
-import { homeReviewHighlights } from "@/lib/reviews/summary";
-import type { ProfileRow } from "@/lib/db/types";
-
-export const dynamic = "force-dynamic"; // 세션에 따라 매번 렌더
 
 /**
- * 홈(4탭 IA 스펙 §2) — 6종 풀이 그리드(→ 사주팔자 탭) + 고객리뷰(실제 코멘트 후기
- * 3개 이상 쌓였을 때만 노출 — P9 §5.2 "빈 상태를 꾸미지 않는다") + FAQ 발췌.
- * 마음·고민 진입은 홈에 없다(확정 결정 7 — 잠금 해제 화면에만).
+ * 홈 — 6종 풀이 그리드(→ 사주팔자 탭) + FAQ 발췌. 인사·함께한 날수·오늘의운세 유도는
+ * 로컬 프로필을 읽는 HomeGreeting(클라이언트)이 맡는다. 마음·고민 진입은 홈에 없다.
  */
-export default async function HomePage() {
-  const supabase = await createServerSupabase();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  async function signOut() {
-    "use server";
-    const supabase = await createServerSupabase();
-    await supabase.auth.signOut();
-    redirect("/");
-  }
-
-  let profile: ProfileRow | null = null;
-  if (user) {
-    const { data } = await supabase
-      .from("profiles").select("*").eq("user_id", user.id).maybeSingle<ProfileRow>();
-    profile = data ?? null;
-  }
-
-  let companionDays = 0;
-  if (profile) {
-    const start = new Date(profile.created_at);
-    const now = new Date();
-    companionDays = Math.max(1, Math.floor((now.getTime() - start.getTime()) / 86_400_000) + 1);
-  }
-  const badge = currentMilestone(companionDays);
-  const justReached = Boolean(isMilestoneToday(companionDays));
-
+export default function HomePage() {
   const grid = PRODUCTS.filter((p) => p.id !== "today");
-  const homeSummary = await homeReviewHighlights();
-
-  // 달지기 배너 멘트 — SSOT(personas.ts homeLine)를 문장 경계에서 두 줄로 나눈다.
-  // 둘째 문장은 moon-gold 강조. homeLine이 한 문장이 되면 둘째 줄은 자연히 사라진다.
-  const [dalzigiLine1, dalzigiLine2] = PERSONAS.dalzigi.homeLine.split(/(?<=\.)\s+/);
 
   return (
     <main className="fade-rise p-6">
-      <div className="flex items-baseline justify-between">
-        <h1 className="font-[family-name:var(--font-serif-kr)] text-2xl text-primary-green">
-          옴니마인드
-        </h1>
-        {companionDays > 0 && (
-          <span className="flex items-center gap-1 text-xs text-text-soft">
-            함께한 지 {companionDays}일째
-            {badge && (
-              <span
-                className={`rounded-full bg-warm-surface px-2 py-0.5 text-primary-green ${justReached ? "badge-pop" : ""}`}
-              >
-                {badge.emoji} {badge.label}
-              </span>
-            )}
-          </span>
-        )}
-      </div>
-      <p className="mt-1 text-sm text-text-soft">오늘 밤도 당신의 이야기를 켜 두었어요.</p>
+      <HomeGreeting />
 
-      {/* 프로필 없으면 개인화 유도 — 그리드보다 먼저(홈 목업: CTA가 첫 카드) */}
-      {/* 달지기 배너(2026-07-28) — 버튼 없이 카드 전체가 오늘의운세 입구다. 밤 장면이
-          그대로 흐르고 달지기의 홈 멘트만 얹는다(문구 SSOT는 personas.ts homeLine).
-          ?input=1 — 인트로 영상이 걷힌 뒤 생년월일 팝업을 (이미 저장돼 있어도) 띄운다. */}
-      {!profile && (
-        <Link
-          href="/today?input=1"
-          className="press relative isolate mt-6 flex min-h-44 flex-col overflow-hidden rounded-card border border-accent-coral/30 bg-warm-surface p-5"
-        >
-          {/* 배경 — 카드 전면 밤 장면(isolate + z -1). 얼굴은 우측 상단 빈 구간
-              (좌측 기준 scale이라 왼쪽 가장자리 공백 없음). unoptimized — 커밋된
-              webp라 이미지 최적화 쿼터 불필요(월 고정비 0원 원칙). */}
-          <span aria-hidden className="absolute inset-0 z-[-1]">
-            <Image
-              src={PERSONA_IMAGES.dalzigi.full}
-              alt=""
-              fill
-              unoptimized
-              className="object-cover"
-              style={{
-                objectPosition: "50% 47%",
-                transform: "scale(1.15)",
-                transformOrigin: "0% 47%",
-              }}
-            />
-            <span className="absolute inset-0 bg-[linear-gradient(to_right,color-mix(in_srgb,var(--warm-surface)_92%,transparent)_0%,color-mix(in_srgb,var(--warm-surface)_50%,transparent)_50%,color-mix(in_srgb,var(--warm-surface)_8%,transparent)_100%)]" />
-          </span>
-          {user ? (
-            <p className="max-w-[70%] text-text-soft">
-              반가워요. 이제 <span className="text-text-main">당신의 조각들</span>을 이어볼까요?
-            </p>
-          ) : (
-            <p className="max-w-[70%] text-[15px] font-medium leading-relaxed text-text-main">
-              &ldquo;{dalzigiLine1}
-              {dalzigiLine2 && (
-                <>
-                  <br />
-                  <span className="text-moon-gold">{dalzigiLine2}</span>
-                </>
-              )}
-              &rdquo;
-            </p>
-          )}
-        </Link>
-      )}
-
-      {/* 6종 풀이 그리드 — 클릭하면 사주팔자 탭으로(확정 결정: 홈 → 사주팔자 이동) */}
+      {/* 6종 풀이 그리드 — 클릭하면 사주팔자 탭으로 */}
       <section className="mt-8" aria-label="풀이 종류">
         <div className="grid grid-cols-2 gap-3">
           {grid.map((p) => (
@@ -136,8 +34,6 @@ export default async function HomePage() {
                 </p>
                 <p className="mt-1 text-xs text-text-soft">{p.tagline}</p>
               </div>
-              {/* 담당 페르소나 얼굴 — 로드 전·실패 시 뒤의 글리프가 자리를 지킨다.
-                  unoptimized — 이미 webp로 줄여 커밋한 파일(월 고정비 0원 원칙). */}
               <span
                 aria-hidden
                 className="relative grid size-11 shrink-0 place-items-center overflow-hidden rounded-full bg-warm-base text-xl"
@@ -156,13 +52,6 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
-
-      {/* 고객리뷰 — 실제 코멘트 후기 3개 이상일 때만(P9 §5.2) */}
-      <ReviewHighlights
-        summary={homeSummary}
-        heading="고객리뷰"
-        sub="실제로 풀이를 열어본 분들의 이야기예요."
-      />
 
       {/* 자주묻는질문 발췌 3문항 */}
       <section className="mt-8" aria-label="자주 묻는 질문">
@@ -184,22 +73,9 @@ export default async function HomePage() {
         </Link>
       </section>
 
+      <CheerWall />
+
       <AdSlot />
-
-      {/* 보관함은 하단 탭에서 유명인 궁합에 자리를 내주었다(2026-07-26) — 진입점을 여기에 둔다. */}
-      {user && (
-        <Link href="/archive" className="mt-6 block text-center text-sm text-text-soft underline">
-          지난 기록 보기 (보관함)
-        </Link>
-      )}
-
-      {user && (
-        <form action={signOut} className="mt-8 text-center">
-          <button className="press text-sm text-text-soft underline">
-            잠시 떠나기 (로그아웃)
-          </button>
-        </form>
-      )}
     </main>
   );
 }

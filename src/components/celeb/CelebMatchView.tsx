@@ -2,8 +2,6 @@
 
 import { useState, useTransition } from "react";
 import Choice from "@/components/ui/Choice";
-import ReviewPrompt from "@/components/reviews/ReviewPrompt";
-import { unlockMatchDeep } from "@/lib/readings/actions";
 import { computeGuestMatchDeep } from "@/lib/readings/guest-actions";
 import {
   CELEB_CATEGORIES, CELEB_REGIONS, celebritiesIn,
@@ -21,19 +19,10 @@ const MODES = [
 ] as const;
 
 /**
- * 유명인 사주 궁합(2026-07-26) — 인물을 고르면 기존 궁합 심층 경로를 그대로 태운다.
- * 새 계산 엔진은 없다: 유명인 생년월일을 "상대"로 넣어 computeDeepMatch가 돌 뿐이다.
- * 로그인이면 unlockMatchDeep(LLM 개인화·캐시 포함), 게스트면 computeGuestMatchDeep(템플릿까지).
+ * 유명인 사주 궁합 — 익명 로컬. 인물을 고르면 유명인 생년월일을 "상대"로 넣어
+ * computeGuestMatchDeep이 내 사주(myDraft, 기기 저장)와 즉시 계산한다(저장·크레딧 없음).
  */
-export default function CelebMatchView({
-  remaining,
-  unlimited,
-  myDraft,
-}: {
-  remaining: number;
-  unlimited: boolean;
-  myDraft?: Draft | null;
-}) {
+export default function CelebMatchView({ myDraft }: { myDraft: Draft }) {
   const [region, setRegion] = useState<CelebRegion>("kr");
   const [category, setCategory] = useState<CelebCategory>("music");
   const [picked, setPicked] = useState<Celebrity | null>(null);
@@ -43,8 +32,6 @@ export default function CelebMatchView({
   >(null);
   const [error, setError] = useState(false);
   const [pending, startTransition] = useTransition();
-  // 게스트는 크레딧 개념이 없다 — 부모가 unlimited를 안 넘겨도 여기서 스스로 방어한다.
-  const effectiveUnlimited = unlimited || Boolean(myDraft);
 
   function reset() {
     setResult(null);
@@ -62,9 +49,7 @@ export default function CelebMatchView({
         birthDate: picked.birthDate, birthTime: "", timeUnknown: true, mode,
         partnerName: picked.name,
       };
-      const r = myDraft
-        ? await computeGuestMatchDeep(myDraft, partner)
-        : await unlockMatchDeep(partner);
+      const r = await computeGuestMatchDeep(myDraft, partner);
       if (r.ok) setResult({ sections: r.sections, readingId: r.readingId });
       else setError(true);
     });
@@ -84,7 +69,6 @@ export default function CelebMatchView({
             <p className="mt-2 leading-relaxed text-text-main">{s.body}</p>
           </section>
         ))}
-        {result.readingId && <ReviewPrompt readingId={result.readingId} />}
         <button
           type="button"
           onClick={reset}
@@ -93,16 +77,6 @@ export default function CelebMatchView({
           다른 사람과도 맞춰보기
         </button>
         <Notice />
-      </div>
-    );
-  }
-
-  if (!effectiveUnlimited && remaining <= 0) {
-    return (
-      <div className="mt-5 rounded-card bg-warm-surface p-5 text-center">
-        <p className="text-sm text-text-soft">
-          지금은 남은 크레딧이 없네요. 채우고 나면 다시 맞춰볼 수 있어요.
-        </p>
       </div>
     );
   }

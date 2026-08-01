@@ -71,16 +71,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## 기술 스택 (확정)
 
 - **Next.js** (TypeScript, App Router) — Vercel 무료 티어 배포
-- **Supabase** — PostgreSQL DB + 카카오/구글 소셜 로그인
-- **OpenRouter** — LLM 해석 (Provider 인터페이스 뒤에 배치). 무료 티어 모델이 기본, P8부터 상담 크레딧(유료) 소비 시에는 `OpenRouterProvider({ premium: true })`로 유료 모델(`OPENROUTER_PREMIUM_MODEL`)을 쓴다. Gemini 어댑터(`gemini-provider.ts`)도 같은 인터페이스로 남아있어 설정만 바꾸면 전환 가능
-- **운영 비용 원칙: 월 고정비 0원** — 무료 티어/무료 API만 사용. P8 유료 LLM 호출은 상담 크레딧 판매 매출로 충당하는 사용량 기반 변동비라 이 원칙과 상충하지 않는다(고정비가 아님)
+- **완전 익명 (2026-08-01)** — 로그인·계정·결제가 없다. 프로필(생년월일시·성별·MBTI·혈액형·닉네임)과 마음·고민 기록은 **클라이언트 `localStorage`에만** 저장된다. 온보딩 draft(`src/app/onboarding/draft.ts`)가 정식 프로필 저장소이고, 페이지는 `src/lib/profile/local.ts`의 `loadLocalProfile()`로 읽는다.
+- **Supabase** — PostgreSQL DB. **인증은 쓰지 않는다.** 서버 전용 admin(service role)으로 **계정과 무관한 데이터만** 저장한다: 익명 지표(events), 문의(inquiries), 익명 응원(cheers). 개인 프로필·상담 기록은 서버에 저장하지 않는다.
+- **OpenRouter** — LLM 해석 (Provider 인터페이스 뒤에 배치). **무료 티어 모델만** 쓴다. 마음·고민·오늘의운세의 서버 액션이 프로필 맥락+입력을 받아 계산+LLM 프록시 역할만 하고, 결과는 서버에 저장하지 않는다(기록은 클라이언트 localStorage). Gemini 어댑터(`gemini-provider.ts`)도 같은 인터페이스로 남아있어 설정만 바꾸면 전환 가능
+- **운영 비용 원칙: 월 고정비 0원** — 무료 티어/무료 API만 사용. 익명·무료 서비스라 유료 결제 경로가 없다.
 
 ### 핵심 아키텍처 원칙
 
 1. **계산과 해석의 분리** — 만세력·별자리 등 계산은 100% 규칙 기반 코드 (LLM 금지 영역), LLM은 문장 생성만
-2. **3단 해석 엔진** — ①규칙 계산 → ②템플릿 문구 조합(항상 동작) → ③LLM 개인화(쿼터 있을 때만). LLM 없이도 서비스 완전 동작
-3. **해석 캐싱** — 프로필 1회 생성, 데일리 하루 1회. 같은 해석을 두 번 생성하지 않음
-4. **요금제는 숨긴 기능(전면 무료 전환, 2026-07-21)** — 현재는 오늘의운세=비로그인 무료, 나머지 전부=로그인만 하면 무료. P8 3단계 요금제(비로그인→로그인→크레딧)와 결제 코드는 삭제하지 않고 `src/lib/consult/quota.ts`의 `FREE_FOR_ALL` 플래그로만 잠가 둔다 — 등급·크레딧은 UI/디자인에 노출하지 않는다(배지·판매 장치 비노출). 유료화 복원 시 플래그만 되돌린다. 레거시 30일 이용권(`premium_until`)은 무제한 유지
+2. **3단 해석 엔진** — ①규칙 계산 → ②템플릿 문구 조합(항상 동작) → ③LLM 개인화(가능할 때). LLM 없이도 서비스 완전 동작
+3. **저장 없이 매번 계산** — 엔진이 순수·결정론적이라 프로필·풀이는 클라이언트에서 매번 재계산해도 같은 값(서버 캐시 없음). 데일리 LLM 결과만 기기당 하루 1회 `localStorage`에 캐시해 무료 쿼터를 아낀다.
+4. **전면 무료·익명 (2026-08-01)** — 모든 기능을 로그인·결제 없이 제공한다. 요금제·크레딧·프리미엄·후기·궁합 초대(connections) 코드는 **삭제**됐다(레거시 `quota.ts`·결제·리뷰 계층 제거). 등급·판매 장치는 UI에 없다. 서버에 남는 유일한 사용자 상호작용은 **익명 응원**(`src/lib/cheer/`, `cheers` 테이블 — user_id 없음).
 5. **페르소나 7인 전담제(2026-07-23)** — 상품 7종에 페르소나 1:1 전담(달지기·서온·벼리·홍연·연리·온새·금오, 겸직 없음). 코드 SSOT는 `src/lib/persona/personas.ts`, 배경 서사는 `docs/persona-plan.md`. 페르소나는 표현 계층 전용 — 계산에 일절 관여하지 않는다
 
 ## 개발 명령
@@ -104,6 +105,6 @@ npm run test:watch # 테스트 워치 모드
 - **TZ 안전성:** `kst.ts`가 KST 벽시계를 런타임 TZ(Vercel=UTC) 무관하게 다룬다. 로컬 `Date` 게터 금지 — 절대 instant만 신뢰하고 `toKstParts`로 KST 컴포넌트를 읽는다.
 - **절기 테이블:** `solar-terms.data.ts`는 `scripts/gen-solar-terms.ts`(astronomy-engine의 태양 겉보기 황경)로 빌드 타임 생성(1900~2100), **초 단위** 저장. 정확도는 `solar-terms.usno.test.ts`(USNO 공표 분점·지점 대조, 오프라인)가 상시 검증한다. `verify-solar-terms.ts`는 KASI 공표값과 대조하는 **감시 도구**(패치 기능 없음 — KASI API 원본에 오류가 확인되어 덮어쓰지 않는다. 무료 API 키 필요, 제공 범위 2000~2028).
 - **모듈:** `pillars`(년·월·일·시주, 절기·오호둔·오서둔·야자시 23시 경계), `clock`(기록 벽시계 → 실제 절대 시각: 서머타임 −1h·표준시 UTC+8:30 시대 +30m), `elements`(오행 분포), `ten-gods`(십성), `daeun`(대운), `twelve-stages`(12운성), `zodiac`(별자리), `mbti`/`blood`(특성 키워드)
-- **저장된 프로필의 버전:** `PROFILE_CONTEXT_VERSION`(현재 2). 계산 의미가 바뀌면 올린다 — 저장된 `profile_context`의 version이 더 낮으면 지금 엔진과 다른 값이므로 재계산 대상이다.
+- **저장된 프로필의 버전:** `PROFILE_CONTEXT_VERSION`(현재 9). 계산 의미가 바뀌면 올린다. 익명 앱에선 저장값이 클라이언트 캐시일 뿐이고 입력만 있으면 언제든 재계산되므로, 이 버전은 주로 계산 이력 기록용이다.
 - **일주 앵커:** 2000-01-07=갑자일 기준 JDN 산술. **KASI '음양력 정보' 공표 일진 467건(1900~2050)과 대조해 확정**(`fixtures/iljin-cases.ts`, 오프라인 테스트 `iljin.test.ts`). 갱신·재대조는 `scripts/verify-iljin.ts`(무료 API 키 필요).
 - **테스트:** 계산은 정답이 존재하므로 TDD 필수. 대조 코퍼스는 `fixtures/manseryeok-cases.ts`(4주 종합), `fixtures/iljin-cases.ts`(일주 × KASI). 외부 대조는 전부 오프라인으로 돌아 CI에서도 검증된다.

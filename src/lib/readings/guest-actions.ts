@@ -20,7 +20,11 @@ import {
 import { assembleDeepMatch } from "@/lib/interpret/content/match";
 import type { ProfileContext } from "@/lib/engine";
 import type { InterpretationSection } from "@/lib/interpret/types";
-import type { UnlockResult } from "./actions";
+
+// 궁합 심층 결과 — 익명 로컬이라 저장·크레딧 개념이 없다(readingId는 항상 null).
+export type MatchDeepResult =
+  | { ok: true; sections: InterpretationSection[]; readingId: null }
+  | { ok: false; reason: "invalid" };
 
 export type GuestReadingResult =
   | { ok: true; ctx: ProfileContext; sections: InterpretationSection[] }
@@ -79,14 +83,13 @@ export async function computeGuestCreditReading(
 }
 
 /**
- * 궁합 심층 — 게스트. 상대 입력 검증은 로그인 경로(unlockMatchDeep)와 같은 규칙을 그대로 쓴다.
- * 반환 타입을 UnlockResult에 맞춰(readingId 항상 null) MatchDeepForm이 두 경로를 한 방식으로
- * 다룰 수 있게 한다.
+ * 궁합 심층 — 익명 로컬. 내 사주(myDraft)와 상대 입력으로 매번 새로 계산한다(저장·크레딧 없음).
+ * 상대 입력 검증은 순수 함수 parseMatchDeepInput 한 곳에만 둔다.
  */
 export async function computeGuestMatchDeep(
   myDraft: Draft,
   raw: unknown,
-): Promise<UnlockResult> {
+): Promise<MatchDeepResult> {
   // 검증은 로그인 경로와 같은 순수 함수를 쓴다 — 규칙이 갈라지지 않도록 한 곳에만 둔다.
   const input = parseMatchDeepInput(raw);
   if (!input) return { ok: false, reason: "invalid" };
@@ -101,7 +104,7 @@ export async function computeGuestMatchDeep(
       match, myElement: ctx.dayMaster.element, myName: myDraft.nickname,
       partnerName: input.partnerName ?? "상대",
     });
-    return { ok: true, sections, usedCredit: false, remaining: 0, readingId: null };
+    return { ok: true, sections, readingId: null };
   } catch {
     return { ok: false, reason: "invalid" };
   }

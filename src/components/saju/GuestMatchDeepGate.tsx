@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { loadDraft, isCompleteDraft, type Draft } from "@/app/onboarding/draft";
-import { UNLIMITED } from "@/lib/consult/quota";
 import MatchDeepForm from "./MatchDeepForm";
 
 type Status = "loading" | "no-draft" | "ready";
@@ -50,5 +49,5 @@ export default function GuestMatchDeepGate() {
     );
   }
 
-  return <MatchDeepForm remaining={UNLIMITED} unlimited myDraft={draft} />;
+  return <MatchDeepForm myDraft={draft!} />;
 }

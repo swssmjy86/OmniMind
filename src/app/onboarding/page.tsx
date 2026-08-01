@@ -6,8 +6,7 @@ import { computeProfile, type ProfileContext } from "@/lib/engine";
 import { zodiacSign } from "@/lib/engine/zodiac";
 import { assembleProfile } from "@/lib/interpret/templates";
 import type { InterpretationSection } from "@/lib/interpret/types";
-import { saveProfile } from "./actions";
-import { saveDraft, loadDraft, clearDraft, isCompleteDraft, type Draft } from "./draft";
+import { saveDraft, type Draft } from "./draft";
 import SajuChart from "@/components/profile/SajuChart";
 import PersonaIntro from "@/components/persona/PersonaIntro";
 import Choice from "@/components/ui/Choice";
@@ -27,7 +26,6 @@ export default function OnboardingPage() {
   });
   const [result, setResult] = useState<Result | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [saveState, setSaveState] = useState<"pending" | "saved" | "guest" | "error">("pending");
 
   const set = (patch: Partial<Draft>) => setDraft((d) => ({ ...d, ...patch }));
 
@@ -43,29 +41,8 @@ export default function OnboardingPage() {
       const sections = assembleProfile(ctx, nickname);
       setResult({ ctx, sections, nickname });
       setStep(3);
-      // 로그인 왕복(OAuth)에 대비해 draft 보존 — 저장 성공 시 삭제
+      // 익명 앱 — draft(localStorage)가 곧 영구 프로필 저장소다. 서버 저장 없음.
       saveDraft(d);
-      // 로그인 상태면 백그라운드로 저장(best-effort). 미리보기는 항상 동작.
-      setSaveState("pending");
-      saveProfile({
-        nickname: d.nickname.trim() || "당신",
-        birthDate: d.birthDate,
-        birthTime: d.timeUnknown ? null : d.birthTime,
-        timeUnknown: d.timeUnknown,
-        gender: d.gender ?? null,
-      }).then((r) => {
-        if (r.saved) {
-          clearDraft();
-          setSaveState("saved");
-        } else {
-          setSaveState(r.reason === "not-authenticated" ? "guest" : "error");
-        }
-      }).catch(() => {
-        // 서버 액션 자체가 거부되는 경우(네트워크 끊김·플랫폼 타임아웃 등) — 프로필 행은 이미
-        // 저장됐을 수 있지만(리포트 생성은 저장 다음 단계) 화면은 계속 "저장 중" 상태로 멈춰
-        // 있으면 안 된다. 코드리뷰 결함 수정: .then()만 있고 .catch()가 없어 거부 시 무한 대기했다.
-        setSaveState("error");
-      });
     } catch {
       setError("입력을 다시 확인해 주세요.");
     }
@@ -73,18 +50,8 @@ export default function OnboardingPage() {
 
   const finish = () => finishWith(draft);
 
-  // 로그인 복귀(?resume=1): 보존된 draft로 자동 재계산·저장을 이어간다.
-  // 렌더 캐스케이드를 피하기 위해 마운트 직후 태스크로 미룬다.
-  useEffect(() => {
-    if (!new URLSearchParams(window.location.search).get("resume")) return;
-    const d = loadDraft();
-    if (!d || !isCompleteDraft(d)) return;
-    const t = setTimeout(() => finishWith(d), 0);
-    return () => clearTimeout(t);
-  }, []);
-
   if (step === 3 && result) {
-    return <ProfileView nickname={result.nickname} result={result} saveState={saveState} />;
+    return <ProfileView nickname={result.nickname} result={result} />;
   }
 
   const zodiacPreview =
@@ -251,8 +218,8 @@ function Field({ title, hint, children }: { title: string; hint: string; childre
 }
 
 function ProfileView({
-  nickname, result, saveState,
-}: { nickname: string; result: Result; saveState: "pending" | "saved" | "guest" | "error" }) {
+  nickname, result,
+}: { nickname: string; result: Result }) {
   const [revealing, setRevealing] = useState(true);
   useEffect(() => {
     const t = setTimeout(() => setRevealing(false), 1600);
@@ -295,34 +262,9 @@ function ProfileView({
         ))}
       </div>
 
-      {saveState === "saved" && (
-        <p className="mt-8 text-center text-sm text-primary-green">
-          이 이야기를 저장했어요. 사주팔자 탭의 총운에서 언제든 다시 볼 수 있어요 🌿
-        </p>
-      )}
-      {saveState === "error" && (
-        <p className="mt-8 text-center text-sm text-text-soft">
-          저장이 잠시 어려웠어요. 이야기는 그대로 볼 수 있고, 다음 방문 때 다시 이어둘게요 🌿
-        </p>
-      )}
-      {(saveState === "guest" || saveState === "pending") && (
-        <section className="mt-8 rounded-card bg-warm-surface p-5 text-center">
-          <p className="text-sm text-text-soft">
-            지금은 미리보기예요. 로그인하면 이 이야기를 저장하고, 사주와 별자리를 더 깊이 엮은
-            이야기와 매일의 기운도 받아볼 수 있어요.
-          </p>
-          <Link
-            href="/login"
-            onClick={() => {
-              // 로그인 후 이 자리로 돌아와 자동 저장을 이어가도록 목적지를 쿠키로
-              document.cookie = `om_next=${encodeURIComponent("/onboarding?resume=1")}; path=/; max-age=600; samesite=lax`;
-            }}
-            className="press mt-4 block w-full rounded-card bg-accent-coral py-3.5 font-medium text-on-accent"
-          >
-            로그인하고 저장하기
-          </Link>
-        </section>
-      )}
+      <p className="mt-8 text-center text-sm text-primary-green">
+        이 이야기를 이 기기에 저장했어요. 사주팔자 탭의 총운에서 언제든 다시 볼 수 있어요 🌿
+      </p>
       <Link
         href="/"
         className="press mt-3 block w-full rounded-card border border-text-soft/30 py-3.5 text-center text-text-soft"
