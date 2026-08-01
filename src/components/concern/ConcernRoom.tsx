@@ -1,84 +1,76 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
-import { submitConcern, deleteConcernLog, deleteAllConcernLogs } from "@/lib/concern/actions";
+import { useEffect, useState } from "react";
+import { submitConcern } from "@/lib/concern/actions";
 import { CONCERN_CATEGORIES, type ConcernCategory } from "@/lib/interpret/content/concern";
 import { CONCERN_MAX_LENGTH } from "@/lib/concern/constants";
+import { loadLog, saveLog, localId } from "@/lib/local-log";
+import type { ProfileContext } from "@/lib/engine";
 import type { InterpretationSection } from "@/lib/interpret/types";
+
+const CONCERN_KEY = "om_concern_log";
 
 export interface PastAdvice {
   id: string;
-  date: string; // "YYYY.MM.DD"
+  date: string; // "오늘" 등 표시 문자열
   sections: InterpretationSection[];
 }
 
+/**
+ * 고민 상담 — 익명 로컬. 기록은 이 기기(localStorage)에만 쌓이고, 제출 시 프로필 맥락과
+ * 오늘 운기를 서버 액션(계산+LLM 프록시)에 보내 조언을 받는다. 계정·쿼터·서버 저장 없음.
+ */
 export default function ConcernRoom({
-  nickname, remaining: initialRemaining, past,
-}: { nickname: string; remaining: number; past: PastAdvice[] }) {
+  nickname, profile,
+}: { nickname: string; profile: ProfileContext }) {
   const [category, setCategory] = useState<ConcernCategory>(CONCERN_CATEGORIES[0]);
   const [text, setText] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<InterpretationSection[] | null>(null);
-  const [remaining, setRemaining] = useState(initialRemaining);
-  const [history, setHistory] = useState<PastAdvice[]>(past);
+  const [history, setHistory] = useState<PastAdvice[]>([]);
 
-  // remaining < 0 = 무제한(레거시 프리미엄, consult/quota.ts UNLIMITED 센티널)
-  const unlimited = remaining < 0;
-  const exhausted = !unlimited && remaining <= 0;
+  useEffect(() => {
+    const stored = loadLog<PastAdvice>(CONCERN_KEY);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (stored.length) setHistory(stored);
+  }, []);
+
+  function persist(next: PastAdvice[]) {
+    setHistory(next);
+    saveLog(CONCERN_KEY, next);
+  }
 
   async function submit() {
     const concern = text.trim();
-    if (!concern || pending || exhausted) return;
+    if (!concern || pending) return;
     setPending(true);
     setError(null);
-    const res = await submitConcern(category, concern);
+    const res = await submitConcern({ profile, nickname, category, concern });
     setPending(false);
     if (res.ok) {
       setResult(res.sections);
-      setRemaining(res.remaining);
       setText("");
-      setHistory((h) => [{ id: res.id, date: "오늘", sections: res.sections }, ...h]);
-    } else if (res.reason === "limit") {
-      setRemaining(0);
+      persist([{ id: localId(), date: "오늘", sections: res.sections }, ...history]);
     } else {
       setError("잠시 길을 잃었어요. 조금 뒤에 다시 이야기 나눠요.");
     }
   }
 
-  async function removeOne(id: string) {
-    const index = history.findIndex((p) => p.id === id);
-    if (index === -1) return;
-    const removed = history[index];
-    setHistory((h) => h.filter((p) => p.id !== id));
-    const res = await deleteConcernLog(id);
-    if (!res.ok) {
-      setHistory((h) => {
-        const next = [...h];
-        next.splice(index, 0, removed);
-        return next;
-      });
-    }
+  function removeOne(id: string) {
+    persist(history.filter((p) => p.id !== id));
   }
 
-  async function removeAll() {
+  function removeAll() {
     if (!window.confirm("고민 상담 기록을 모두 지울까요? 되돌릴 수 없어요.")) return;
-    const before = history;
-    setHistory([]);
-    const res = await deleteAllConcernLogs();
-    if (!res.ok) setHistory(before);
+    persist([]);
   }
 
   return (
     <main className="p-6 pb-24">
       <h1 className="font-[family-name:var(--font-serif-kr)] text-2xl text-primary-green">고민</h1>
       <p className="mt-1 text-xs text-text-soft">
-        {unlimited
-          ? "고민 이야기를 마음껏 나눌 수 있어요 ✨"
-          : exhausted
-            ? "오늘 나눌 수 있는 고민 이야기는 여기까지예요 🌙"
-            : `오늘 함께 생각할 수 있는 고민이 ${remaining}번 남았어요`}
+        고민 이야기를 마음껏 나눌 수 있어요 ✨
       </p>
 
       {result ? (
@@ -89,17 +81,7 @@ export default function ConcernRoom({
         </p>
       )}
 
-      {exhausted ? (
-        <div className="mt-6 rounded-card bg-warm-surface p-5 text-center">
-          <p className="text-sm text-text-soft">내일 새로운 기운과 함께, 다시 함께 생각해요.</p>
-          <Link
-            href="/premium"
-            className="mt-2 inline-block text-sm text-accent-coral underline underline-offset-4"
-          >
-            고민 상담, 상담 크레딧으로 이어가기 🌙
-          </Link>
-        </div>
-      ) : (
+      {(
         <div className="mt-6 space-y-4">
           <div className="flex flex-wrap gap-2">
             {CONCERN_CATEGORIES.map((c) => (
