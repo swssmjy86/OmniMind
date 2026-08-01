@@ -1,7 +1,7 @@
-import Link from "next/link";
 import Image from "next/image";
 import { PERSONAS, type PersonaId } from "@/lib/persona/personas";
 import { PERSONA_IMAGES } from "@/lib/persona/images";
+import PersonaSpeakLink from "./PersonaSpeakLink";
 import type { Product } from "@/lib/persona/products";
 
 // 일러스트가 붙기 전 쓰던 CSS 심볼 폴백(§4.3). 배너형 카드에서는 얼굴이 전신컷으로
@@ -71,7 +71,13 @@ export default function PersonaCard({ product }: { product: Product }) {
         </p>
 
         <p className="persona-cta mt-auto pt-3 text-right text-[15px] text-moon-gold">
-          {soon ? "곧 만나요" : "풀이 보러 가기 →"}
+          {soon ? (
+            "곧 만나요"
+          ) : (
+            <>
+              풀이 보러 가기 <span aria-hidden>🔊</span> →
+            </>
+          )}
         </p>
       </div>
     </>
@@ -83,11 +89,13 @@ export default function PersonaCard({ product }: { product: Product }) {
     );
   }
   return (
-    <Link
+    <PersonaSpeakLink
       href={product.href}
+      personaId={persona.id}
+      line={persona.homeLine}
       className="persona-card press block rounded-card bg-warm-surface"
     >
       {inner}
-    </Link>
+    </PersonaSpeakLink>
   );
 }
