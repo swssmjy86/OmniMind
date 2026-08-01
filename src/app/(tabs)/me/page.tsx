@@ -144,7 +144,7 @@ export default async function MePage() {
 
       {/* P7 궁합 — 우리의 조합 입구 */}
       <Link
-        href="/match"
+        href="/saju/match-deep"
         className="press mt-4 block w-full rounded-card border border-primary-green/30 bg-warm-surface py-3.5 text-center font-medium text-primary-green"
       >
         우리의 조합 보기 — 연인·친구·동료 🍃
