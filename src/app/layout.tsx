@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { Noto_Serif_KR } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import RefTracker from "@/components/share/RefTracker";
-import IdleLogout from "@/components/auth/IdleLogout";
 import Footer from "@/components/Footer";
 import ThemeToggle from "@/components/theme/ThemeToggle";
 import { THEME_KEY } from "@/lib/theme/store";
@@ -82,7 +81,6 @@ export default function RootLayout({
       <body className="min-h-dvh antialiased">
         <div className="app-shell mx-auto min-h-dvh max-w-[var(--shell-width)] bg-warm-base lg:max-w-[var(--shell-width-lg)]">
           <RefTracker />
-          <IdleLogout />
           <ThemeToggle />
           {children}
           <Footer />
