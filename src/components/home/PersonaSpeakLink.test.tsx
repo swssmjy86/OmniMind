@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from "vitest";
 import PersonaSpeakLink from "./PersonaSpeakLink";
 import { speakPersonaLine } from "@/lib/persona/speak";
 
-vi.mock("@/lib/persona/speak", () => ({ speakPersonaLine: vi.fn() }));
+vi.mock("@/lib/persona/speak", () => ({ speakPersonaLine: vi.fn(), warmUpVoices: vi.fn() }));
 
 describe("PersonaSpeakLink", () => {
   it("누르면 페르소나 멘트를 소리로 읽고 링크로 이동한다", () => {

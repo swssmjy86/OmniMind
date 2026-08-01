@@ -68,13 +68,21 @@ describe("speakPersonaLine", () => {
     expect(spoken[1].pitch).toBeLessThan(1.1);
   });
 
-  it("저품질(compact) 음성보다 일반 음성을 우선한다", () => {
+  it("'female' 이름 음성을 남성으로 오인하지 않는다(부분문자열 male 버그)", () => {
+    voices = [{ name: "Korean Female", lang: "ko-KR" }]; // 남성 음성 없음
+    speakPersonaLine("geumo", "재물의 물길."); // 남
+    // 여성 음성을 남성으로 매칭하면 안 된다 → 매칭 실패로 보정 pitch(낮게)가 적용돼야 한다
+    expect(spoken[0].pitch).toBeLessThan(1);
+  });
+
+  it("신경망(고음질) 음성을 일반·compact보다 우선한다", () => {
     voices = [
       { name: "Korean (Compact)", lang: "ko-KR" },
-      { name: "Yuna", lang: "ko-KR" },
+      { name: "Google 한국의", lang: "ko-KR" }, // 신경망(google)
+      { name: "Some Korean", lang: "ko-KR" },
     ];
-    speakPersonaLine("seoon", "서고에 닿아 있어요."); // 여
-    expect(spoken[0].voiceName).toBe("Yuna");
+    speakPersonaLine("seoon", "서고에 닿아 있어요.");
+    expect(spoken[0].voiceName).toBe("Google 한국의");
   });
 
   it("빈 문자열은 발화하지 않는다", () => {
@@ -82,10 +90,10 @@ describe("speakPersonaLine", () => {
     expect(spoken).toHaveLength(0);
   });
 
-  it("reduced-motion이면 소리도 건너뛴다", () => {
+  it("reduced-motion이어도 소리는 난다(오디오는 모션 선호와 무관, 클릭 재생)", () => {
     window.matchMedia = vi.fn().mockReturnValue({ matches: true }) as unknown as typeof window.matchMedia;
     speakPersonaLine("dalzigi", "안녕하세요");
-    expect(spoken).toHaveLength(0);
+    expect(spoken).toHaveLength(1);
   });
 
   it("canSpeak/stopSpeaking이 동작한다", () => {

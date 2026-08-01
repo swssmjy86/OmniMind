@@ -71,7 +71,13 @@ export default function PersonaCard({ product }: { product: Product }) {
         </p>
 
         <p className="persona-cta mt-auto pt-3 text-right text-[15px] text-moon-gold">
-          {soon ? "곧 만나요" : "풀이 보러 가기 🔊 →"}
+          {soon ? (
+            "곧 만나요"
+          ) : (
+            <>
+              풀이 보러 가기 <span aria-hidden>🔊</span> →
+            </>
+          )}
         </p>
       </div>
     </>

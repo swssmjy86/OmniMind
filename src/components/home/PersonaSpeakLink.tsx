@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import type { ReactNode } from "react";
-import { speakPersonaLine } from "@/lib/persona/speak";
+import { useEffect, type ReactNode } from "react";
+import { speakPersonaLine, warmUpVoices } from "@/lib/persona/speak";
 import type { PersonaId } from "@/lib/persona/personas";
 
 /**
@@ -23,6 +23,12 @@ export default function PersonaSpeakLink({
   className?: string;
   children: ReactNode;
 }) {
+  // 음성 목록은 비동기 로드라(Chromium은 첫 getVoices가 빈 배열) 마운트 때 미리 데워
+  // 둔다 — 그래야 첫 클릭부터 성별에 맞는 한국어 음성이 잡힌다.
+  useEffect(() => {
+    warmUpVoices();
+  }, []);
+
   return (
     <Link href={href} className={className} onClick={() => speakPersonaLine(personaId, line)}>
       {children}
