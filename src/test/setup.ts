@@ -1,6 +1,7 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
 import { afterEach } from "vitest";
+import { sessionStore } from "@/lib/session-store";
 
 // Web Storage 폴리필 — Node 24+는 실험적 네이티브 localStorage 전역을 심는데,
 // `--localstorage-file` 없이는 undefined를 반환해 jsdom이 제공하던 window.localStorage를
@@ -44,4 +45,8 @@ if (typeof Element !== "undefined" && !Element.prototype.scrollIntoView) {
 
 afterEach(() => {
   cleanup();
+  // 세션 한정 인메모리 저장소는 모듈 수준 Map이라 테스트 간에 유지된다 — 매 테스트 후 비운다.
+  sessionStore.clear();
+  // localStorage(테마·유입·데일리 캐시·최초방문)도 테스트 간 누수 방지로 함께 비운다.
+  try { window.localStorage.clear(); } catch { /* jsdom 없음 등 무시 */ }
 });

@@ -1,5 +1,7 @@
-// 온보딩 draft 보존 — 로그인 왕복(OAuth 리다이렉트) 동안 입력을 잃지 않기 위해
-// localStorage에 저장하고, 복귀(?resume=1) 시 자동으로 저장을 이어간다.
+// 온보딩 draft — 세션 한정 인메모리에 담는다(sessionStore). 새로고침, 또는 하단 탭 재클릭
+// 시 초기화된다(완전 세션 한정, 2026-08-01). 초기화 전까지 한 세션 안에서는 온보딩→나·마음·
+// 고민이 이 값을 공유한다. 기기(디스크)엔 영구 저장하지 않는다.
+import { sessionStore } from "@/lib/session-store";
 
 export interface Draft {
   nickname: string;
@@ -25,7 +27,7 @@ export function isCompleteDraft(d: Draft): boolean {
 
 export function saveDraft(d: Draft): void {
   try {
-    localStorage.setItem(DRAFT_KEY, JSON.stringify(d));
+    sessionStore.setItem(DRAFT_KEY, JSON.stringify(d));
   } catch {
     // 저장 불가(시크릿 모드 등)여도 온보딩은 계속
   }
@@ -33,7 +35,7 @@ export function saveDraft(d: Draft): void {
 
 export function loadDraft(): Draft | null {
   try {
-    const raw = localStorage.getItem(DRAFT_KEY);
+    const raw = sessionStore.getItem(DRAFT_KEY);
     if (!raw) return null;
     const d = JSON.parse(raw) as Partial<Draft>;
     if (
@@ -54,7 +56,7 @@ export function loadDraft(): Draft | null {
 
 export function clearDraft(): void {
   try {
-    localStorage.removeItem(DRAFT_KEY);
+    sessionStore.removeItem(DRAFT_KEY);
   } catch {
     // 무시
   }

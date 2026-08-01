@@ -1,8 +1,12 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import BottomNav from "./BottomNav";
+import { sessionStore } from "@/lib/session-store";
 
-vi.mock("next/navigation", () => ({ usePathname: () => "/today" }));
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/today",
+  useRouter: () => ({ refresh: vi.fn() }),
+}));
 
 describe("하단 탭바 (4탭 IA 스펙 §2)", () => {
   it("4탭 — 홈·오늘의운세·사주팔자·유명인궁합", () => {
@@ -25,5 +29,12 @@ describe("하단 탭바 (4탭 IA 스펙 §2)", () => {
     render(<BottomNav />);
     expect(screen.getByRole("link", { name: /오늘의운세/ })).toHaveClass("font-semibold");
     expect(screen.getByRole("link", { name: /^홈/ })).not.toHaveClass("font-semibold");
+  });
+
+  it("탭을 누르면 세션 입력 저장소를 비운다(새 탭이 빈 상태로 시작)", () => {
+    sessionStore.setItem("om_onboarding_draft", "{...}");
+    render(<BottomNav />);
+    fireEvent.click(screen.getByRole("link", { name: /사주팔자/ }));
+    expect(sessionStore.getItem("om_onboarding_draft")).toBeNull();
   });
 });

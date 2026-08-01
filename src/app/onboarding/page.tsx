@@ -263,7 +263,7 @@ function ProfileView({
       </div>
 
       <p className="mt-8 text-center text-sm text-primary-green">
-        이 이야기를 이 기기에 저장했어요. 사주팔자 탭의 총운에서 언제든 다시 볼 수 있어요 🌿
+        지금 이 화면에서 당신의 이야기를 만나보세요. 사주팔자 탭의 총운에서도 이어집니다 🌿
       </p>
       <Link
         href="/"

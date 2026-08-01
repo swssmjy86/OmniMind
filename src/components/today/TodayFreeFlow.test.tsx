@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { sessionStore } from "@/lib/session-store";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import TodayFreeFlow from "./TodayFreeFlow";
 import { TODAY_BIRTH_KEY } from "@/lib/today/birth-store";
@@ -26,6 +27,8 @@ const extras = {
 
 describe("TodayFreeFlow — 비로그인 오늘의운세 개인화(블러 해제)", () => {
   beforeEach(() => {
+    sessionStore.clear();
+    // EXTRAS 캐시는 localStorage라 세션 초기화와 별개로 매 테스트 전에 비운다.
     window.localStorage.clear();
     vi.clearAllMocks();
   });
@@ -102,14 +105,14 @@ describe("TodayFreeFlow — 비로그인 오늘의운세 개인화(블러 해제
   });
 
   it("forceInput이면 저장된 생년월일이 있어도 입력 시트를 띄운다", async () => {
-    window.localStorage.setItem(TODAY_BIRTH_KEY, JSON.stringify(birth));
+    sessionStore.setItem(TODAY_BIRTH_KEY, JSON.stringify(birth));
     vi.mocked(computeGuestDailyExtras).mockResolvedValue(extras);
     render(<TodayFreeFlow {...props} forceInput />);
     expect(await screen.findByText("태어난 날을 알려주실래요?")).toBeInTheDocument();
   });
 
   it("개인화가 준비되는 동안 버퍼링 화면이 뜨고, 끝나면 카드로 바뀐다", async () => {
-    window.localStorage.setItem(TODAY_BIRTH_KEY, JSON.stringify(birth));
+    sessionStore.setItem(TODAY_BIRTH_KEY, JSON.stringify(birth));
     let resolve!: (v: typeof extras) => void;
     vi.mocked(computeGuestDailyExtras).mockReturnValue(
       new Promise((r) => { resolve = r; }),
@@ -127,7 +130,7 @@ describe("TodayFreeFlow — 비로그인 오늘의운세 개인화(블러 해제
   });
 
   it("개인화 실패(null)여도 버퍼링이 걷히고 공통 카드로 진행한다", async () => {
-    window.localStorage.setItem(TODAY_BIRTH_KEY, JSON.stringify(birth));
+    sessionStore.setItem(TODAY_BIRTH_KEY, JSON.stringify(birth));
     vi.mocked(computeGuestDailyExtras).mockResolvedValue(null);
     render(<TodayFreeFlow {...props} />);
     expect(await screen.findByText("헤드라인")).toBeInTheDocument();
@@ -135,7 +138,7 @@ describe("TodayFreeFlow — 비로그인 오늘의운세 개인화(블러 해제
   });
 
   it("저장된 태어난 날이 있으면 일간·띠·AI 이야기까지 블러 없이 전부 보여준다", async () => {
-    window.localStorage.setItem(TODAY_BIRTH_KEY, JSON.stringify(birth));
+    sessionStore.setItem(TODAY_BIRTH_KEY, JSON.stringify(birth));
     vi.mocked(computeGuestDailyExtras).mockResolvedValue(extras);
     render(<TodayFreeFlow {...props} />);
     expect(computeGuestDailyExtras).toHaveBeenCalledWith("1990-06-15", "");
@@ -148,7 +151,7 @@ describe("TodayFreeFlow — 비로그인 오늘의운세 개인화(블러 해제
   });
 
   it("같은 날짜·같은 생일의 저장분이 있으면 서버 호출 없이 재사용한다(LLM 하루 1회·버퍼링 없음)", async () => {
-    window.localStorage.setItem(TODAY_BIRTH_KEY, JSON.stringify(birth));
+    sessionStore.setItem(TODAY_BIRTH_KEY, JSON.stringify(birth));
     window.localStorage.setItem(
       "om-today-extras",
       JSON.stringify({ birthDate: birth.birthDate, birthTime: birth.birthTime, extras }),
@@ -160,7 +163,7 @@ describe("TodayFreeFlow — 비로그인 오늘의운세 개인화(블러 해제
   });
 
   it("저장분의 날짜가 오늘이 아니면 다시 계산한다", async () => {
-    window.localStorage.setItem(TODAY_BIRTH_KEY, JSON.stringify(birth));
+    sessionStore.setItem(TODAY_BIRTH_KEY, JSON.stringify(birth));
     window.localStorage.setItem(
       "om-today-extras",
       JSON.stringify({

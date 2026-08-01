@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
+import { sessionStore } from "@/lib/session-store";
 import { saveDraft, loadDraft, clearDraft, isCompleteDraft, type Draft } from "./draft";
 
 const draft: Draft = {
@@ -21,9 +22,9 @@ describe("onboarding draft", () => {
   });
 
   it("깨진 값·형식 오류는 null", () => {
-    localStorage.setItem("om_onboarding_draft", "{broken");
+    sessionStore.setItem("om_onboarding_draft", "{broken");
     expect(loadDraft()).toBeNull();
-    localStorage.setItem(
+    sessionStore.setItem(
       "om_onboarding_draft",
       JSON.stringify({ ...draft, gender: "unknown" }),
     );
@@ -39,9 +40,9 @@ describe("onboarding draft", () => {
     saveDraft(withTraits);
     expect(loadDraft()).toEqual(withTraits);
     // 형식 오류는 draft 전체를 버린다(다른 필드와 같은 방어 규칙)
-    localStorage.setItem("om_onboarding_draft", JSON.stringify({ ...draft, blood: "C" }));
+    sessionStore.setItem("om_onboarding_draft", JSON.stringify({ ...draft, blood: "C" }));
     expect(loadDraft()).toBeNull();
-    localStorage.setItem("om_onboarding_draft", JSON.stringify({ ...draft, mbti: 12 }));
+    sessionStore.setItem("om_onboarding_draft", JSON.stringify({ ...draft, mbti: 12 }));
     expect(loadDraft()).toBeNull();
   });
 

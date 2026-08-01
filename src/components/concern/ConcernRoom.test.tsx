@@ -1,4 +1,5 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { sessionStore } from "@/lib/session-store";
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import ConcernRoom, { type PastAdvice } from "./ConcernRoom";
 import { submitConcern } from "@/lib/concern/actions";
@@ -22,7 +23,7 @@ const PAST: PastAdvice[] = [
 describe("ConcernRoom — 익명 로컬 기록", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    window.localStorage.clear();
+    sessionStore.clear();
   });
 
   it("제목·카테고리·입력을 렌더하고 빈 입력이면 버튼이 비활성이다", () => {
@@ -34,18 +35,18 @@ describe("ConcernRoom — 익명 로컬 기록", () => {
   });
 
   it("localStorage 기록을 불러오고, 항목 삭제는 즉시 목록·저장소에서 지운다", () => {
-    window.localStorage.setItem(CONCERN_KEY, JSON.stringify(PAST));
+    sessionStore.setItem(CONCERN_KEY, JSON.stringify(PAST));
     render(<ConcernRoom nickname="달빛" profile={profile} />);
 
     expect(screen.getAllByText(/이직을 고민하고 있어요/).length).toBeGreaterThan(0);
     fireEvent.click(screen.getByLabelText("이 고민 기록 삭제"));
 
     expect(screen.queryAllByText(/이직을 고민하고 있어요/)).toHaveLength(0);
-    expect(JSON.parse(window.localStorage.getItem(CONCERN_KEY)!)).toHaveLength(0);
+    expect(JSON.parse(sessionStore.getItem(CONCERN_KEY)!)).toHaveLength(0);
   });
 
   it("전체 삭제는 확인 후에만 진행된다", () => {
-    window.localStorage.setItem(CONCERN_KEY, JSON.stringify(PAST));
+    sessionStore.setItem(CONCERN_KEY, JSON.stringify(PAST));
     vi.spyOn(window, "confirm").mockReturnValue(false);
     render(<ConcernRoom nickname="달빛" profile={profile} />);
 

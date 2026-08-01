@@ -28,8 +28,9 @@ export function loadLocalProfile(): LocalProfile | null {
   }
 }
 
-// "함께한 날수" 계산용 최초 방문 시각(localStorage). 프로필과 별개로, 처음 읽는 순간
-// 한 번 심는다. 서버 계정의 profiles.created_at을 대체한다.
+// "함께한 날수" 계산용 최초 방문 시각. 이건 "입력받은 내용"이 아니라 사용 지표라, 세션
+// 한정 저장소가 아니라 localStorage에 둔다(새로고침·세션을 넘어 유지돼야 함께한 날수·
+// 마일스톤이 동작한다). 처음 읽는 순간 한 번 심는다.
 const FIRST_SEEN_KEY = "om_first_seen";
 
 /** 최초 방문 시각(ms). 없으면 지금으로 심고 반환한다. */
