@@ -47,4 +47,6 @@ afterEach(() => {
   cleanup();
   // 세션 한정 인메모리 저장소는 모듈 수준 Map이라 테스트 간에 유지된다 — 매 테스트 후 비운다.
   sessionStore.clear();
+  // localStorage(테마·유입·데일리 캐시·최초방문)도 테스트 간 누수 방지로 함께 비운다.
+  try { window.localStorage.clear(); } catch { /* jsdom 없음 등 무시 */ }
 });

@@ -28,6 +28,8 @@ const extras = {
 describe("TodayFreeFlow — 비로그인 오늘의운세 개인화(블러 해제)", () => {
   beforeEach(() => {
     sessionStore.clear();
+    // EXTRAS 캐시는 localStorage라 세션 초기화와 별개로 매 테스트 전에 비운다.
+    window.localStorage.clear();
     vi.clearAllMocks();
   });
 
@@ -150,7 +152,7 @@ describe("TodayFreeFlow — 비로그인 오늘의운세 개인화(블러 해제
 
   it("같은 날짜·같은 생일의 저장분이 있으면 서버 호출 없이 재사용한다(LLM 하루 1회·버퍼링 없음)", async () => {
     sessionStore.setItem(TODAY_BIRTH_KEY, JSON.stringify(birth));
-    sessionStore.setItem(
+    window.localStorage.setItem(
       "om-today-extras",
       JSON.stringify({ birthDate: birth.birthDate, birthTime: birth.birthTime, extras }),
     );
@@ -162,7 +164,7 @@ describe("TodayFreeFlow — 비로그인 오늘의운세 개인화(블러 해제
 
   it("저장분의 날짜가 오늘이 아니면 다시 계산한다", async () => {
     sessionStore.setItem(TODAY_BIRTH_KEY, JSON.stringify(birth));
-    sessionStore.setItem(
+    window.localStorage.setItem(
       "om-today-extras",
       JSON.stringify({
         birthDate: birth.birthDate, birthTime: birth.birthTime,

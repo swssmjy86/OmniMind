@@ -3,7 +3,6 @@
 // 클라이언트 전용(localStorage 접근). 서버 컴포넌트에서 호출 금지.
 import { computeProfile, type ProfileContext } from "@/lib/engine";
 import { loadDraft, type Draft } from "@/app/onboarding/draft";
-import { sessionStore } from "@/lib/session-store";
 
 export interface LocalProfile {
   draft: Draft;
@@ -29,18 +28,19 @@ export function loadLocalProfile(): LocalProfile | null {
   }
 }
 
-// "함께한 날수" 계산용 최초 방문 시각(localStorage). 프로필과 별개로, 처음 읽는 순간
-// 한 번 심는다. 서버 계정의 profiles.created_at을 대체한다.
+// "함께한 날수" 계산용 최초 방문 시각. 이건 "입력받은 내용"이 아니라 사용 지표라, 세션
+// 한정 저장소가 아니라 localStorage에 둔다(새로고침·세션을 넘어 유지돼야 함께한 날수·
+// 마일스톤이 동작한다). 처음 읽는 순간 한 번 심는다.
 const FIRST_SEEN_KEY = "om_first_seen";
 
 /** 최초 방문 시각(ms). 없으면 지금으로 심고 반환한다. */
 export function firstSeenAt(): number {
   try {
-    const raw = sessionStore.getItem(FIRST_SEEN_KEY);
+    const raw = window.localStorage.getItem(FIRST_SEEN_KEY);
     const n = raw ? Number(raw) : NaN;
     if (Number.isFinite(n)) return n;
     const now = Date.now();
-    sessionStore.setItem(FIRST_SEEN_KEY, String(now));
+    window.localStorage.setItem(FIRST_SEEN_KEY, String(now));
     return now;
   } catch {
     return Date.now();

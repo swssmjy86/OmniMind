@@ -21,10 +21,9 @@ export default function HomeGreeting() {
     const p = loadLocalProfile();
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setHasProfile(Boolean(p));
-    if (p) {
-      const days = Math.max(1, Math.floor((Date.now() - firstSeenAt()) / 86_400_000) + 1);
-      setCompanionDays(days);
-    }
+    // 함께한 날수는 프로필(세션 한정)과 별개 — 최초 방문(localStorage) 기준이라 세션을 넘어
+    // 이어진다. 프로필이 세션마다 초기화돼도 이 값은 유지된다.
+    setCompanionDays(Math.max(1, Math.floor((Date.now() - firstSeenAt()) / 86_400_000) + 1));
     setReady(true);
   }, []);
 

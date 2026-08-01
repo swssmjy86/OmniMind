@@ -10,7 +10,10 @@ import { TODAY_BIRTH_KEY, parseTodayBirth, type TodayBirth } from "@/lib/today/b
 import { computeGuestDailyExtras, type GuestDailyExtras } from "@/lib/today/actions";
 import type { AstroEvent } from "@/lib/kasi/astro-events";
 
-/** 개인화 결과 하루 캐시 — LLM(무료 쿼터)을 기기당 하루 1회로 줄인다(2026-07-24 블러 해제). */
+// 개인화 결과 하루 캐시 — LLM(무료 쿼터)을 기기당 하루 1회로 줄인다. 이건 "입력"이 아니라
+// 생년월일+날짜로 키가 잡힌 계산 캐시라 세션 저장소가 아니라 localStorage에 둔다: 생년월일
+// 입력은 새로고침 때 초기화돼도, 같은 생일·같은 날이면 캐시가 살아 있어 재입력 시 LLM을 다시
+// 호출하지 않는다(쿼터 보호).
 const EXTRAS_KEY = "om-today-extras";
 
 /** KST 오늘 날짜(YYYY-MM-DD) — KST는 고정 UTC+9(서머타임 없음)라 클라이언트 산술로 충분. */
@@ -20,7 +23,7 @@ function kstToday(): string {
 
 function loadCachedExtras(birth: TodayBirth): GuestDailyExtras | null {
   try {
-    const raw = sessionStore.getItem(EXTRAS_KEY);
+    const raw = window.localStorage.getItem(EXTRAS_KEY);
     if (!raw) return null;
     const c = JSON.parse(raw) as {
       birthDate?: string; birthTime?: string; extras?: GuestDailyExtras;
@@ -38,7 +41,7 @@ function loadCachedExtras(birth: TodayBirth): GuestDailyExtras | null {
 
 function saveCachedExtras(birth: TodayBirth, extras: GuestDailyExtras): void {
   try {
-    sessionStore.setItem(
+    window.localStorage.setItem(
       EXTRAS_KEY,
       JSON.stringify({ birthDate: birth.birthDate, birthTime: birth.birthTime, extras }),
     );
