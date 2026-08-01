@@ -5,6 +5,7 @@ import PersonaIntro from "@/components/persona/PersonaIntro";
 import ShareSheet from "@/components/share/ShareSheet";
 import TodayInputSheet from "./TodayInputSheet";
 import { dailyCardQueryFromParams } from "@/lib/share/card-copy";
+import { sessionStore } from "@/lib/session-store";
 import { TODAY_BIRTH_KEY, parseTodayBirth, type TodayBirth } from "@/lib/today/birth-store";
 import { computeGuestDailyExtras, type GuestDailyExtras } from "@/lib/today/actions";
 import type { AstroEvent } from "@/lib/kasi/astro-events";
@@ -19,7 +20,7 @@ function kstToday(): string {
 
 function loadCachedExtras(birth: TodayBirth): GuestDailyExtras | null {
   try {
-    const raw = window.localStorage.getItem(EXTRAS_KEY);
+    const raw = sessionStore.getItem(EXTRAS_KEY);
     if (!raw) return null;
     const c = JSON.parse(raw) as {
       birthDate?: string; birthTime?: string; extras?: GuestDailyExtras;
@@ -37,7 +38,7 @@ function loadCachedExtras(birth: TodayBirth): GuestDailyExtras | null {
 
 function saveCachedExtras(birth: TodayBirth, extras: GuestDailyExtras): void {
   try {
-    window.localStorage.setItem(
+    sessionStore.setItem(
       EXTRAS_KEY,
       JSON.stringify({ birthDate: birth.birthDate, birthTime: birth.birthTime, extras }),
     );
@@ -93,7 +94,7 @@ export default function TodayFreeFlow({
     // 외부 스토어를 구독하는 게 아니라 최초 1회 동기화라 set-state-in-effect 휴리스틱의
     // 대상이 아니다.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setBirth(parseTodayBirth(window.localStorage.getItem(TODAY_BIRTH_KEY)));
+    setBirth(parseTodayBirth(sessionStore.getItem(TODAY_BIRTH_KEY)));
     setReady(true);
   }, []);
 

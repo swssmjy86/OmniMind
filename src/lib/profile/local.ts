@@ -3,6 +3,7 @@
 // 클라이언트 전용(localStorage 접근). 서버 컴포넌트에서 호출 금지.
 import { computeProfile, type ProfileContext } from "@/lib/engine";
 import { loadDraft, type Draft } from "@/app/onboarding/draft";
+import { sessionStore } from "@/lib/session-store";
 
 export interface LocalProfile {
   draft: Draft;
@@ -35,11 +36,11 @@ const FIRST_SEEN_KEY = "om_first_seen";
 /** 최초 방문 시각(ms). 없으면 지금으로 심고 반환한다. */
 export function firstSeenAt(): number {
   try {
-    const raw = window.localStorage.getItem(FIRST_SEEN_KEY);
+    const raw = sessionStore.getItem(FIRST_SEEN_KEY);
     const n = raw ? Number(raw) : NaN;
     if (Number.isFinite(n)) return n;
     const now = Date.now();
-    window.localStorage.setItem(FIRST_SEEN_KEY, String(now));
+    sessionStore.setItem(FIRST_SEEN_KEY, String(now));
     return now;
   } catch {
     return Date.now();

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { createPortal } from "react-dom";
 import PickerInput from "@/components/ui/PickerInput";
 import Choice from "@/components/ui/Choice";
+import { sessionStore } from "@/lib/session-store";
 import { TODAY_BIRTH_KEY, type TodayBirth } from "@/lib/today/birth-store";
 
 /**
@@ -28,7 +29,7 @@ export default function TodayInputSheet({
   const submit = () => {
     const b: TodayBirth = { birthDate, birthTime, gender };
     try {
-      window.localStorage.setItem(TODAY_BIRTH_KEY, JSON.stringify(b));
+      sessionStore.setItem(TODAY_BIRTH_KEY, JSON.stringify(b));
     } catch {
       // 저장 불가(시크릿 모드 등)여도 이번 화면은 계속
     }

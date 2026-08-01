@@ -1,10 +1,11 @@
 import { fireEvent, render, screen } from "@testing-library/react";
+import { sessionStore } from "@/lib/session-store";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import CelebInputSheet from "./CelebInputSheet";
 import { DRAFT_KEY, loadDraft } from "@/app/onboarding/draft";
 
 describe("유명인 궁합 입력 시트 (오늘의운세와 같은 팝업)", () => {
-  beforeEach(() => window.localStorage.clear());
+  beforeEach(() => sessionStore.clear());
 
   it("태어난 날·태어난 시간·성별·확인 버튼을 렌더한다", () => {
     render(<CelebInputSheet onSaved={() => {}} />);
@@ -40,7 +41,7 @@ describe("유명인 궁합 입력 시트 (오늘의운세와 같은 팝업)", ()
       gender: "female",
     });
     // localStorage draft로도 저장돼, 다음 방문 땐 시트 없이 바로 궁합으로 이어진다.
-    expect(window.localStorage.getItem(DRAFT_KEY)).toContain("1990-06-15");
+    expect(sessionStore.getItem(DRAFT_KEY)).toContain("1990-06-15");
     expect(loadDraft()).toEqual({
       nickname: "나",
       birthDate: "1990-06-15",
