@@ -15,8 +15,14 @@
 import { writeFileSync } from "node:fs";
 import * as Astronomy from "astronomy-engine";
 
-const YEAR_FROM = 1900;
-const YEAR_TO = 2100;
+// 지원 출생 연도는 1900~2100이지만, 그 경계 출생의 월지·대운을 정확히 세우려면 이웃
+// 연도의 절기가 필요하다. 예: 1900년 소한 이전(1월 초 며칠) 출생은 직전 절기가 대설 1899
+// (자월)인데, 이 노드가 없으면 resolveMonth가 소한 1900(축월)으로 한 칸 밀려 오귀속한다.
+// 2100년 말 출생의 순행 대운수도 소한 2101이 있어야 정확하다. 그래서 양옆 1년씩 더 생성한다.
+// (solar-terms.ts의 DATA_YEAR_MIN/MAX가 이 범위를 조회 허용하고, 출생 입력 검증은 여전히
+//  1900~2100으로 좁게 둔다.)
+const YEAR_FROM = 1899;
+const YEAR_TO = 2101;
 
 // 인덱스 순서(0=소한 … 23=동지)와 근사 절입일 시드(month, day).
 // 목표 황경 = (285 + 15*index) % 360

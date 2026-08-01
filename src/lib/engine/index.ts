@@ -26,8 +26,10 @@ export type { ProfileContext };
  *   5 → 6 (2026-07-21): 사령(sarang) 추가 — 월지 지장간 중 절입 경과일 기준 실권 층.
  *   6 → 7 (2026-07-21): 격국(gyeok) 추가 — 월지 지장간 투출 기준 정격/변격/겸격.
  *   7 → 8 (2026-07-21): 사생지/사왕지/사고지(stage) 추가 — 일지 기준 나 자신의 리듬.
+ *   8 → 9 (2026-08-01): 지원 범위 경계(1900년 소한 이전·2100년 말) 출생의 월주·대운
+ *     오귀속 수정 — 절기 데이터에 이웃 연도(1899·2101)를 포함해 직전/다음 절입을 정확히 잡는다.
  */
-export const PROFILE_CONTEXT_VERSION = 8;
+export const PROFILE_CONTEXT_VERSION = 9;
 
 interface ProfileContext {
   version: number;
