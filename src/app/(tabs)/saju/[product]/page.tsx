@@ -5,10 +5,9 @@ import {
 } from "@/lib/interpret/content/credit-readings";
 import { PRODUCTS } from "@/lib/persona/products";
 import { PERSONAS } from "@/lib/persona/personas";
-import { PERSONA_IMAGES } from "@/lib/persona/images";
 import { PERSONA_GLYPHS } from "@/components/home/PersonaCard";
 import GuestReadingView from "@/components/saju/GuestReadingView";
-import PersonaImageIntro from "@/components/persona/PersonaImageIntro";
+import PersonaGreetingIntro from "@/components/persona/PersonaGreetingIntro";
 
 export const metadata: Metadata = { title: "사주 풀이 — 옴니마인드" };
 
@@ -26,12 +25,10 @@ export default async function CreditReadingPage({
 
   return (
     <main className="fade-rise p-6">
-      <PersonaImageIntro
+      <PersonaGreetingIntro
         personaId={persona.id}
         eyebrow={`${PERSONA_GLYPHS[persona.id]} ${persona.name} · ${meta.title}`}
         line={persona.greeting}
-        image={PERSONA_IMAGES[persona.id].full}
-        imagePosition={PERSONA_IMAGES[persona.id].fullPosition}
       />
       <h1 className="font-[family-name:var(--font-serif-kr)] text-2xl text-primary-green">
         {meta.title}

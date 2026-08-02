@@ -86,14 +86,16 @@ export default function PersonaIntro({
     }
   }, [visible, needsTap]);
 
-  // 영상이 멈춰버려도 오버레이가 화면을 계속 덮지 않도록 상한을 둔다(영상 8초 + 여유).
-  // 재생이 시작된 뒤부터 잰다 — ▶ 버튼을 기다리는 정지 화면은 사용자가 직접 닫을 때까지 유지.
+  // 오버레이가 화면을 영영 덮지 않도록 상한을 둔다(영상 8초 + 여유). 오버레이가 뜬 뒤부터
+  // 잰다 — 재생이 시작조차 못 하는 환경(인앱 브라우저·iOS 저전력: 음소거 자동재생마저 차단돼
+  // ▶ 대기로 멈춘 상태)에서도 사주 풀이를 계속 가리지 않도록 스스로 걷힌다. playing이 참이
+  // 되면(▶ 탭 등) 타이머를 다시 걸어, 뒤늦게 재생을 시작해도 클립이 중간에 끊기지 않게 한다.
   // 배경 모드(held)로 넘어간 뒤에는 의도적으로 남아 있는 것이므로 타임아웃을 걸지 않는다.
   useEffect(() => {
-    if (!playing || held) return;
+    if (!visible || held) return;
     const t = setTimeout(close, 15_000);
     return () => clearTimeout(t);
-  }, [playing, held]);
+  }, [visible, playing, held]);
 
   // 배경으로 남은 오버레이는 부모가 release로 걷어낸다(입력 팝업이 닫힌 뒤).
   useEffect(() => {

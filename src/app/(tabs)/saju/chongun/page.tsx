@@ -1,9 +1,8 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { PERSONAS } from "@/lib/persona/personas";
-import { PERSONA_IMAGES } from "@/lib/persona/images";
 import GuestReadingView from "@/components/saju/GuestReadingView";
-import PersonaImageIntro from "@/components/persona/PersonaImageIntro";
+import PersonaGreetingIntro from "@/components/persona/PersonaGreetingIntro";
 
 export const metadata: Metadata = {
   title: "총운 — 옴니마인드",
@@ -15,12 +14,10 @@ export default function ChongunPage() {
   const seoon = PERSONAS.seoon;
   return (
     <main className="fade-rise p-6">
-      <PersonaImageIntro
+      <PersonaGreetingIntro
         personaId="seoon"
         eyebrow={`📜 ${seoon.name} · 총운`}
         line={seoon.greeting}
-        image={PERSONA_IMAGES.seoon.full}
-        imagePosition={PERSONA_IMAGES.seoon.fullPosition}
       />
       <h1 className="font-[family-name:var(--font-serif-kr)] text-2xl text-primary-green">
         총운

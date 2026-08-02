@@ -12,6 +12,7 @@ import PersonaIntro from "@/components/persona/PersonaIntro";
 import Choice from "@/components/ui/Choice";
 import PickerInput from "@/components/ui/PickerInput";
 import { PERSONAS } from "@/lib/persona/personas";
+import { PERSONA_VIDEOS } from "@/lib/persona/videos";
 
 interface Result {
   ctx: ProfileContext;
@@ -70,7 +71,7 @@ export default function OnboardingPage() {
         personaId="dalzigi"
         eyebrow={`🏮 ${PERSONAS.dalzigi.name} · 오늘의운세`}
         line={PERSONAS.dalzigi.homeLine}
-        src="/videos/dalzigi-intro.mp4"
+        src={PERSONA_VIDEOS.dalzigi}
         // 영상을 끝까지 보면 생년월일 입력 스텝으로 바로 전환 — 별명은 건너뛰어도
         // "당신"으로 폴백되고, 이전 버튼으로 돌아가 채울 수도 있다.
         onComplete={() => setStep((s) => (s === 0 ? 1 : s))}
