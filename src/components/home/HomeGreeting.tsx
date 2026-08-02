@@ -60,10 +60,14 @@ export default function HomeGreeting() {
           className="press relative isolate mt-6 flex min-h-44 flex-col overflow-hidden rounded-card border border-accent-coral/30 bg-warm-surface p-5"
         >
           <span aria-hidden className="absolute inset-0 z-[-1]">
+            {/* 배너는 프로필이 없을 때만(하이드레이션 후) 뜨는 above-the-fold 히어로다.
+                기본값이면 next/image가 loading="lazy"로 실어 히어로가 눈에 띄게 늦게 뜬다 →
+                priority로 lazy를 걷어 eager로 만들어, 배너가 렌더되는 즉시 곧바로 받아온다. */}
             <Image
               src={PERSONA_IMAGES.dalzigi.full}
               alt=""
               fill
+              priority
               unoptimized
               className="object-cover"
               style={{ objectPosition: "50% 47%", transform: "scale(1.15)", transformOrigin: "0% 47%" }}
