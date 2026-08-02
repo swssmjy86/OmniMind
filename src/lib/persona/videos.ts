@@ -10,7 +10,11 @@
 
 import type { PersonaId } from "./personas";
 
-export const PERSONA_VIDEOS: Partial<Record<PersonaId, string>> = {
+// dalzigi는 오늘의운세·온보딩 인트로가 항상 참조하므로 필수 키로 좁혀 둔다 — 정적 접근
+// (PERSONA_VIDEOS.dalzigi)은 string으로 보장돼 비-null 단언이 필요 없고, 키를 지우면
+// 두 페이지가 컴파일 단계에서 걸린다. 동적 접근(PERSONA_VIDEOS[personaId])은 Partial 쪽이
+// 맡아 string | undefined로 남아, 영상 없는 페르소나는 PersonaGreetingIntro가 이미지로 폴백한다.
+export const PERSONA_VIDEOS: Partial<Record<PersonaId, string>> & { dalzigi: string } = {
   dalzigi: "/videos/dalzigi-intro.mp4",
   seoon: "/videos/seoon-intro.mp4",
   byeori: "/videos/byeori-intro.mp4",

@@ -55,7 +55,7 @@ export default async function TodayPage({
           personaId: "dalzigi",
           eyebrow: `🏮 ${PERSONAS.dalzigi.name} · 오늘의운세`,
           line: PERSONAS.dalzigi.homeLine,
-          src: PERSONA_VIDEOS.dalzigi!,
+          src: PERSONA_VIDEOS.dalzigi,
         }}
         forceInput={forceInput}
       />
