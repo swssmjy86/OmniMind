@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import { PERSONAS } from "@/lib/persona/personas";
-import { PERSONA_IMAGES } from "@/lib/persona/images";
 import { PERSONA_GLYPHS } from "@/components/home/PersonaCard";
 import GuestMatchDeepGate from "@/components/saju/GuestMatchDeepGate";
-import PersonaImageIntro from "@/components/persona/PersonaImageIntro";
+import PersonaGreetingIntro from "@/components/persona/PersonaGreetingIntro";
 
 export const metadata: Metadata = {
   title: "궁합 심층 — 옴니마인드",
@@ -15,12 +14,10 @@ export default function MatchDeepPage() {
   const yeonri = PERSONAS.yeonri;
   return (
     <main className="fade-rise p-6">
-      <PersonaImageIntro
+      <PersonaGreetingIntro
         personaId="yeonri"
         eyebrow={`${PERSONA_GLYPHS.yeonri} ${yeonri.name} · 궁합 심층`}
         line={yeonri.greeting}
-        image={PERSONA_IMAGES.yeonri.full}
-        imagePosition={PERSONA_IMAGES.yeonri.fullPosition}
       />
       <h1 className="font-[family-name:var(--font-serif-kr)] text-2xl text-primary-green">
         궁합 심층

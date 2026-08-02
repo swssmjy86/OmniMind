@@ -3,6 +3,7 @@ import { computeDaily } from "@/lib/engine/daily";
 import { assembleDaily } from "@/lib/interpret/content/daily";
 import { toKstParts } from "@/lib/engine/kst";
 import { PERSONAS } from "@/lib/persona/personas";
+import { PERSONA_VIDEOS } from "@/lib/persona/videos";
 import TodayFreeFlow from "@/components/today/TodayFreeFlow";
 import { getTodayAstroEvents } from "@/lib/kasi/astro-events-cache";
 
@@ -54,7 +55,7 @@ export default async function TodayPage({
           personaId: "dalzigi",
           eyebrow: `🏮 ${PERSONAS.dalzigi.name} · 오늘의운세`,
           line: PERSONAS.dalzigi.homeLine,
-          src: "/videos/dalzigi-intro.mp4",
+          src: PERSONA_VIDEOS.dalzigi!,
         }}
         forceInput={forceInput}
       />
