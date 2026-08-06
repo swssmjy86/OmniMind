@@ -26,7 +26,7 @@
 ```bash
 cd ios
 xcodegen generate                                   # project.yml → OmniMind.xcodeproj
-SIM='platform=iOS Simulator,name=iPhone 16'         # 없으면: xcrun simctl list devices 로 가용 기기 확인 후 교체
+SIM='platform=iOS Simulator,name=iPhone 17'         # 이 Mac의 가용 기기. 다르면: xcrun simctl list devices 로 확인 후 교체
 xcodebuild -project OmniMind.xcodeproj -scheme OmniMind -destination "$SIM" build
 xcodebuild -project OmniMind.xcodeproj -scheme OmniMind -destination "$SIM" test
 ```
@@ -215,7 +215,7 @@ final class LaunchSmokeTests: XCTestCase {
 
 ```bash
 cd ios && xcodegen generate
-xcodebuild -project OmniMind.xcodeproj -scheme OmniMind -destination "platform=iOS Simulator,name=iPhone 16" test
+xcodebuild -project OmniMind.xcodeproj -scheme OmniMind -destination "platform=iOS Simulator,name=iPhone 17" test
 ```
 Expected: `AppConfigTests` 컴파일·통과(로직이 이미 맞으면 통과). 만약 시뮬레이터 이름 오류면 `xcrun simctl list devices`로 가용 기기명으로 교체. (이 태스크는 로직이 자명해 Step 3에서 바로 통과할 수 있음 — 통과하면 Step 4로.)
 
@@ -377,7 +377,7 @@ final class LaunchSmokeTests: XCTestCase {
 
 ```bash
 cd ios && xcodegen generate
-xcodebuild -project OmniMind.xcodeproj -scheme OmniMind -destination "platform=iOS Simulator,name=iPhone 16" test
+xcodebuild -project OmniMind.xcodeproj -scheme OmniMind -destination "platform=iOS Simulator,name=iPhone 17" test
 ```
 Expected: 빌드 성공. UI 스모크는 시뮬레이터 네트워크가 있어야 통과(오프라인이면 스킵/재시도).
 
@@ -1219,7 +1219,7 @@ struct OmniWidget: Widget {
 
 ```bash
 cd ios && xcodegen generate
-xcodebuild -project OmniMind.xcodeproj -scheme OmniMindWidget -destination "platform=iOS Simulator,name=iPhone 16" build
+xcodebuild -project OmniMind.xcodeproj -scheme OmniMindWidget -destination "platform=iOS Simulator,name=iPhone 17" build
 ```
 Expected: 위젯 타깃 빌드 성공.
 
