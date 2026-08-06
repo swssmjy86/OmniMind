@@ -23,6 +23,10 @@ targets:
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
         TARGETED_DEVICE_FAMILY: "1"     # iPhone 우선
+    entitlements:
+      path: OmniMind/OmniMind.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.omnimind.app]
   OmniMindTests:
     type: bundle.unit-test
     platform: iOS

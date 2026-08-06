@@ -1,5 +1,6 @@
 import SwiftUI
 import WebKit
+import WidgetKit
 
 struct WebContainer: UIViewRepresentable {
     @ObservedObject var model: WebViewModel
@@ -23,6 +24,9 @@ struct WebContainer: UIViewRepresentable {
         webView.scrollView.refreshControl = rc
         context.coordinator.webView = webView
         webView.load(URLRequest(url: AppConfig.productionURL))
+        NotificationCenter.default.addObserver(context.coordinator,
+            selector: #selector(Coordinator.syncWidget),
+            name: UIApplication.willResignActiveNotification, object: nil)
         return webView
     }
 
@@ -44,6 +48,17 @@ struct WebContainer: UIViewRepresentable {
         init(model: WebViewModel) { self.model = model }
 
         @objc func refresh(_ sender: UIRefreshControl) { webView?.reload() }
+
+        /// 앱이 백그라운드로 물러날 때 웹의 오늘 요약을 읽어 위젯 공유 저장소에 반영한다(Task 7).
+        @objc func syncWidget() {
+            guard let webView else { return }
+            Task { @MainActor in
+                if let data = await WebBridge.readToday(from: webView) {
+                    WidgetDataStore.save(data)
+                    WidgetCenter.shared.reloadAllTimelines()
+                }
+            }
+        }
 
         func webView(_ webView: WKWebView, didFinish nav: WKNavigation!) {
             webView.scrollView.refreshControl?.endRefreshing()
