@@ -1,0 +1,73 @@
+name: OmniMind
+options:
+  bundleIdPrefix: com.omnimind
+  deploymentTarget:
+    iOS: "16.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    SWIFT_VERSION: "5.9"
+    GENERATE_INFOPLIST_FILE: YES
+    DEVELOPMENT_TEAM: ""      # 실기기·배포 시 팀 ID 입력
+targets:
+  OmniMind:
+    type: application
+    platform: iOS
+    sources: [OmniMind]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.omnimind.app
+        INFOPLIST_KEY_CFBundleDisplayName: 옴니마인드
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
+        TARGETED_DEVICE_FAMILY: "1"     # iPhone 우선
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+    info:
+      path: OmniMind/Info.plist
+      properties:
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        ITSAppUsesNonExemptEncryption: false
+        UILaunchScreen:
+          UIColorName: LaunchBackgroundColor
+    entitlements:
+      path: OmniMind/OmniMind.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.omnimind.app]
+    dependencies:
+      - target: OmniMindWidget
+  OmniMindTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [OmniMindTests]
+    dependencies:
+      - target: OmniMind
+  OmniMindUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [OmniMindUITests]
+    dependencies:
+      - target: OmniMind
+  OmniMindWidget:
+    type: app-extension
+    platform: iOS
+    sources:
+      - OmniMindWidget
+      - OmniMind/Widget/WidgetDataStore.swift
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.omnimind.app.widget
+        INFOPLIST_KEY_CFBundleDisplayName: 오늘의 기운
+    info:
+      path: OmniMindWidget/Info.plist
+      properties:
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: OmniMindWidget/OmniMindWidget.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.omnimind.app]

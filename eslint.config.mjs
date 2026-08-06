@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // 로컬 Obsidian 볼트(저장소 루트에서 우연히 열린 개인 도구 산출물) — 프로젝트 코드 아님
+    ".obsidian/**",
   ]),
 ]);
 
