@@ -36,14 +36,15 @@ func drawBackground() {
 drawBackground()
 
 // Crescent moon = outer circle MINUS cutout circle.
-let moonC = CGPoint(x: 470, y: 512), moonR: CGFloat = 322
-let cutC  = CGPoint(x: 628, y: 556), cutR: CGFloat = 300
+// Cutout offset PURELY horizontal (same y) → symmetric, upright crescent opening to the right.
+let moonC = CGPoint(x: 462, y: 512), moonR: CGFloat = 322
+let cutC  = CGPoint(x: 462 + 138, y: 512), cutR: CGFloat = 314
 // 1) fill the full moon disc with a warm cream sheen
 ctx.saveGState()
 ctx.addEllipse(in: CGRect(x: moonC.x - moonR, y: moonC.y - moonR, width: moonR*2, height: moonR*2))
 ctx.clip()
 let moonGrad = CGGradient(colorsSpace: cs, colors: [cream, creamDim] as CFArray, locations: [0, 1])!
-ctx.drawLinearGradient(moonGrad, start: CGPoint(x: 300, y: 800), end: CGPoint(x: 560, y: 240), options: [])
+ctx.drawLinearGradient(moonGrad, start: CGPoint(x: 300, y: 780), end: CGPoint(x: 300, y: 244), options: [])
 ctx.restoreGState()
 // 2) punch the cutout by redrawing the background clipped to the cut circle → true crescent
 ctx.saveGState()
