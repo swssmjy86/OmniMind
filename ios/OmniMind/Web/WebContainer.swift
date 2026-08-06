@@ -45,7 +45,6 @@ struct WebContainer: UIViewRepresentable {
         let model: WebViewModel
         weak var webView: WKWebView?
         var lastReloadToken = 0
-        private var backgroundTaskID: UIBackgroundTaskIdentifier = .invalid
         init(model: WebViewModel) { self.model = model }
 
         @objc func refresh(_ sender: UIRefreshControl) { webView?.reload() }
@@ -53,27 +52,29 @@ struct WebContainer: UIViewRepresentable {
         /// 앱이 백그라운드로 물러날 때 웹의 오늘 요약을 읽어 위젯 공유 저장소에 반영한다(Task 7).
         /// evaluateJavaScript 왕복 도중 앱이 suspend되어 위젯 갱신이 끊기지 않도록
         /// 백그라운드 태스크 어서션으로 감싸 작업이 끝날 때까지 실행을 보장한다.
+        ///
+        /// 태스크 식별자는 함수 로컬 상태로만 존재한다(공유 인스턴스 변수 아님) — 알림이
+        /// 짧은 시간 안에 다시 발생해 `syncWidget()`이 겹쳐 호출돼도, 각 호출은 자신만의
+        /// id를 소유하므로 서로의 어서션을 훔치거나 조기에 끝내지 않는다.
         @objc func syncWidget() {
             guard let webView else { return }
-            let taskID = UIApplication.shared.beginBackgroundTask(withName: "com.omnimind.syncWidget") { [weak self] in
-                self?.endBackgroundTask()
+            var taskID: UIBackgroundTaskIdentifier = .invalid
+            func endTask() {
+                guard taskID != .invalid else { return }
+                UIApplication.shared.endBackgroundTask(taskID)
+                taskID = .invalid
             }
-            backgroundTaskID = taskID
+            taskID = UIApplication.shared.beginBackgroundTask(withName: "omni.widget.sync") {
+                endTask()
+            }
             guard taskID != .invalid else { return }
             Task { @MainActor in
                 if let data = await WebBridge.readToday(from: webView) {
                     WidgetDataStore.save(data)
                     WidgetCenter.shared.reloadAllTimelines()
                 }
-                self.endBackgroundTask()
+                endTask()
             }
-        }
-
-        /// 백그라운드 태스크를 정확히 한 번만 종료한다(정상 완료·만료 핸들러 양쪽에서 호출돼도 안전).
-        private func endBackgroundTask() {
-            guard backgroundTaskID != .invalid else { return }
-            UIApplication.shared.endBackgroundTask(backgroundTaskID)
-            backgroundTaskID = .invalid
         }
 
         func webView(_ webView: WKWebView, didFinish nav: WKNavigation!) {
