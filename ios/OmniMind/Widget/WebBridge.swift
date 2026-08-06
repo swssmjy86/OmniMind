@@ -28,9 +28,17 @@ enum WebBridge {
               let cached = try? JSONDecoder().decode(CachedExtras.self, from: data)
         else { return nil }
 
-        let headline = cached.extras?.personal
-            ?? cached.extras?.zodiac?.line
+        let headline = (cached.extras?.personal).nonBlank
+            ?? (cached.extras?.zodiac?.line).nonBlank
             ?? "오늘의 기운이 준비됐어요"
         return TodayWidgetData(headline: headline, updatedAt: Date())
+    }
+}
+
+extension Optional where Wrapped == String {
+    /// 공백/빈 문자열을 nil로 취급해 `??` 체인에서 다음 폴백으로 넘어가게 한다.
+    var nonBlank: String? {
+        guard let self, !self.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
+        return self
     }
 }
