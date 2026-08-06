@@ -1,5 +1,9 @@
 import SwiftUI
 
 struct RootView: View {
-    var body: some View { Text("OmniMind").padding() }
+    @StateObject private var webModel = WebViewModel()
+    var body: some View {
+        WebContainer(model: webModel)
+            .ignoresSafeArea(.container, edges: .bottom)
+    }
 }
