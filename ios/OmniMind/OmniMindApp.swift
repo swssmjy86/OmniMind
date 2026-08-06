@@ -8,6 +8,7 @@ struct OmniMindApp: App {
     var body: some Scene {
         WindowGroup {
             RootView(webModel: webModel, notifications: notifications)
+                .tint(.omniCoral)
                 .onAppear {
                     notifications.registerDelegate()
                     notifications.onDeepLink = { path in webModel.requestDeepLink(path: path) }
