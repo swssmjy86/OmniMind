@@ -50,3 +50,9 @@ next-env.d.ts
 
 # Higgsfield 원본 영상 export(대용량) — 웹용 압축본만 public/videos/에 커밋한다
 docs/hf_*.mp4
+
+# iOS (Xcode/XcodeGen) — OmniMind.xcodeproj는 재현성을 위해 커밋한다
+ios/**/xcuserdata/
+ios/**/*.xcuserstate
+ios/DerivedData/
+ios/.build/
