@@ -29,6 +29,9 @@
 .DS_Store
 *.pem
 
+# 로컬 Obsidian 볼트 설정(저장소 루트에서 우연히 열린 개인 도구 산출물 — 프로젝트 무관, eslint가 스캔하지 않도록 제외)
+.obsidian/
+
 # debug
 npm-debug.log*
 yarn-debug.log*
