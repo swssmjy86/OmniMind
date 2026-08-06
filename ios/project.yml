@@ -27,6 +27,8 @@ targets:
       path: OmniMind/OmniMind.entitlements
       properties:
         com.apple.security.application-groups: [group.com.omnimind.app]
+    dependencies:
+      - target: OmniMindWidget
   OmniMindTests:
     type: bundle.unit-test
     platform: iOS
@@ -39,3 +41,22 @@ targets:
     sources: [OmniMindUITests]
     dependencies:
       - target: OmniMind
+  OmniMindWidget:
+    type: app-extension
+    platform: iOS
+    sources:
+      - OmniMindWidget
+      - OmniMind/Widget/WidgetDataStore.swift
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.omnimind.app.widget
+        INFOPLIST_KEY_CFBundleDisplayName: 오늘의 기운
+    info:
+      path: OmniMindWidget/Info.plist
+      properties:
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: OmniMindWidget/OmniMindWidget.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.omnimind.app]
