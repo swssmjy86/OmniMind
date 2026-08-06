@@ -10,6 +10,10 @@ struct WebContainer: UIViewRepresentable {
         let config = WKWebViewConfiguration()
         config.websiteDataStore = .default()            // Safari와 분리된 영속 저장
         config.allowsInlineMediaPlayback = true
+        // navigator.share 폴백 브리지(Task 6) — 웹이 window.webkit.messageHandlers.omniShare로
+        // postMessage하면 네이티브 공유 시트를 띄운다. 웹 shim은 별도 승인 전까지 미적용이라
+        // 현재는 대기 상태(무해)다.
+        config.userContentController.add(context.coordinator, name: "omniShare")
         let webView = WKWebView(frame: .zero, configuration: config)
         webView.navigationDelegate = context.coordinator
         webView.uiDelegate = context.coordinator
@@ -73,5 +77,16 @@ struct WebContainer: UIViewRepresentable {
             }
             return nil
         }
+    }
+}
+
+/// navigator.share 폴백 브리지 수신부(Task 6). 웹이 아직 `omniShare`로 postMessage하지 않으므로
+/// (웹 shim은 별도 승인 대기) 현재는 등록만 돼 있고 실사용되지 않는 대기 경로다.
+extension WebContainer.Coordinator: WKScriptMessageHandler {
+    func userContentController(_ uc: WKUserContentController, didReceive message: WKScriptMessage) {
+        guard message.name == "omniShare",
+              let payload = SharePayload.decode(message.body),
+              let view = webView else { return }
+        ShareCoordinator.present(payload, from: view)
     }
 }
