@@ -43,12 +43,17 @@ struct WebContainer: UIViewRepresentable {
 
         func webView(_ webView: WKWebView, didFinish nav: WKNavigation!) {
             webView.scrollView.refreshControl?.endRefreshing()
+            model.loadFailed = false
         }
         func webView(_ webView: WKWebView, didFail nav: WKNavigation!, withError e: Error) {
-            webView.scrollView.refreshControl?.endRefreshing(); model.didFailLoad()
+            webView.scrollView.refreshControl?.endRefreshing()
+            guard (e as NSError).code != NSURLErrorCancelled else { return }
+            model.didFailLoad()
         }
         func webView(_ webView: WKWebView, didFailProvisionalNavigation nav: WKNavigation!, withError e: Error) {
-            webView.scrollView.refreshControl?.endRefreshing(); model.didFailLoad()
+            webView.scrollView.refreshControl?.endRefreshing()
+            guard (e as NSError).code != NSURLErrorCancelled else { return }
+            model.didFailLoad()
         }
 
         func webView(_ webView: WKWebView, decidePolicyFor action: WKNavigationAction,
