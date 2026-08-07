@@ -17,8 +17,8 @@ export default function ContactPage() {
       </div>
       <p className="mt-6 text-center text-xs text-text-soft">
         이메일이 편하다면{" "}
-        <a href="mailto:swssmjy86@gmail.com" className="underline underline-offset-2">
-          swssmjy86@gmail.com
+        <a href="mailto:omnimind.i6uj.official@gmail.com" className="underline underline-offset-2">
+          omnimind.i6uj.official@gmail.com
         </a>
         으로 보내 주셔도 좋아요.
       </p>
